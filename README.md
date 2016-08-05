@@ -13,6 +13,8 @@ Compute chemical equilibrium
 $ npm install chem-equilibrium
 ```
 
+#[API Documentation](https://cheminfo-js.github.io/chem-equilibrium/)
+
 ## License
 
   [MIT](./LICENSE)
