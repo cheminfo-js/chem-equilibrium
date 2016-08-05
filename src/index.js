@@ -30,10 +30,10 @@ class Equilibrium {
      * @param {number} [options.robustMaxTries=15] - Maximum tries when using {@link #Equilibrium#solveRobust solveRobust}.
      */
     constructor(model, options) {
+        this.options = Object.assign({}, defaultOptions, options);
         checkModel(model);
         this.model = model;
         this._model = this._processModel(model);
-        this.options = Object.assign({}, defaultOptions, options);
     }
 
     /**
@@ -239,7 +239,7 @@ function checkModel(model) {
     checkLabels(model.formedSpecies, labels);
     checkLabels(model.components, labels);
     checkComponents(model.components);
-    checkFormedSpecies(model.formedSpecies);
+    checkFormedSpecies(model);
 }
 
 function checkLabels(arr, labels) {
