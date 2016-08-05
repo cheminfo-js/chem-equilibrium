@@ -1,5 +1,6 @@
 'use strict';
 var Matrix = require('ml-matrix');
+var stat = require('ml-stat').matrix;
 
 function newtonRaphton(model, beta, cTotal, c) {
 
@@ -21,9 +22,9 @@ function newtonRaphton(model, beta, cTotal, c) {
 
     var maxIt = 99;
     for (i = 0; i < maxIt; i++) {
-        var cSpec = Matrix.multiply(prod(pow(c.transpose().repeat(1, nspec), model)), [beta]);
+        var cSpec = Matrix.multiply([stat.product(c.transpose().repeat(1, nspec).pow(model), 0)], [beta]);
         // console.log('cSpec', cSpec);
-        var cTotCalc = sumColumns(Matrix.multiply(cSpec.repeat(ncomp, 1), model)).transpose();
+        var cTotCalc = (new Matrix([stat.sum(Matrix.multiply(cSpec.repeat(ncomp, 1), model), 1)])).transpose();
         // console.log('cTotCalc', cTotCalc);
 
         // console.log(cTotal, cTotCalc);
@@ -78,44 +79,4 @@ function checkNeg(arr) {
     return arr.some(function (el) {
         return el <= 0;
     });
-}
-
-function prod(matrix) {
-    var res = new Matrix(1, matrix.columns).fill(1);
-    for (var i = 0; i < matrix.rows; i++) {
-        for (var j = 0; j < matrix.columns; j++) {
-            res[0][j] *= matrix[i][j];
-        }
-    }
-    return res;
-}
-
-function sumColumns(matrix) {
-    var res = new Matrix(matrix.rows, 1).fill(0);
-    for (var i = 0; i < matrix.rows; i++) {
-        for (var j = 0; j < matrix.columns; j++) {
-            res[i][0] += matrix[i][j];
-        }
-    }
-    return res;
-}
-
-function sumRows(matrix) {
-    var res = new Matrix(1, matrix.columns).fill(0);
-    for (var i = 0; i < matrix.rows; i++) {
-        for (var j = 0; j < matrix.columns; j++) {
-            res[0][j] += matrix[i][j];
-        }
-    }
-    return res;
-}
-
-
-function pow(matrix1, matrix2) {
-    for (var i = 0; i < matrix1.rows; i++) {
-        for (var j = 0; j < matrix1.columns; j++) {
-            matrix1[i][j] = Math.pow(matrix1[i][j], matrix2[i][j]);
-        }
-    }
-    return matrix1;
 }

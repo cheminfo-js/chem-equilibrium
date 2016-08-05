@@ -25,6 +25,7 @@
     "should": "^9.0.2"
   },
   "dependencies": {
-    "ml-matrix": "github:mljs/matrix"
+    "ml-matrix": "github:mljs/matrix",
+    "ml-stat": "^1.2.0"
   }
 }
