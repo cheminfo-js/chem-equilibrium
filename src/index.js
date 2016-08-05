@@ -4,22 +4,33 @@ const random = require('./util/random');
 const newtonRaphton = require('./NewtonRaphton');
 
 const defaultOptions = {
-    robustMaxTries: 15
+    robustMaxTries: 15,
+    volume: 1
 };
 
+/**
+ * Equilibrium
+ */
 class Equilibrium {
     /**
      * @constructor
      * @param {Object} model
-     * @param {Array} model.components - The equilibrium's independant components. Requires a label property and either
-     * a total property (for total concentration) or an atEquilibrium property (for fixed final concentration)
-     * @param {Array} model.formedSpecies - The list of species that are formed from the components.
-     * @param {Array} model.formedSpecies[].components - The stoechiometric coefficient of each component. Should be the
-     * same size as model.components.
-     * @param {Object} options
-     * @param {number} [options.robustMaxTries=15] - Maximum tries when using {@link Equilibrium#solveRobust solveRobust}.
+     * amounts can be though as if they were concenrations.
+     * @param {Object[]} model.components - The equilibrium's independent components. Each object in the array requires
+     * a label property and either a total property (for total amount) or an atEquilibrium property (for fixed final amount).
+     * The label property should be a unique name for that specie
+     *
+     * @param {Object[]} model.formedSpecies - The list of species that are formed from the components. Each object
+     * in the array requires a label property, a beta property and a components property. The component property should be an array of numbers
+     * with the stoechiometric coefficient of each component using the order in which the components where specified. The beta property
+     * should be a number with the formation constant of this specie. The label property should be a unique name for that specie.
+     *
+     * @param {Object} options - Additional options
+     * @param {number} [options.volume=1] - Volume of the solution in which the equilibrium occurs. If this value is 1 then
+     * @param {number} [options.robustMaxTries=15] - Maximum tries when using {@link #Equilibrium#solveRobust solveRobust}.
      */
     constructor(model, options) {
+        checkModel(model);
         this.model = model;
         this._model = this._processModel(model);
         this.options = Object.assign({}, defaultOptions, options);
@@ -121,10 +132,10 @@ class Equilibrium {
             if (component.atEquilibrium) {
                 // Keep concentration and label of fixed components
                 fixedLabels.push(component.label);
-                cFixed.push(component.atEquilibrium);
+                cFixed.push(component.atEquilibrium / this.options.volume);
             } else {
                 // Total concentration of components that will be involved in the optimization algorithm
-                cTotal.push(component.total);
+                cTotal.push(component.total / this.options.volume);
                 specLabels.push(component.label)
             }
         }
@@ -163,7 +174,7 @@ class Equilibrium {
     }
 
     /**
-     * Solve the model robustly. Does not take into account initial concentrations set with {@link Equilibrium#setInitial setInitial}
+     * Solve the model robustly. Does not take into account initial concentrations set with {@link #Equilibrium#setInitial setInitial}
      * Random initialization concentrations are used until the optimization algorithm converges. The number of tries
      * is set at instanciation with robustMaxTries
      * @returns {Object|null} An Object with as many properties as there are species. The key is the label of the specie,
@@ -182,6 +193,20 @@ class Equilibrium {
         return null;
     }
 
+    /**
+     * Set initial concentration of components
+     * @param {Object} initial - Object where the key is the label of the component and the value is the initial
+     * amount (in moles) of this components.
+     */
+    setInitial(initial) {
+        this._initial = initial;
+    }
+
+    /**
+     * Transforms array of specie concentrations into object where the key is the specie label.
+     * Adds the fixed concentrations to it
+     * @private
+     */
     _processResult(cSpec) {
         if (!cSpec) return;
         console.log(cSpec);
@@ -206,4 +231,44 @@ function getRange(start, end) {
         arr.push(i);
     }
     return arr;
+}
+
+function checkModel(model) {
+    // check that labels are unique
+    var labels = {};
+    checkLabels(model.formedSpecies, labels);
+    checkLabels(model.components, labels);
+    checkComponents(model.components);
+    checkFormedSpecies(model.formedSpecies);
+}
+
+function checkLabels(arr, labels) {
+    for (var i = 0; i < arr.length; i++) {
+        var label = arr[i].label;
+        if (label == undefined) throw new Error('Labels must be defined');
+        if (labels[label]) throw new Error('Labels should be unique');
+        labels[label] = true;
+    }
+}
+
+function checkComponents(comp) {
+    for(var i=0; i<comp.length; i++) {
+        if(!comp[i].total && !comp[i].atEquilibrium) {
+            throw new Error('Component should have total or atEquilibrium')
+        }
+    }
+}
+
+function checkFormedSpecies(model) {
+    var spec = model.formedSpecies;
+    if(!spec) throw new Error('Formed species is not defined');
+    for(var i=0; i<spec.length; i++) {
+        var s = spec[i];
+        if(!s.components || s.components.length !== model.components.length) {
+            throw new Error('Formed species\' components array should have the same size as components');
+        }
+        if(typeof s.beta !== 'number') {
+            throw new Error('All formed species should have a beta property');
+        }
+    }
 }
