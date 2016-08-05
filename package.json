@@ -1,0 +1,30 @@
+{
+  "name": "chem-equilibrium",
+  "version": "0.0.1",
+  "description": "Compute chemical equilibrium",
+  "keywords": [],
+  "files": [
+    "src"
+  ],
+  "author": "Daniel Kostro &lt;kostro.d@gmail.com&gt;",
+  "repository": "cheminfo-js/chem-equilibrium",
+  "bugs": {
+    "url": "https://github.com/cheminfo-js/chem-equilibrium/issues"
+  },
+  "homepage": "https://github.com/cheminfo-js/chem-equilibrium",
+  "license": "MIT",
+  "main": "./src/index.js",
+  "scripts": {
+    "test": "mocha --require should --reporter mocha-better-spec-reporter --recursive",
+    "build": "cheminfo build"
+  },
+  "devDependencies": {
+    "cheminfo-tools": "^1.5.0",
+    "mocha": "^2.5.1",
+    "mocha-better-spec-reporter": "^3.0.2",
+    "should": "^9.0.2"
+  },
+  "dependencies": {
+    "ml-matrix": "github:mljs/matrix"
+  }
+}
