@@ -24,7 +24,7 @@ function newtonRaphton(model, beta, cTotal, c) {
     for (i = 0; i < maxIt; i++) {
         var cSpec = Matrix.multiply([stat.product(c.transpose().repeat(1, nspec).pow(model), 0)], [beta]);
         // console.log('cSpec', cSpec);
-        var cTotCalc = (new Matrix([stat.sum(Matrix.multiply(cSpec.repeat(ncomp, 1), model), 1)])).transpose();
+        var cTotCalc = new Matrix([stat.sum(Matrix.multiply(cSpec.repeat(ncomp, 1), model), 1)]);
         // console.log('cTotCalc', cTotCalc);
 
         // console.log(cTotal, cTotCalc);
