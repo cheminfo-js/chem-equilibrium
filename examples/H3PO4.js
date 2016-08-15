@@ -17,6 +17,13 @@ var equilibriumModel = {
 
 var eq = new Equilibrium(equilibriumModel);
 var solution = eq.solveRobust();
-console.log(solution);
+
+for(var pH=0; pH<=14; pH++) {
+    equilibriumModel.components[0].atEquilibrium = Math.pow(10, -pH);
+    eq = new Equilibrium(equilibriumModel);
+    eq.setInitial(solution);
+    solution = eq.solve();
+    console.log(solution);
+}
 
 

@@ -126,6 +126,7 @@ class Equilibrium {
         var specLabels = [];
         var fixedLabels = [];
         var cFixed = [];
+        var compLabels = [];
 
         // Init labels and total concentration
         var cTotal = [];
@@ -138,12 +139,12 @@ class Equilibrium {
             } else {
                 // Total concentration of components that will be involved in the optimization algorithm
                 cTotal.push(component.total / this.options.volume);
-                specLabels.push(component.label)
+                specLabels.push(component.label);
+                compLabels.push(component.label);
             }
         }
 
         specLabels = specLabels.concat(model.formedSpecies.map(f => f.label));
-        var compLabels = model.components.map(s => s.label);
 
 
         return {
