@@ -16,7 +16,7 @@
   "main": "./src/index.js",
   "scripts": {
     "test": "mocha --require should --reporter mocha-better-spec-reporter --recursive",
-    "build": "cheminfo build"
+    "build": "cheminfo build -b -u"
   },
   "devDependencies": {
     "cheminfo-tools": "^1.5.0",
