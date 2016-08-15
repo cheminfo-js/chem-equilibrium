@@ -168,8 +168,6 @@ class Equilibrium {
         var model = this._model;
         var initial = this._getInitial();
         var cSpec = newtonRaphton(model.model, model.beta, model.cTotal, initial);
-        console.log('cSpec');
-        console.log(cSpec);
         return this._processResult(cSpec);
     }
 
@@ -209,7 +207,6 @@ class Equilibrium {
      */
     _processResult(cSpec) {
         if (!cSpec) return;
-        console.log(cSpec);
         var result = {};
         for (var i = 0; i < cSpec.length; i++) {
             result[this._model.specLabels[i]] = cSpec[i];
