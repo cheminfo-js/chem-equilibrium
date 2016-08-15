@@ -5,7 +5,8 @@ const newtonRaphton = require('./NewtonRaphton');
 
 const defaultOptions = {
     robustMaxTries: 15,
-    volume: 1
+    volume: 1,
+    random: Math.random
 };
 
 /**
@@ -28,6 +29,7 @@ class Equilibrium {
      * @param {Object} options - Additional options
      * @param {number} [options.volume=1] - Volume of the solution in which the equilibrium occurs. If this value is 1 then
      * @param {number} [options.robustMaxTries=15] - Maximum tries when using {@link #Equilibrium#solveRobust solveRobust}.
+     * @param {function} [options.random=Math.random] - Random number generator to use when initializing concentrations
      */
     constructor(model, options) {
         this.options = Object.assign({}, defaultOptions, options);
@@ -55,7 +57,7 @@ class Equilibrium {
 
         for (i = 0; i < initial.length; i++) {
             if (initial[i] === undefined) {
-                initial[i] = random.logarithmic();
+                initial[i] = random.logarithmic(this.options.random);
             }
         }
         return initial;
@@ -181,7 +183,7 @@ class Equilibrium {
     solveRobust() {
         var model = this._model;
         for (var i = 0; i < this.options.robustMaxTries; i++) {
-            var initial = random.logarithmic(model.nComp);
+            var initial = random.logarithmic(this.options.random, model.nComp);
             var cSpec = newtonRaphton(model.model, model.beta, model.cTotal, initial);
             if (cSpec) {
                 return this._processResult(cSpec);
