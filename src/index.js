@@ -253,8 +253,8 @@ function checkLabels(arr, labels) {
 
 function checkComponents(comp) {
     for(var i=0; i<comp.length; i++) {
-        if(!comp[i].total && !comp[i].atEquilibrium) {
-            throw new Error('Component should have total or atEquilibrium')
+        if(typeof comp[i].total !== 'number' && typeof comp[i].atEquilibrium !== 'number') {
+            throw new Error('Component should have a property total or atEquilibrium that is a number');
         }
     }
 }
