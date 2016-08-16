@@ -15,7 +15,7 @@ function newtonRaphton(model, beta, cTotal, c) {
 
     // Prevent numerical difficulties
     for (var i = 0; i < cTotal.length; i++) {
-        if (cTotal[i] === 0) cTotal = 1e-15;
+        if (cTotal[i] === 0) cTotal[i] = 1e-15;
     }
 
     c = new Matrix([c]);
