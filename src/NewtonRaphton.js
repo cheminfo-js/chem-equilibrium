@@ -31,7 +31,9 @@ function newtonRaphton(model, beta, cTotal, c) {
         var d = Matrix.subtract([cTotal], cTotCalc);
 
         // console.log('d', d);
-        if (checkEpsilon(d[0])) return cSpec.to1DArray();
+        if (checkEpsilon(d[0])) {
+            return cSpec.to1DArray();
+        }
 
 
         var Jstar = new Matrix(ncomp, ncomp).fill(0);
@@ -55,7 +57,7 @@ function newtonRaphton(model, beta, cTotal, c) {
         while (checkNeg(c[0])) {
             deltaC = deltaC.multiply(0.5);
             c.subtract(deltaC);
-            if (checkEpsilon(deltaC)) break;
+            if (checkEpsilon(deltaC[0])) break;
         }
 
     }
@@ -71,7 +73,7 @@ module.exports = newtonRaphton;
 
 function checkEpsilon(arr) {
     return !arr.some(function (el) {
-        return Math.abs(el) > 1e-15
+        return Math.abs(el) >= 1e-15
     });
 }
 
