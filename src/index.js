@@ -214,8 +214,8 @@ class Equilibrium {
             specSolidLabels,
             specSolutionLabels,
             nFixed: nComp - matrix.rows,
-            solidModel: solidMatrix,
-            solidBeta: solidBeta
+            solidModel: solidMatrix.to2DArray(),
+            solidBeta: solidBeta.to1DArray()
         };
     }
 
