@@ -111,7 +111,7 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC) {
             // console.log('final solution concentrations',c);
             // console.log('final solid concentrations', solidC);
             console.log(`solution converged in ${i} iterations`);
-            return cSpec.to1DArray().concat(solidC.to1DArray());
+            return cSpec.to1DArray().concat(solidC.to1DArray ? solidC.to1DArray() : solidC);
         }
 
 
@@ -177,7 +177,7 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC) {
         return null;
     }
     // console.log('insoluble indices', solidIndices);
-    return cSpec.to1DArray().concat(solidC.to1DArray());
+    return cSpec.to1DArray().concat(solidC.to1DArray ? solidC.to1DArray() : solidC);
 
 }
 

@@ -5,4 +5,12 @@ var newtonRaphton = require('../../src/NewtonRaphton');
 //  1: Ag+ -> Ag+,  beta = 1
 //  2: Ag+ + Cl- -> AgCl, ksp=1.77e-10
 
-newtonRaphton([[1,0],[0,1]], [1, 1], [0.1, 0.1], [0.1, 0.1], [[1],[1]], [1.77e-10], [0]);
+var model = [[1,0],[0,1]];
+var beta = [1, 1];
+var cTotal = [1, 1];
+var c = [0.1, 0.1];
+var solidModel = [[1],[1]];
+var solidBeta = [1.77e-10];
+var cSolid = [0];
+var spec = newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, cSolid);
+console.log(spec);

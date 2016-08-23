@@ -242,10 +242,12 @@ class Equilibrium {
     solveRobust() {
         var model = this._model;
         for (var i = 0; i < this.options.robustMaxTries; i++) {
+            console.log(model.specSolidLabels)
             var initial = {
                 components: random.logarithmic(this.options.random, model.compLabels.length),
                 solids: random.logarithmic(this.options.random, model.specSolidLabels.length)
             };
+            console.log(model.model, model.beta, model.cTotal, initial.components, model.solidModel, model.solidBeta, initial.solids);
             var cSpec = newtonRaphton(model.model, model.beta, model.cTotal, initial.components, model.solidModel, model.solidBeta, initial.solids);
             if (cSpec) {
                 return this._processResult(cSpec);

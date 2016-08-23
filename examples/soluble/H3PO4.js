@@ -4,7 +4,7 @@ var Equilibrium = require('../../src/index');
 
 var equilibriumModel = {
     "components": [
-        {"label": "H+", atEquilibrium: Math.pow(10, -12.32)},
+        {"label": "H+", atEquilibrium: 1},
         {"label": "PO4---", "total": 1}
     ],
     "formedSpecies": [
