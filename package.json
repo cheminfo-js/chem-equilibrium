@@ -27,6 +27,7 @@
     "superagent": "^2.2.0"
   },
   "dependencies": {
+    "lodash.groupby": "^4.6.0",
     "ml-matrix": "^2.0.0",
     "ml-stat": "^1.2.0",
     "papaparse": "^4.1.2"

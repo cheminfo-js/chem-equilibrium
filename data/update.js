@@ -16,18 +16,17 @@ superagent.get('https://googledocs.cheminfo.org/spreadsheets/d/1VjfiuDtJUqxdfyFr
         return d.type === 'acidity' && d.B === 'H+' && d.pk !== undefined;
     });
     appendSpecies(acidity);
-    console.log(data)
     fs.writeFileSync(path.join(__dirname, 'data.json'), JSON.stringify(data));
 }).catch(function(err) {
     console.log(err);
+    process.exit(1);
 });
 
 
-function appendSpecies(pkas) {
+function appendSpecies(reactions) {
     var links={};
-    debugger;
     // we add the children
-    for (var line of pkas) {
+    for (var line of reactions) {
         links[line.AB] = {
             child: {
                 entity:line.A,
@@ -54,8 +53,12 @@ function appendSpecies(pkas) {
     }
     // we give the species and number of times it is there
 
-    pkas.forEach(function(pka) {
-        pka.deprotonated=links[pka.AB].deprotonated
+    reactions.forEach(function(reaction) {
+        reaction.protons = links[reaction.AB].deprotonated.protons;
+        reaction.pka = reaction.pk;
+        reaction.deprotonated = links[reaction.AB].deprotonated.label;
+        reaction.totalPk = links[reaction.AB].deprotonated.pk;
+        reaction.totalPka = reaction.totalPk;
     });
 
     return links;
