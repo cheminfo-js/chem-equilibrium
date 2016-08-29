@@ -1,6 +1,6 @@
 'use strict';
 
-var Equilibrium = require('../../src/index');
+var Equilibrium = require('../../src/Equilibrium');
 
 var equilibriumModel = {
     "components": [
