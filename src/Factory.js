@@ -11,6 +11,23 @@ class Helper {
         this._hasChanged = true;
     }
 
+    static getSpecieLabels(type) {
+        var labels = new Set();
+        var keys = Object.keys(equations);
+        for(var i=0; i<keys.length; i++) {
+            var eq = equations[keys[i]];
+            if(!type || eq.type === type) {
+                labels.add(keys[i]);
+                for(let key in eq.components) {
+                    labels.add(key);
+                }
+            }
+        }
+        return Array.from(labels);
+    }
+
+
+
     addSpecie(label, total) {
         var eq = equations[label];
         if (eq) {

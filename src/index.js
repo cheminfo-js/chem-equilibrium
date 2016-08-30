@@ -4,3 +4,5 @@ var Equilibrium = require('./Equilibrium');
 var Factory = require('./Factory');
 
 Equilibrium.Factory = Factory;
+
+module.exports = Equilibrium;
