@@ -79,7 +79,8 @@ class Helper {
         var model = {};
 
         this._getEquations();
-        var {_equations: equations, _solidEquations: solidEquations} = this;
+        var equations = this._equations;
+        var solidEquations = this._solidEquations;
 
         function addEquations(equations, modelEq, solid) {
             var keys = Object.keys(equations);
