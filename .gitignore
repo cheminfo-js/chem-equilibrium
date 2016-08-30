@@ -1,6 +1,3 @@
-#build director
-dist
-
 # Logs
 logs
 *.log
