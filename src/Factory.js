@@ -87,6 +87,34 @@ class Helper {
         // is disrupted if a component does not appear in any equation
     }
 
+    getEquations() {
+        this._getEquations();
+        var equations = [];
+        function addEquations(eq, solid) {
+            var keys = Object.keys(eq);
+            for(var i=0; i<keys.length; i++) {
+                var key = keys[i];
+                equations.push({
+                    label: key,
+                    components: []
+                });
+                var idx = equations.length -1;
+                if(solid) equations[idx].solid = true;
+                var ks = Object.keys(eq[key].components);
+                for(var j=0; j<ks.length; j++) {
+                    var k = ks[j];
+                    equations[idx].components.push({
+                        label: ks[j],
+                        n: eq[key].components[k]
+                    });
+                }
+            }
+        }
+        addEquations(this._equations);
+        addEquations(this._solidEquations);
+        return equations;
+    }
+
     getModel() {
         var that = this;
         var nbComponents = this.components.length;
@@ -141,35 +169,6 @@ class Helper {
         for (var i = 0; i < this.components.length; i++) {
             model.components[i] = Object.assign({}, this.components[i]);
         }
-        //
-        // // Model formed species
-        // model.formedSpecies = [{
-        //     label: 'OH-',
-        //     beta: Math.pow(10, -14),
-        //     components: new Array(nbComponents).fill(0)
-        // }];
-        //
-        // model.formedSpecies[0].components[protonIndex] = -1;
-        //
-        //
-        // for (var i = 0; i < this.components.length; i++) {
-        //     if (i === protonIndex) continue;
-        //     var group = groupedAcidBase[this.components[i].label];
-        //     if (group) {
-        //         for (var j = 0; j < group.length; j++) {
-        //             var el = group[j];
-        //             model.formedSpecies.push({
-        //                 label: String(el.AB),
-        //                 beta: Math.pow(10, Number(el.totalPka)),
-        //                 components: new Array(nbComponents).fill(0)
-        //             });
-        //             model.formedSpecies[model.formedSpecies.length - 1].components[i] = 1;
-        //             model.formedSpecies[model.formedSpecies.length - 1].components[protonIndex] = Number(el.protons);
-        //         }
-        //     } else {
-        //         console.warn('doing nothing with component');
-        //     }
-        // }
 
         return model;
     }

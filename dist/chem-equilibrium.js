@@ -80,7 +80,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	var defaultOptions = {
 	    robustMaxTries: 15,
 	    volume: 1,
-	    random: Math.random
+	    random: Math.random,
+	    autoInitial: true
 	};
 
 	/**
@@ -330,7 +331,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var model = this._model;
 	            var initial = this._getInitial();
 	            var cSpec = newtonRaphton(model.model, model.beta, model.cTotal, initial.components, model.solidModel, model.solidBeta, initial.solids);
-	            return this._processResult(cSpec);
+	            var result = this._processResult(cSpec);
+	            if (this.options.autoInitial) this.setInitial(result);
+	            return result;
 	        }
 
 	        /**
@@ -1573,7 +1576,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        mmul(other) {
 	            other = this.constructor.checkMatrix(other);
 	            if (this.columns !== other.rows)
-	                console.warn('Number of columns of left matrix are not equal to number of rows of right matrix.');
+	                throw new Error('Number of columns of left matrix are not equal to number of rows of right matrix.');
 
 	            var m = this.rows;
 	            var n = this.columns;
