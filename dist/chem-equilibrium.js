@@ -61,6 +61,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	Equilibrium.Factory = Factory;
 
+	module.exports = Equilibrium;
+
 /***/ },
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
@@ -6412,6 +6414,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	                if (_ret === 'continue|loop1') continue loop1;
 	            }
 	            this._hasChanged = false;
+	        }
+	    }], [{
+	        key: 'getSpecieLabels',
+	        value: function getSpecieLabels(type) {
+	            var labels = new Set();
+	            var keys = Object.keys(equations);
+	            for (var i = 0; i < keys.length; i++) {
+	                var eq = equations[keys[i]];
+	                if (!type || eq.type === type) {
+	                    labels.add(keys[i]);
+	                    for (var key in eq.components) {
+	                        labels.add(key);
+	                    }
+	                }
+	            }
+	            return Array.from(labels);
 	        }
 	    }]);
 
