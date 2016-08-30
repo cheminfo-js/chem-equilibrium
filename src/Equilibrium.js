@@ -6,7 +6,8 @@ const newtonRaphton = require('./NewtonRaphton');
 const defaultOptions = {
     robustMaxTries: 15,
     volume: 1,
-    random: Math.random
+    random: Math.random,
+    autoInitial: true
 };
 
 /**
@@ -229,7 +230,9 @@ class Equilibrium {
         var model = this._model;
         var initial = this._getInitial();
         var cSpec = newtonRaphton(model.model, model.beta, model.cTotal, initial.components, model.solidModel, model.solidBeta, initial.solids);
-        return this._processResult(cSpec);
+        var result = this._processResult(cSpec);
+        if(this.options.autoInitial) this.setInitial(result);
+        return result;
     }
 
     /**
