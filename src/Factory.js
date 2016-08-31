@@ -77,6 +77,10 @@ class Helper {
         return new Equilibrium(this.getModel(), this.options);
     }
 
+    getComponents() {
+        return this.components;
+    }
+
     ignoreEquation(label) {
         // Update equations
         this._getEquations();
