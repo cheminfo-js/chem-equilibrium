@@ -2,6 +2,14 @@
 const Factory = require('../src/Factory');
 
 describe('Factory', function () {
+    it('in water, it should create acid/base model just by adding one component', function () {
+        var factory = new Factory();
+        factory.addSpecie('CH3COO-', 1);
+        var model = factory.getModel();
+        model.components.should.have.length(2);
+        model.formedSpecies.should.have.length(2);
+    });
+
     it('should create acid/base model', function () {
         var factory = new Factory();
         factory.addSpecie('CO3--', 1);
@@ -34,8 +42,8 @@ describe('Factory', function () {
         });
     });
 
-    it('should create a precipitation model', function () {
-        var factory = new Factory();
+    it('should create a very simple precipitation model (in DMSO)', function () {
+        var factory = new Factory({solvent: 'DMSO'});
         factory.addSpecie('AgCl', 1);
         var model = factory.getModel();
         model.components.length.should.equal(2);
@@ -53,24 +61,6 @@ describe('Factory', function () {
             label: 'AgCl2-',
             beta: Math.pow(10, 5.26),
             components: getExpectedComponents(['Ag+', 1, 'Cl-', 2], model)
-        });
-    });
-
-    it('should ignore an equation in the model', function () {
-        var factory = new Factory();
-        factory.addSpecie('AgCl', 1);
-        factory.ignoreEquation('AgCl2-');
-        var model = factory.getModel();
-        model.components.length.should.equal(2);
-        // A complex and a precipitate are formed
-        model.formedSpecies.length.should.equal(1);
-        getComponent('Ag+', model).should.deepEqual({label: 'Ag+', total: 1});
-        getComponent('Cl-', model).should.deepEqual({label: 'Cl-', total: 1});
-        getFormedSpecie('AgCl', model).should.deepEqual({
-            label: 'AgCl',
-            beta: Math.pow(10, 9.74),
-            components: getExpectedComponents(['Ag+', 1, 'Cl-', 1], model),
-            solid: true
         });
     });
 });

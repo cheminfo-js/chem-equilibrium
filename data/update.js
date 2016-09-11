@@ -38,13 +38,27 @@ superagent.get('https://googledocs.cheminfo.org/spreadsheets/d/1VjfiuDtJUqxdfyFr
     var precipitation = data.filter(function(d) {
         return d.type === 'precipitation' && d.pk !== undefined;
     });
-    var equations = Object.assign(getEquationsAcidity(acidity), getEquationsComplexation(complex), getEquationsPrecipitation(precipitation));
+    var equations = Object.assign(getEquations(acidity, 'acidoBasic'), getEquations(complex, 'complexation'), getEquations(precipitation, 'precipitation'));
     fs.writeFileSync(path.join(__dirname, 'data.json'), JSON.stringify(equations));
 }).catch(function (err) {
     console.log(err);
     process.exit(1);
 });
 
+function getEquations(eq, type) {
+    var equations = {};
+    for(var s of eq) {
+        equations[s.AB] = {
+            components: {
+                [s.sA]: s.nA,
+                [s.sB]: s.nB
+            },
+            pK: s.pk,
+            type: type
+        }
+    }
+    return equations;
+}
 
 function getEquationsPrecipitation(precipitation) {
     var equations = {};

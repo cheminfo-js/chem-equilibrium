@@ -1,14 +1,20 @@
 'use strict';
 
-const equations = require('../data/data.json');
+const chemistEquations = require('../data/data.json');
+var equations = processChemist(chemistEquations);
 const allComponents = getComponentList(equations);
 const Equilibrium = require('./Equilibrium');
+const defaultOptions = {
+    solvent: 'H2O'
+};
 
-class Helper {
-    constructor() {
+class Factory {
+    constructor(options) {
+        options = Object.assign({}, defaultOptions, options);
         this.components = [];
         this.options = {};
         this._hasChanged = true;
+        this._setSolvent(options.solvent);
     }
 
     static getSpecieLabels(type) {
@@ -27,25 +33,30 @@ class Helper {
     }
 
 
+    _setSolvent(solvent) {
+        this.solvent = solvent;
+        this._solventEquations();
+        // de facto add components linked to solvent
+        this.addSpecie(this.solvent);
+    }
 
     addSpecie(label, total) {
-        var eq = equations[label];
+        if(label === this.solvent) {
+            total = 0;
+        }
+        var eq = this.solventEquations[label] || equations[label];
         if (eq) {
             for (var key in eq.components) {
                 this._addComponent(key, total * eq.components[key]);
             }
-        } else if (allComponents.indexOf(label) >= 0 || label === 'OH-') {
+        } else if (allComponents.indexOf(label) >= 0) {
             this._addComponent(label, total);
-        } else {
+        } else if(label !== this.solvent){
             throw new Error('Specie not found');
         }
     }
 
     _addComponent(label, total) {
-        if (label === 'OH-') {
-            label = 'H+';
-            total = -total;
-        }
         if (!total) total = 0;
         var comp = this.components.find(c => c.label === label);
         if (comp) comp.total += total;
@@ -55,6 +66,48 @@ class Helper {
                 label, total
             });
         }
+    }
+
+    _solventEquations() {
+        var solvent = {};
+        var keys = Object.keys(equations);
+        for(var i=0; i<keys.length; i++) {
+            var key = keys[i];
+
+            var comp = equations[key].components;
+            var compKeys = Object.keys(comp);
+            if(key === this.solvent) {
+                solvent[key] = {
+                    formed: compKeys[compKeys.length-1],
+                    components: {},
+                    pK: -equations[key].pK
+                };
+                for(let j=0; j<compKeys.length-1; j++) {
+                    let compKey = compKeys[j];
+                    solvent[key].components[compKey] = -equations[key].components[compKey];
+                }
+                // check for repercussions on other equations
+                replaceComponent(key, solvent);
+                // alias
+                solvent[solvent[key].formed] = solvent[key];
+
+            } else {
+                for(let j=0; j<compKeys.length; j++) {
+                    let compKey = compKeys[i];
+                    if(equations[key].components[compKey] === this.solvent) {
+                        solvent[key] = {
+                            components: Object.assign(equations[key].components),
+                            pK: equations[key].pK
+                        };
+                        // Remove solvent from equation
+                        delete solvent[key].components[compKey];
+                    }
+                }
+            }
+
+        }
+        this.solventEquations = solvent;
+        return solvent;
     }
 
     setTotal(componentLabel, total) {
@@ -81,50 +134,51 @@ class Helper {
         return this.components;
     }
 
-    ignoreEquation(label) {
-        // Update equations
+    getEquations(type) {
+        var that = this;
+        type = type || 'chemist';
         this._getEquations();
-        delete this._equations[label];
-        delete this._solidEquations[label];
-
-        // TODO: check if it disrupted the model
-        // is disrupted if a component does not appear in any equation
-    }
-
-    getEquations() {
-        this._getEquations();
-        var equations = [];
+        var result = [];
         function addEquations(eq, solid) {
             var keys = Object.keys(eq);
             for(var i=0; i<keys.length; i++) {
                 var key = keys[i];
-                equations.push({
-                    label: key,
+                var label, currentEq;
+                if(type === 'decomposed') {
+                    label = key;
+                    currentEq = equations[key];
+                } else if(type === 'decomposed-solvent') {
+                    label = that.solventEquations[key] && that.solventEquations[key].formed || key;
+                    currentEq = that.solventEquations[key] || eq[key];
+                } else if(type === 'chemist') {
+                    label = key;
+                    currentEq = chemistEquations[key];
+                }
+                result.push({
+                    label: label,
                     components: []
                 });
-                var idx = equations.length -1;
-                if(solid) equations[idx].solid = true;
-                var ks = Object.keys(eq[key].components);
+                var idx = result.length - 1;
+                if(solid) result[idx].solid = true;
+
+                var ks = Object.keys(currentEq.components);
                 for(var j=0; j<ks.length; j++) {
                     var k = ks[j];
-                    equations[idx].components.push({
+                    result[idx].components.push({
                         label: ks[j],
-                        n: eq[key].components[k]
+                        n: currentEq.components[k]
                     });
                 }
             }
         }
         addEquations(this._equations);
-        addEquations(this._solidEquations);
-        return equations;
+        addEquations(this._solidEquations, true);
+        return result;
     }
 
     getModel() {
         var that = this;
         var nbComponents = this.components.length;
-
-        var protonIndex = this.components.findIndex(c => c.label === 'H+');
-
         var model = {};
 
         this._getEquations();
@@ -137,9 +191,9 @@ class Helper {
                 var key = keys[i];
                 var equation = equations[key];
                 var eq = {
-                    label: keys[i],
+                    label: that.solventEquations[key] && that.solventEquations[key].formed || key,
                     beta: Math.pow(10, equation.pK),
-                    components: new Array(that.components.length).fill(0),
+                    components: new Array(that.components.length).fill(0)
                 };
                 if (solid) eq.solid = true;
                 modelEq.push(eq);
@@ -157,15 +211,6 @@ class Helper {
         addEquations(equations, model.formedSpecies);
         addEquations(solidEquations, model.formedSpecies, true);
 
-
-        if (protonIndex >= 0) {
-            model.formedSpecies.push({
-                label: 'OH-',
-                beta: Math.pow(10, -14),
-                components: new Array(this.components.length).fill(0)
-            });
-            model.formedSpecies[model.formedSpecies.length - 1].components[protonIndex] = -1;
-        }
 
 
         // Model components
@@ -196,7 +241,9 @@ class Helper {
         var keys = Object.keys(equations);
         loop1: for (var i = 0; i < keys.length; i++) {
             var key = keys[i];
-            var eq = equations[key];
+            var eq = this.solventEquations[key] || equations[key];
+            var productLabel = eq.formed || key;
+            //if(eq.formed) key = eq.formed;
             let compKeys = Object.keys(eq.components);
             for (var j = 0; j < compKeys.length; j++) {
                 if (!this.components.find(c => c.label === compKeys[j])) {
@@ -213,7 +260,7 @@ class Helper {
     }
 }
 
-module.exports = Helper;
+module.exports = Factory;
 
 function getComponentList(equations) {
     var list = new Set();
@@ -227,4 +274,77 @@ function getComponentList(equations) {
         }
     }
     return Array.from(list);
+}
+
+function processChemist(eq) {
+    var equations = {};
+    var links = {};
+    // we add the children
+    for (var key in eq) {
+        if(eq.hasOwnProperty(key)) {
+            var e = eq[key];
+            if(e.type === 'acidoBasic') {
+                links[key] = {
+                    child: {
+                        entity: Object.keys(e.components)[0],
+                        pk: e.pK
+                    }
+                }
+            } else {
+                equations[key] = eq[key];
+            }
+        }
+    }
+
+    // Process acido-basic reactions
+    for (key in links) {
+        var current = links[key];
+        var pk = current.child.pk;
+        var number = 1;
+        var childEntity = current.child.entity;
+        while (links[childEntity]) {
+            number++;
+            pk += links[childEntity].child.pk;
+            childEntity = links[childEntity].child.entity;
+        }
+        current.deprotonated = {
+            label: childEntity,
+            protons: number,
+            pk: pk
+        };
+        equations[key] = {
+            pK: pk,
+            components: {
+                'H+': number,
+                [childEntity]: 1
+            }
+        }
+    }
+
+    return equations;
+}
+
+function replaceComponent(key, eq) {
+    var formed = eq[key].formed;
+    if(!formed) return;
+    var keys = Object.keys(equations);
+    for(var i=0; i<keys.length; i++) {
+        if(keys[i] === key) continue;
+        var compKeys = Object.keys(equations[keys[i]].components);
+        for(var j=0; j<compKeys.length; j++) {
+            var compKey = compKeys[j];
+            if(compKey === formed) {
+                var newEq = eq[keys[i]] = eq[keys[i]] || {formed:keys[i], pK: equations[keys[i]].pK, components: Object.assign({}, equations[keys[i]].components)};
+                var n = equations[keys[i]].components[compKey];
+                for(var k in eq[key].components) {
+                    if(newEq.components[k]) {
+                        newEq.components[k] += n * eq[key].components[k];
+                    } else {
+                        newEq.components[k] = n * eq[key].components[k];
+                    }
+                }
+                delete newEq.components[formed];
+            }
+        }
+    }
 }
