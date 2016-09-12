@@ -317,7 +317,8 @@ function processChemist(eq) {
             components: {
                 'H+': number,
                 [childEntity]: 1
-            }
+            },
+            type: eq[key].type
         }
     }
 
