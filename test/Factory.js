@@ -37,7 +37,7 @@ describe('Factory', function () {
 
         getFormedSpecie('OH-', model).should.deepEqual({
             label: 'OH-',
-            beta: Math.pow(10, -14),
+            beta: Math.pow(10, 14),
             components: getExpectedComponents(['H+', -1], model)
         });
     });
