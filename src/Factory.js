@@ -192,7 +192,7 @@ class Factory {
                 var equation = equations[key];
                 var eq = {
                     label: that.solventEquations[key] && that.solventEquations[key].formed || key,
-                    beta: Math.pow(10, equation.pK),
+                    beta: equations[key].type === 'precipitation' ? Math.pow(10, -equation.pK) : Math.pow(10, equation.pK),
                     components: new Array(that.components.length).fill(0)
                 };
                 if (solid) eq.solid = true;
