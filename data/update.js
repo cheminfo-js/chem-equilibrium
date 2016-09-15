@@ -39,7 +39,7 @@ superagent.get('https://googledocs.cheminfo.org/spreadsheets/d/1VjfiuDtJUqxdfyFr
         return d.type === 'precipitation' && d.pk !== undefined;
     });
     var equations = Object.assign(getEquations(acidity, 'acidoBasic'), getEquations(complex, 'complexation'), getEquations(precipitation, 'precipitation'));
-    fs.writeFileSync(path.join(__dirname, 'data.json'), JSON.stringify(equations));
+    fs.writeFileSync(path.join(__dirname, 'data.json'), JSON.stringify(equations, null, '\t'));
 }).catch(function (err) {
     console.log(err);
     process.exit(1);
