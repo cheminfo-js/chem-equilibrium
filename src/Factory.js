@@ -20,11 +20,11 @@ class Factory {
     static getSpecieLabels(type) {
         var labels = new Set();
         var keys = Object.keys(equations);
-        for(var i=0; i<keys.length; i++) {
+        for (var i = 0; i < keys.length; i++) {
             var eq = equations[keys[i]];
-            if(!type || eq.type === type) {
+            if (!type || eq.type === type) {
                 labels.add(keys[i]);
-                for(let key in eq.components) {
+                for (let key in eq.components) {
                     labels.add(key);
                 }
             }
@@ -41,7 +41,7 @@ class Factory {
     }
 
     addSpecie(label, total) {
-        if(label === this.solvent) {
+        if (label === this.solvent) {
             total = 0;
         }
         var eq = this.solventEquations[label] || equations[label];
@@ -51,7 +51,7 @@ class Factory {
             }
         } else if (allComponents.indexOf(label) >= 0) {
             this._addComponent(label, total);
-        } else if(label !== this.solvent){
+        } else if (label !== this.solvent) {
             throw new Error('Specie not found');
         }
     }
@@ -71,18 +71,19 @@ class Factory {
     _solventEquations() {
         var solvent = {};
         var keys = Object.keys(equations);
-        for(var i=0; i<keys.length; i++) {
+        for (var i = 0; i < keys.length; i++) {
             var key = keys[i];
 
             var comp = equations[key].components;
             var compKeys = Object.keys(comp);
-            if(key === this.solvent) {
+            if (key === this.solvent) {
                 solvent[key] = {
-                    formed: compKeys[compKeys.length-1],
+                    formed: compKeys[compKeys.length - 1],
                     components: {},
-                    pK: -equations[key].pK
+                    pK: -equations[key].pK,
+                    type: equations[key].type
                 };
-                for(let j=0; j<compKeys.length-1; j++) {
+                for (let j = 0; j < compKeys.length - 1; j++) {
                     let compKey = compKeys[j];
                     solvent[key].components[compKey] = -equations[key].components[compKey];
                 }
@@ -92,9 +93,9 @@ class Factory {
                 solvent[solvent[key].formed] = solvent[key];
 
             } else {
-                for(let j=0; j<compKeys.length; j++) {
+                for (let j = 0; j < compKeys.length; j++) {
                     let compKey = compKeys[i];
-                    if(equations[key].components[compKey] === this.solvent) {
+                    if (equations[key].components[compKey] === this.solvent) {
                         solvent[key] = {
                             components: Object.assign(equations[key].components),
                             pK: equations[key].pK
@@ -139,18 +140,19 @@ class Factory {
         type = type || 'chemist';
         this._getEquations();
         var result = [];
+
         function addEquations(eq, solid) {
             var keys = Object.keys(eq);
-            for(var i=0; i<keys.length; i++) {
+            for (var i = 0; i < keys.length; i++) {
                 var key = keys[i];
                 var label, currentEq;
-                if(type === 'decomposed') {
+                if (type === 'decomposed') {
                     label = key;
                     currentEq = equations[key];
-                } else if(type === 'decomposed-solvent') {
+                } else if (type === 'decomposed-solvent') {
                     label = that.solventEquations[key] && that.solventEquations[key].formed || key;
                     currentEq = that.solventEquations[key] || eq[key];
-                } else if(type === 'chemist') {
+                } else if (type === 'chemist') {
                     label = key;
                     currentEq = chemistEquations[key];
                 }
@@ -159,10 +161,10 @@ class Factory {
                     components: []
                 });
                 var idx = result.length - 1;
-                if(solid) result[idx].solid = true;
+                if (solid) result[idx].solid = true;
 
                 var ks = Object.keys(currentEq.components);
-                for(var j=0; j<ks.length; j++) {
+                for (var j = 0; j < ks.length; j++) {
                     var k = ks[j];
                     result[idx].components.push({
                         label: ks[j],
@@ -171,6 +173,7 @@ class Factory {
                 }
             }
         }
+
         addEquations(this._equations);
         addEquations(this._solidEquations, true);
         return result;
@@ -210,7 +213,6 @@ class Factory {
         model.formedSpecies = [];
         addEquations(equations, model.formedSpecies);
         addEquations(solidEquations, model.formedSpecies, true);
-
 
 
         // Model components
@@ -281,9 +283,9 @@ function processChemist(eq) {
     var links = {};
     // we add the children
     for (var key in eq) {
-        if(eq.hasOwnProperty(key)) {
+        if (eq.hasOwnProperty(key)) {
             var e = eq[key];
-            if(e.type === 'acidoBasic') {
+            if (e.type === 'acidoBasic') {
                 links[key] = {
                     child: {
                         entity: Object.keys(e.components)[0],
@@ -327,18 +329,23 @@ function processChemist(eq) {
 
 function replaceComponent(key, eq) {
     var formed = eq[key].formed;
-    if(!formed) return;
+    if (!formed) return;
     var keys = Object.keys(equations);
-    for(var i=0; i<keys.length; i++) {
-        if(keys[i] === key) continue;
+    for (var i = 0; i < keys.length; i++) {
+        if (keys[i] === key) continue;
         var compKeys = Object.keys(equations[keys[i]].components);
-        for(var j=0; j<compKeys.length; j++) {
+        for (var j = 0; j < compKeys.length; j++) {
             var compKey = compKeys[j];
-            if(compKey === formed) {
-                var newEq = eq[keys[i]] = eq[keys[i]] || {formed:keys[i], pK: equations[keys[i]].pK, components: Object.assign({}, equations[keys[i]].components)};
+            if (compKey === formed) {
+                var newEq = eq[keys[i]] = eq[keys[i]] || {
+                        formed: keys[i],
+                        pK: equations[keys[i]].pK,
+                        components: Object.assign({}, equations[keys[i]].components),
+                        type: equations[keys[i]].type
+                    };
                 var n = equations[keys[i]].components[compKey];
-                for(var k in eq[key].components) {
-                    if(newEq.components[k]) {
+                for (var k in eq[key].components) {
+                    if (newEq.components[k]) {
                         newEq.components[k] += n * eq[key].components[k];
                     } else {
                         newEq.components[k] = n * eq[key].components[k];

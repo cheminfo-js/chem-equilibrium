@@ -64,7 +64,7 @@ describe('Factory', function () {
         });
     });
 
-    it.only('should create precipitation model with OH- precipitation', function () {
+    it('should create precipitation model with OH- precipitation', function () {
         var factory = new Factory();
         factory.addSpecie('Ag+', 1);
         var model = factory.getModel();
@@ -75,7 +75,8 @@ describe('Factory', function () {
         getFormedSpecie('AgOH', model).should.deepEqual({
             label: 'AgOH',
             beta: Math.pow(10, -7.72),
-            components: getExpectedComponents(['Ag+', 1, 'H+', -1], model)
+            components: getExpectedComponents(['Ag+', 1, 'H+', -1], model),
+            solid: true
         })
     })
 });
