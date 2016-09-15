@@ -50,10 +50,13 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC) {
             var Ksp = stat.product(c.transpose().repeat(1, nsolid).pow(solidModel), 0);
             Ksp.forEach((k, idx) => {
                 if (k > solidBeta[idx]) {
+                    // The computed solubility product is greater than maximum value
                     solidIndices.push(idx);
                 } else if (solidC[0][idx] > 0) {
+                    // solid concentration is not 0
                     solidIndices.push(idx);
                 } else if (Math.abs(k - solidBeta[idx]) < 1e-15) {
+                    // diff is negative but small, we keep it in the model
                     solidIndices.push(idx);
                 }
             });
