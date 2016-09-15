@@ -16,13 +16,13 @@ superagent.get('https://googledocs.cheminfo.org/spreadsheets/d/1VjfiuDtJUqxdfyFr
     data.forEach(function (d) {
         var reg = /\s*(\d*)\s*(.*)/;
         var m = reg.exec(d.A);
-        d.sA = m[2];
+        d.sA = m[2].trim();
         d.nA = m[1] || 1;
         m = reg.exec(d.B);
-        d.sB = m[2];
+        d.sB = m[2].trim();
         d.nB = m[1] || 1;
         m = reg.exec(d.AB);
-        d.sAB = m[2];
+        d.sAB = m[2].trim();
         d.nAB = m[1] || 1;
         d.nA /= d.nAB;
         d.nB /= d.nAB;
