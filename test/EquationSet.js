@@ -42,19 +42,20 @@ const equations2 = [
     }
 ];
 
-describe.only('EquationSet', function () {
+describe('EquationSet', function () {
     it('should create an equation library (no inter-dependencies)', function () {
         var eqSet = new EquationSet(equations1);
         var norm = eqSet.getNormalized('E');
         norm.size.should.equal(2);
     });
 
-    it.only('should create an equation library (with inter-dependencies', function () {
+    it('should create an equation library (with inter-dependencies', function () {
         var eqSet = new EquationSet(equations2);
         var norm = eqSet.getNormalized('E');
-        norm.forEach(eq => {
-            console.log(eq.pK);
-        })
         norm.size.should.equal(2);
+        var A = norm.get('A', true);
+        var B = norm.get('B', true);
+        A.pK.should.equal(8);
+        B.pK.should.equal(3);
     });
 });

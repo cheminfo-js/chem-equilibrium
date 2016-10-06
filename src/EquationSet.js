@@ -17,7 +17,7 @@ class EquationSet {
 
     addEquation(eq, key) {
         var equation = Equation.create(eq);
-        var key = key || new Buffer(equation.formed).toString('base64');
+        var key = key || getHash(eq.formed);
         if (this.equations.get(key)) {
             throw new Error('Could not add equation, another equation with the same key already exists');
         }
@@ -37,8 +37,14 @@ class EquationSet {
         return this.equations.size;
     }
 
-    get(id) {
-        return this.equations.get(id);
+    get(id, hashIt) {
+        var key;
+        if(hashIt) {
+            key = getHash(id);
+        } else {
+            key = id;
+        }
+        return this.equations.get(key);
     }
 
     keys() {
@@ -189,4 +195,8 @@ function fillRec(equations, eq, eqToFill, n, pK) {
     }
     eqToFill.pK = eqToFill.pK || 0;
     eqToFill.pK += n * eq.pK;
+}
+
+function getHash(id) {
+    return new Buffer(id).toString('base64');
 }
