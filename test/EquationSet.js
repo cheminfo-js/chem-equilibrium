@@ -2,7 +2,7 @@
 
 const EquationSet = require('../src/EquationSet');
 
-var equations1 = [
+const equations1 = [
     {
         formed: 'A',
         components: {
@@ -20,10 +20,34 @@ var equations1 = [
     }
 ];
 
+const equations2 = [
+    {
+        formed: 'A',
+        components: {
+            B: 2
+        },
+        type: 'acidoBasic'
+    },
+    {
+        formed: 'B',
+        components: {
+            C: 1,
+            D: 1
+        },
+        type: 'acidoBasic'
+    }
+];
+
 describe.only('EquationSet', function () {
-    it('should create an equation library', function () {
+    it('should create an equation library (no inter-dependencies)', function () {
         var eqSet = new EquationSet(equations1);
         var norm = eqSet.getNormalized('E');
-        console.log(norm);
+        norm.size.should.equal(2);
+    });
+
+    it.only('should create an equation library (with inter-dependencies', function () {
+        var eqSet = new EquationSet(equations2);
+        var norm = eqSet.getNormalized('E');
+        norm.size.should.equal(2);
     });
 });

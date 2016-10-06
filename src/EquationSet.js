@@ -34,6 +34,10 @@ class EquationSet {
 
     }
 
+    get size() {
+        return this.equations.size;
+    }
+
     get(id) {
         return this.equations.get(id);
     }
@@ -96,7 +100,7 @@ module.exports = EquationSet;
 
 function normalize(equations) {
     var N = equations.length;
-    var newEquations = new Array(N);
+    var newEquations = new Array(N).fill(0);
     var needs = new Array(N);
 
     // First, find the independent equations
@@ -114,7 +118,7 @@ function normalize(equations) {
     }
 
     var iter = 0;
-    while (iter < 10) {
+    while (!allDefined(newEquations) && iter < 10) {
         for (var i = 0; i < N; i++) {
             if (!newEquations[i]) {
                 if (allDefined(newEquations, needs[i])) {
@@ -124,11 +128,13 @@ function normalize(equations) {
         }
         iter++;
     }
+    if (!allDefined(newEquations)) {
+        throw new Error('something went wrong');
+    }
     return newEquations;
 }
 
 function isIndependent(equations, idx) {
-    console.log(equations, equations.length)
     var keys = Object.keys(equations[idx].components);
     for (var i = 0; i < keys.length; i++) {
         var key = keys[i];
@@ -141,11 +147,42 @@ function isIndependent(equations, idx) {
 }
 
 function allDefined(arr, idx) {
-    return !idx.any(function (idx) {
-        return arr[idx];
-    });
+    if (idx !== undefined) {
+        return !idx.some(function (idx) {
+            return !arr[idx];
+        });
+    } else {
+        return !arr.some(function (el) {
+            return el === 0;
+        });
+    }
 }
 
-function fillLine() {
-    return {};
+function fillLine(equations, newEquations, i) {
+    var eq = equations[i];
+    var newEq = {
+        type: eq.type,
+        formed: eq.formed,
+        components: {}
+    };
+    fillRec(equations, eq, newEq, 1);
+
+    newEquations[i] = newEq;
+}
+
+function fillRec(equations, eq, eqToFill, n) {
+    var componentsToFill = eqToFill.components;
+    var components = eq.components;
+    var keys = Object.keys(components);
+    for (let j = 0; j < keys.length; j++) {
+        var key = keys[j];
+        let nn = n * components[key];
+        var rep = equations.find(eq => eq.formed === keys[j]);
+        if (!rep) {
+            componentsToFill[keys[j]] = componentsToFill[keys[j]] || 0;
+            componentsToFill[keys[j]] += nn * eq.components[keys[j]];
+        } else {
+            fillRec(equations, rep, eqToFill, nn);
+        }
+    }
 }
