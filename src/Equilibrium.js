@@ -4,7 +4,7 @@ const random = require('./util/random');
 const newtonRaphton = require('./NewtonRaphton');
 
 const defaultOptions = {
-    robustMaxTries: 15,
+    robustMaxTries: 1000,
     volume: 1,
     random: Math.random,
     autoInitial: true
