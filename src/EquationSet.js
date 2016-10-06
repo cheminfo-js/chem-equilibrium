@@ -9,7 +9,6 @@ class EquationSet {
         for (var i = 0; i < equations.length; i++) {
             this.addEquation(equations[i]);
         }
-
     }
 
     [Symbol.iterator]() {
@@ -50,13 +49,16 @@ class EquationSet {
         return this.equations.entries();
     }
 
+    forEach() {
+        return this.equations.forEach.apply(this.equations, arguments);
+    }
+
 
     getNormalized(solvent) {
         var norm = new Array(this.equations.size);
         var keys = new Array(this.equations.size);
         var idx = 0;
         for (const [key, entry] of this.entries()) {
-            console.log(key, entry);
             norm[idx] = entry.withSolvent(solvent);
             keys[idx] = key;
             idx++;
@@ -170,7 +172,7 @@ function fillLine(equations, newEquations, i) {
     newEquations[i] = newEq;
 }
 
-function fillRec(equations, eq, eqToFill, n) {
+function fillRec(equations, eq, eqToFill, n, pK) {
     var componentsToFill = eqToFill.components;
     var components = eq.components;
     var keys = Object.keys(components);
@@ -185,4 +187,6 @@ function fillRec(equations, eq, eqToFill, n) {
             fillRec(equations, rep, eqToFill, nn);
         }
     }
+    eqToFill.pK = eqToFill.pK || 0;
+    eqToFill.pK += n * eq.pK;
 }

@@ -5,7 +5,8 @@ const types = ['acidoBasic', 'precipitation', 'complexation'];
 class Equation {
     constructor(eq) {
         // Sanity checks
-        if (!eq.formed || typeof eq.formed !== 'string') throw new Error('equation expects a property "formed"');
+        if (typeof eq.formed !== 'string') throw new Error('equation expects a property "formed" that is a string');
+        if(typeof eq.pK !== 'number') throw new Error('equation expects a property "pK" that is a number');
         if (types.indexOf(eq.type) === -1) throw new Error('Unexpected type');
         if(Object.prototype.toString.call(eq.components) !== '[object Object]') throw new Error('Unexpected components');
         if(Object.keys(eq.components).length < 1) throw new Error('Components is expected to have at least one key');

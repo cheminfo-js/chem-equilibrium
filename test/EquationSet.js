@@ -8,7 +8,8 @@ const equations1 = [
         components: {
             B: -1
         },
-        type: 'acidoBasic'
+        type: 'acidoBasic',
+        pK: 1
     },
     {
         formed: 'C',
@@ -16,7 +17,8 @@ const equations1 = [
             D: 2,
             E: 1
         },
-        type: 'acidoBasic'
+        type: 'acidoBasic',
+        pK: 1
     }
 ];
 
@@ -26,7 +28,8 @@ const equations2 = [
         components: {
             B: 2
         },
-        type: 'acidoBasic'
+        type: 'acidoBasic',
+        pK: 2
     },
     {
         formed: 'B',
@@ -34,7 +37,8 @@ const equations2 = [
             C: 1,
             D: 1
         },
-        type: 'acidoBasic'
+        type: 'acidoBasic',
+        pK: 3
     }
 ];
 
@@ -48,6 +52,9 @@ describe.only('EquationSet', function () {
     it.only('should create an equation library (with inter-dependencies', function () {
         var eqSet = new EquationSet(equations2);
         var norm = eqSet.getNormalized('E');
+        norm.forEach(eq => {
+            console.log(eq.pK);
+        })
         norm.size.should.equal(2);
     });
 });
