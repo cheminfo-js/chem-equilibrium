@@ -62,6 +62,16 @@ const equations3 = [
     }
 ];
 
+const equations4 = equations2.slice();
+equations4.push({
+    formed: 'X',
+    components: {
+        Y: 1
+    },
+    pK: 1,
+    type: 'acidoBasic'
+});
+
 describe('EquationSet', function () {
     it('should create and normalize an equation set (no inter-dependencies)', function () {
         var eqSet = new EquationSet(equations1);
@@ -90,7 +100,7 @@ describe('EquationSet', function () {
     });
 
     it('should get a subset of an equation set', function () {
-        var eqSet = new EquationSet(equations2);
+        var eqSet = new EquationSet(equations4);
         var subSet = eqSet.getSubset(['C', 'D']);
         subSet.size.should.equal(2);
     });
