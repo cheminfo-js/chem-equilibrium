@@ -160,6 +160,7 @@ class EquationSet {
 
         model.formedSpecies = subsetArr.map(eq => {
             return {
+                solid: eq.type === 'precipitation',
                 label: eq.formed,
                 beta: Math.pow(10, -eq.pK),
                 components: components.map(key => {
@@ -185,7 +186,9 @@ class EquationSet {
         });
 
         var moreAdded = true;
-        while(moreAdded) {
+        var passes = 0;
+        while(passes <= 10 && moreAdded) {
+            passes++;
             moreAdded = false;
             this.forEach(function(eq) {
                 var hasAll = !Object.keys(eq.components).some(c => !speciesSet.has(c));
@@ -195,6 +198,10 @@ class EquationSet {
                     moreAdded = true;
                 }
             });
+        }
+
+        if(passes === 10) {
+            throw new Error('You might have a circular dependency in your equations');
         }
 
         // Pass along some properties
@@ -241,7 +248,7 @@ function normalize(equations) {
         iter++;
     }
     if (!allDefined(newEquations)) {
-        throw new Error('something went wrong');
+        throw new Error('There may be a circular dependency in the equations');
     }
     return newEquations;
 }

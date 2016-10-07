@@ -1,7 +1,7 @@
 'use strict';
 const Factory = require('../src/Factory');
 
-describe.skip('Factory', function () {
+describe('Factory', function () {
     it('in water, it should create acid/base model just by adding one component', function () {
         var factory = new Factory();
         factory.addSpecie('CH3COO-', 1);
@@ -10,12 +10,13 @@ describe.skip('Factory', function () {
         model.formedSpecies.should.have.length(2);
     });
 
-    it('should create acid/base model', function () {
+    it.only('should create acid/base model', function () {
         var factory = new Factory();
         factory.addSpecie('CO3--', 1);
         factory.addSpecie('HCO3-', 1);
         factory.addSpecie('OH-', 1);
         var model = factory.getModel();
+        console.log(model);
         model.components.length.should.equal(2);
         model.formedSpecies.length.should.equal(3);
 
@@ -26,19 +27,22 @@ describe.skip('Factory', function () {
         getFormedSpecie('H2CO3', model).should.deepEqual({
             label: 'H2CO3',
             beta: Math.pow(10, 10.33 + 6.3),
-            components: getExpectedComponents(['CO3--', 1, 'H+', 2], model)
+            components: getExpectedComponents(['CO3--', 1, 'H+', 2], model),
+            solid: false
         });
 
         getFormedSpecie('HCO3-', model).should.deepEqual({
             label: 'HCO3-',
             beta: Math.pow(10, 10.33),
-            components: getExpectedComponents(['H+', 1, 'CO3--', 1], model)
+            components: getExpectedComponents(['H+', 1, 'CO3--', 1], model),
+            solid: false
         });
 
         getFormedSpecie('OH-', model).should.deepEqual({
             label: 'OH-',
             beta: Math.pow(10, -14),
-            components: getExpectedComponents(['H+', -1], model)
+            components: getExpectedComponents(['H+', -1], model),
+            solid: false
         });
     });
 

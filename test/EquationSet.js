@@ -72,6 +72,24 @@ equations4.push({
     type: 'acidoBasic'
 });
 
+const circularEquations = [
+    {
+        formed: 'A',
+        components: {
+            B: 1
+        },
+        pK:1, type: 'acidoBasic'
+    },
+    {
+        formed: 'B',
+        components: {
+            A:1,
+            C:1
+        },
+        pK:1, type: 'acidoBasic'
+    }
+];
+
 describe('EquationSet', function () {
     it('should create and normalize an equation set (no inter-dependencies)', function () {
         var eqSet = new EquationSet(equations1);
@@ -105,11 +123,16 @@ describe('EquationSet', function () {
         subSet.size.should.equal(2);
     });
 
-    it.only('should get the model given the totals', function () {
+    it('should get the model given the totals', function () {
         var eqSet = new EquationSet(equations2);
         var normSet = eqSet.getNormalized('E');
         var model = normSet.getModel({A: 1});
-        console.log(JSON.stringify(model, null, '\t'));
     });
 
+    it('should throw when normalizing an equations set with a circular dependency', function () {
+        var eqSet = new EquationSet(circularEquations);
+        (function() {
+            eqSet.getNormalized();
+        }).should.throw(/circular/);
+    });
 });
