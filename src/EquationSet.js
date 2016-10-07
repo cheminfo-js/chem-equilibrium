@@ -133,10 +133,8 @@ class EquationSet {
                     totalComp[key] += total;
                 } else {
                     var eq = subsetArr.find(eq => {
-                        console.log(eq.formed);
                         return eq.formed === key
                     });
-                    console.log(key, eq);
                     if(eq) {
                         var keys = Object.keys(eq.components);
                         for(var i=0; i<keys.length; i++) {
@@ -162,7 +160,7 @@ class EquationSet {
             return {
                 solid: eq.type === 'precipitation',
                 label: eq.formed,
-                beta: Math.pow(10, -eq.pK),
+                beta: eq.type === 'precipitation' ? Math.pow(10, -eq.pK) : Math.pow(10, eq.pK),
                 components: components.map(key => {
                     return eq.components[key] || 0
                 })

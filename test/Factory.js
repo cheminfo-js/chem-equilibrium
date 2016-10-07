@@ -10,13 +10,12 @@ describe('Factory', function () {
         model.formedSpecies.should.have.length(2);
     });
 
-    it.only('should create acid/base model', function () {
+    it('should create acid/base model', function () {
         var factory = new Factory();
         factory.addSpecie('CO3--', 1);
         factory.addSpecie('HCO3-', 1);
         factory.addSpecie('OH-', 1);
         var model = factory.getModel();
-        console.log(model);
         model.components.length.should.equal(2);
         model.formedSpecies.length.should.equal(3);
 
@@ -64,7 +63,8 @@ describe('Factory', function () {
         getFormedSpecie('AgCl2-', model).should.deepEqual({
             label: 'AgCl2-',
             beta: Math.pow(10, 5.26),
-            components: getExpectedComponents(['Ag+', 1, 'Cl-', 2], model)
+            components: getExpectedComponents(['Ag+', 1, 'Cl-', 2], model),
+            solid: false
         });
     });
 
