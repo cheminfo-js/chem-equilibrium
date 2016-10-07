@@ -5,6 +5,8 @@ class EquationSet {
     constructor(equations) {
         equations = equations || [];
         this._changed = false;
+        this._normalized = false;
+        this._disabledKeys = new Set();
         this.equations = new Map();
         for (var i = 0; i < equations.length; i++) {
             this.add(equations[i]);
@@ -20,6 +22,7 @@ class EquationSet {
         var key = key || getHash(eq.formed);
         this.equations.set(key, equation);
         this._changed = true;
+        this._normalized = false;
     }
 
     has(eq) {
@@ -31,12 +34,29 @@ class EquationSet {
         return this.equations.has(key);
     }
 
-    disableEquation(eq) {
-
+    get species() {
+        var speciesSet = new Set();
+        this.forEach(eq => {
+            speciesSet.add(eq.formed);
+            Object.keys(eq.components).forEach(c => speciesSet.add(c));
+        });
+        return Array.from(speciesSet);
     }
 
-    enableEquation(eq) {
+    get components() {
+        var speciesSet = new Set();
+        this.forEach(eq => {
+            Object.keys(eq.components).forEach(c => speciesSet.add(c));
+        });
+        return Array.from(speciesSet);
+    }
 
+    disableEquation(key) {
+        this._disabledKeys.add(key);
+    }
+
+    enableEquation(key) {
+        this._disabledKeys.delete(key);
     }
 
     get size() {
@@ -67,6 +87,8 @@ class EquationSet {
 
 
     getNormalized(solvent) {
+        // In a normalized set, formed species can be found in any of the components
+        // of the equation set
         var norm = new Array(this.equations.size);
         var keys = new Array(this.equations.size);
         var idx = 0;
@@ -84,14 +106,13 @@ class EquationSet {
 
         // return a new equation set that has been normalized
         // normalization requires the solvent to be set
+        normSet._normalized = true;
+        normSet._disabledKeys = new Set(this._disabledKeys);
         return normSet;
     }
 
     isNormalized() {
-        // check normalization
-        // An equation set is normalized when no formed species can be found in any of the components
-        // of the equation set
-
+        return this._normalized;
     }
 
     getModel() {
@@ -125,6 +146,10 @@ class EquationSet {
                 }
             });
         }
+
+        // Pass along some properties
+        newSet._disabledKeys = new Set(this._disabledKeys);
+        newSet._normalized = this._normalized;
         return newSet;
     }
 
@@ -203,11 +228,10 @@ function fillLine(equations, newEquations, i) {
         components: {}
     };
     fillRec(equations, eq, newEq, 1);
-
     newEquations[i] = newEq;
 }
 
-function fillRec(equations, eq, eqToFill, n, pK) {
+function fillRec(equations, eq, eqToFill, n) {
     var componentsToFill = eqToFill.components;
     var components = eq.components;
     var keys = Object.keys(components);
