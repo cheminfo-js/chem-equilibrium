@@ -117,18 +117,22 @@ class EquationSet {
         return this._normalized;
     }
 
-    getModel(totals) {
+    getModel(totals, all) {
         if (!this.isNormalized()) {
             throw new Error('Cannot get model from un-normalized equation set');
         }
         var totalComp = {};
-        var subset = this.getSubset(Object.keys(totals));
+        if(all) {
+            var subset = this;
+        } else {
+            subset = this.getSubset(Object.keys(totals));
+        }
         var components = subset.components;
         const subsetArr = [...subset.values()];
         components.forEach(c => totalComp[c] = 0);
         for(var key in totals) {
             if(totals.hasOwnProperty(key)) {
-                var total = totals[key];
+                var total = totals[key] || 0;
                 if(components.indexOf(key) !== -1) {
                     totalComp[key] += total;
                 } else {
@@ -296,7 +300,7 @@ function fillRec(equations, eq, eqToFill, n) {
         var rep = equations.find(eq => eq.formed === keys[j]);
         if (!rep) {
             componentsToFill[keys[j]] = componentsToFill[keys[j]] || 0;
-            componentsToFill[keys[j]] += nn * eq.components[keys[j]];
+            componentsToFill[keys[j]] += nn;
         } else {
             fillRec(equations, rep, eqToFill, nn);
         }

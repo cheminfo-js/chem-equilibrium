@@ -78,7 +78,7 @@ describe('Factory', function () {
         getComponent('H+', model).should.deepEqual({label: 'H+', total: 0});
         getFormedSpecie('AgOH', model).should.deepEqual({
             label: 'AgOH',
-            beta: Math.pow(10, -7.72),
+            beta: Math.pow(10, -7.72 + 14),
             components: getExpectedComponents(['Ag+', 1, 'H+', -1], model),
             solid: true
         })

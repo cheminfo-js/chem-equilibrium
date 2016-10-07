@@ -96,8 +96,9 @@ class Factory {
     }
 
     getModel() {
-        var normSet = this.eqSet.getNormalized(this.options.solvent);
-        return normSet.getModel(this.species);
+        var subSet = this.eqSet.getSubset(Object.keys(this.species));
+        var normSet = subSet.getNormalized(this.options.solvent);
+        return normSet.getModel(this.species, true);
     }
 
 }
