@@ -1,5 +1,6 @@
-{
-	"HIO3": {
+[
+	{
+		"formed": "HIO3",
 		"components": {
 			"IO3-": 1,
 			"H+": 1
@@ -7,7 +8,8 @@
 		"pK": 0.8,
 		"type": "acidoBasic"
 	},
-	"HOCN": {
+	{
+		"formed": "HOCN",
 		"components": {
 			"OCN-": 1,
 			"H+": 1
@@ -15,7 +17,8 @@
 		"pK": 3.48,
 		"type": "acidoBasic"
 	},
-	"HBrO": {
+	{
+		"formed": "HBrO",
 		"components": {
 			"BrO-": 1,
 			"H+": 1
@@ -23,7 +26,8 @@
 		"pK": 8.6,
 		"type": "acidoBasic"
 	},
-	"CH2ClCO2H": {
+	{
+		"formed": "CH2ClCO2H",
 		"components": {
 			"CH2ClCO2-": 1,
 			"H+": 1
@@ -31,7 +35,8 @@
 		"pK": 2.89,
 		"type": "acidoBasic"
 	},
-	"C6H5COOH": {
+	{
+		"formed": "C6H5COOH",
 		"components": {
 			"C6H5COO-": 1,
 			"H+": 1
@@ -39,7 +44,8 @@
 		"pK": 4.2,
 		"type": "acidoBasic"
 	},
-	"C6H5NH3+": {
+	{
+		"formed": "C6H5NH3+",
 		"components": {
 			"C6H5NH2": 1,
 			"H+": 1
@@ -47,7 +53,8 @@
 		"pK": 4.6,
 		"type": "acidoBasic"
 	},
-	"C2H5COOH": {
+	{
+		"formed": "C2H5COOH",
 		"components": {
 			"C2H5COO-": 1,
 			"H+": 1
@@ -55,7 +62,8 @@
 		"pK": 4.87,
 		"type": "acidoBasic"
 	},
-	"C5H5NH+": {
+	{
+		"formed": "C5H5NH+",
 		"components": {
 			"C5H5N": 1,
 			"H+": 1
@@ -63,7 +71,8 @@
 		"pK": 5.25,
 		"type": "acidoBasic"
 	},
-	"CH3NH3+": {
+	{
+		"formed": "CH3NH3+",
 		"components": {
 			"CH3NH2": 1,
 			"H+": 1
@@ -71,7 +80,8 @@
 		"pK": 10.66,
 		"type": "acidoBasic"
 	},
-	"(C2H5)3NH+": {
+	{
+		"formed": "(C2H5)3NH+",
 		"components": {
 			"(C2H5)3N": 1,
 			"H+": 1
@@ -79,7 +89,8 @@
 		"pK": 10.75,
 		"type": "acidoBasic"
 	},
-	"C2H5NH3+": {
+	{
+		"formed": "C2H5NH3+",
 		"components": {
 			"C2H5NH2": 1,
 			"H+": 1
@@ -87,7 +98,8 @@
 		"pK": 10.8,
 		"type": "acidoBasic"
 	},
-	"HClO4": {
+	{
+		"formed": "HClO4",
 		"components": {
 			"ClO4-": 1,
 			"H+": 1
@@ -95,7 +107,8 @@
 		"pK": -7,
 		"type": "acidoBasic"
 	},
-	"HCl": {
+	{
+		"formed": "HCl",
 		"components": {
 			"Cl-": 1,
 			"H+": 1
@@ -103,7 +116,8 @@
 		"pK": -3,
 		"type": "acidoBasic"
 	},
-	"H2SO4": {
+	{
+		"formed": "H2SO4",
 		"components": {
 			"HSO4-": 1,
 			"H+": 1
@@ -111,7 +125,8 @@
 		"pK": -3,
 		"type": "acidoBasic"
 	},
-	"HNO3": {
+	{
+		"formed": "HNO3",
 		"components": {
 			"NO3-": 1,
 			"H+": 1
@@ -119,7 +134,8 @@
 		"pK": -1,
 		"type": "acidoBasic"
 	},
-	"H2SO3": {
+	{
+		"formed": "H2SO3",
 		"components": {
 			"HSO3-": 1,
 			"H+": 1
@@ -127,7 +143,8 @@
 		"pK": 1.8,
 		"type": "acidoBasic"
 	},
-	"HSO4-": {
+	{
+		"formed": "HSO4-",
 		"components": {
 			"SO4--": 1,
 			"H+": 1
@@ -135,7 +152,8 @@
 		"pK": 1.9,
 		"type": "acidoBasic"
 	},
-	"HClO2": {
+	{
+		"formed": "HClO2",
 		"components": {
 			"ClO2-": 1,
 			"H+": 1
@@ -143,7 +161,8 @@
 		"pK": 1.93,
 		"type": "acidoBasic"
 	},
-	"H2PO3": {
+	{
+		"formed": "H2PO3",
 		"components": {
 			"HPO3-": 1,
 			"H+": 1
@@ -151,7 +170,8 @@
 		"pK": 2,
 		"type": "acidoBasic"
 	},
-	"Fe(H2O)6+++": {
+	{
+		"formed": "Fe(H2O)6+++",
 		"components": {
 			"Fe(H2O)5OH++": 1,
 			"H+": 1
@@ -159,7 +179,8 @@
 		"pK": 2.1,
 		"type": "acidoBasic"
 	},
-	"H3PO4": {
+	{
+		"formed": "H3PO4",
 		"components": {
 			"H2PO4-": 1,
 			"H+": 1
@@ -167,7 +188,8 @@
 		"pK": 2.12,
 		"type": "acidoBasic"
 	},
-	"HF": {
+	{
+		"formed": "HF",
 		"components": {
 			"F-": 1,
 			"H+": 1
@@ -175,7 +197,8 @@
 		"pK": 3.2,
 		"type": "acidoBasic"
 	},
-	"HNO2": {
+	{
+		"formed": "HNO2",
 		"components": {
 			"NO2-": 1,
 			"H+": 1
@@ -183,7 +206,8 @@
 		"pK": 3.35,
 		"type": "acidoBasic"
 	},
-	"HCO2H": {
+	{
+		"formed": "HCO2H",
 		"components": {
 			"HCO2-": 1,
 			"H+": 1
@@ -191,7 +215,8 @@
 		"pK": 3.75,
 		"type": "acidoBasic"
 	},
-	"CH3CO2H": {
+	{
+		"formed": "CH3CO2H",
 		"components": {
 			"CH3COO-": 1,
 			"H+": 1
@@ -199,7 +224,8 @@
 		"pK": 4.7,
 		"type": "acidoBasic"
 	},
-	"Al(H2O)6+++": {
+	{
+		"formed": "Al(H2O)6+++",
 		"components": {
 			"Al(H2O)5OH++": 1,
 			"H+": 1
@@ -207,7 +233,8 @@
 		"pK": 4.9,
 		"type": "acidoBasic"
 	},
-	"H2CO3": {
+	{
+		"formed": "H2CO3",
 		"components": {
 			"HCO3-": 1,
 			"H+": 1
@@ -215,7 +242,8 @@
 		"pK": 6.3,
 		"type": "acidoBasic"
 	},
-	"HPO3-": {
+	{
+		"formed": "HPO3-",
 		"components": {
 			"PO3--": 1,
 			"H+": 1
@@ -223,7 +251,8 @@
 		"pK": 6.59,
 		"type": "acidoBasic"
 	},
-	"H2S": {
+	{
+		"formed": "H2S",
 		"components": {
 			"HS-": 1,
 			"H+": 1
@@ -231,7 +260,8 @@
 		"pK": 7.04,
 		"type": "acidoBasic"
 	},
-	"HSO3-": {
+	{
+		"formed": "HSO3-",
 		"components": {
 			"SO3--": 1,
 			"H+": 1
@@ -239,7 +269,8 @@
 		"pK": 7.21,
 		"type": "acidoBasic"
 	},
-	"HClO": {
+	{
+		"formed": "HClO",
 		"components": {
 			"ClO-": 1,
 			"H+": 1
@@ -247,7 +278,8 @@
 		"pK": 8,
 		"type": "acidoBasic"
 	},
-	"HCN": {
+	{
+		"formed": "HCN",
 		"components": {
 			"CN-": 1,
 			"H+": 1
@@ -255,7 +287,8 @@
 		"pK": 9.2,
 		"type": "acidoBasic"
 	},
-	"NH4+": {
+	{
+		"formed": "NH4+",
 		"components": {
 			"NH3": 1,
 			"H+": 1
@@ -263,7 +296,8 @@
 		"pK": 9.25,
 		"type": "acidoBasic"
 	},
-	"HCO3-": {
+	{
+		"formed": "HCO3-",
 		"components": {
 			"CO3--": 1,
 			"H+": 1
@@ -271,7 +305,8 @@
 		"pK": 10.33,
 		"type": "acidoBasic"
 	},
-	"H2PO4-": {
+	{
+		"formed": "H2PO4-",
 		"components": {
 			"HPO4--": 1,
 			"H+": 1
@@ -279,7 +314,8 @@
 		"pK": 7.2,
 		"type": "acidoBasic"
 	},
-	"HPO4--": {
+	{
+		"formed": "HPO4--",
 		"components": {
 			"PO4---": 1,
 			"H+": 1
@@ -287,7 +323,8 @@
 		"pK": 12.32,
 		"type": "acidoBasic"
 	},
-	"H2O": {
+	{
+		"formed": "H2O",
 		"components": {
 			"OH-": 1,
 			"H+": 1
@@ -295,7 +332,8 @@
 		"pK": 14,
 		"type": "acidoBasic"
 	},
-	"HS-": {
+	{
+		"formed": "HS-",
 		"components": {
 			"S--": 1,
 			"H+": 1
@@ -303,7 +341,8 @@
 		"pK": 19,
 		"type": "acidoBasic"
 	},
-	"NH3": {
+	{
+		"formed": "NH3",
 		"components": {
 			"NH2-": 1,
 			"H+": 1
@@ -311,7 +350,8 @@
 		"pK": 23,
 		"type": "acidoBasic"
 	},
-	"Ag(NH3)2+": {
+	{
+		"formed": "Ag(NH3)2+",
 		"components": {
 			"Ag+": 1,
 			"NH3": 2
@@ -319,7 +359,8 @@
 		"pK": 7.2,
 		"type": "complexation"
 	},
-	"Zn(NH3)4++": {
+	{
+		"formed": "Zn(NH3)4++",
 		"components": {
 			"Zn++": 1,
 			"NH3": 4
@@ -327,7 +368,8 @@
 		"pK": 8.89,
 		"type": "complexation"
 	},
-	"Cu(NH3)4++": {
+	{
+		"formed": "Cu(NH3)4++",
 		"components": {
 			"Cu++": 1,
 			"NH3": 4
@@ -335,7 +377,8 @@
 		"pK": 13.04,
 		"type": "complexation"
 	},
-	"Hg(NH3)4++": {
+	{
+		"formed": "Hg(NH3)4++",
 		"components": {
 			"Hg++": 1,
 			"NH3": 4
@@ -343,7 +386,8 @@
 		"pK": 19.26,
 		"type": "complexation"
 	},
-	"Co(NH3)6++": {
+	{
+		"formed": "Co(NH3)6++",
 		"components": {
 			"Co++": 1,
 			"NH3": 6
@@ -351,7 +395,8 @@
 		"pK": 4.7,
 		"type": "complexation"
 	},
-	"Co(NH3)4+++": {
+	{
+		"formed": "Co(NH3)4+++",
 		"components": {
 			"Co+++": 1,
 			"NH3": 4
@@ -359,7 +404,8 @@
 		"pK": 33.66,
 		"type": "complexation"
 	},
-	"Cd(NH3)6++": {
+	{
+		"formed": "Cd(NH3)6++",
 		"components": {
 			"Cd++": 1,
 			"NH3": 6
@@ -367,7 +413,8 @@
 		"pK": 5.41,
 		"type": "complexation"
 	},
-	"Cd(NH3)4++": {
+	{
+		"formed": "Cd(NH3)4++",
 		"components": {
 			"Cd++": 1,
 			"NH3": 4
@@ -375,7 +422,8 @@
 		"pK": 7,
 		"type": "complexation"
 	},
-	"Ni(NH3)6++": {
+	{
+		"formed": "Ni(NH3)6++",
 		"components": {
 			"Ni++": 1,
 			"NH3": 6
@@ -383,7 +431,8 @@
 		"pK": 8.3,
 		"type": "complexation"
 	},
-	"Fe(CN)6----": {
+	{
+		"formed": "Fe(CN)6----",
 		"components": {
 			"Fe++": 1,
 			"CN-": 6
@@ -391,7 +440,8 @@
 		"pK": 35,
 		"type": "complexation"
 	},
-	"Fe(CN)6---": {
+	{
+		"formed": "Fe(CN)6---",
 		"components": {
 			"Fe+++": 1,
 			"CN-": 6
@@ -399,7 +449,8 @@
 		"pK": 41.96,
 		"type": "complexation"
 	},
-	"Ag(CN)2-": {
+	{
+		"formed": "Ag(CN)2-",
 		"components": {
 			"Ag+": 1,
 			"CN-": 2
@@ -407,7 +458,8 @@
 		"pK": 18.72,
 		"type": "complexation"
 	},
-	"Cu(CN)2-": {
+	{
+		"formed": "Cu(CN)2-",
 		"components": {
 			"Cu+": 1,
 			"CN-": 2
@@ -415,7 +467,8 @@
 		"pK": 16,
 		"type": "complexation"
 	},
-	"Cd(CN)4--": {
+	{
+		"formed": "Cd(CN)4--",
 		"components": {
 			"Cd++": 1,
 			"CN-": 4
@@ -423,7 +476,8 @@
 		"pK": 16.89,
 		"type": "complexation"
 	},
-	"Au(CN)2-": {
+	{
+		"formed": "Au(CN)2-",
 		"components": {
 			"Au+": 1,
 			"CN-": 2
@@ -431,7 +485,8 @@
 		"pK": 38.3,
 		"type": "complexation"
 	},
-	"Ni(CN)4--": {
+	{
+		"formed": "Ni(CN)4--",
 		"components": {
 			"Ni++": 1,
 			"CN-": 4
@@ -439,7 +494,8 @@
 		"pK": 31,
 		"type": "complexation"
 	},
-	"AlF6---": {
+	{
+		"formed": "AlF6---",
 		"components": {
 			"Al+++": 1,
 			"F-": 6
@@ -447,7 +503,8 @@
 		"pK": 4.4,
 		"type": "complexation"
 	},
-	"AlF4-": {
+	{
+		"formed": "AlF4-",
 		"components": {
 			"Al+++": 1,
 			"F-": 4
@@ -455,7 +512,8 @@
 		"pK": 8.3,
 		"type": "complexation"
 	},
-	"BeF4--": {
+	{
+		"formed": "BeF4--",
 		"components": {
 			"Be++": 1,
 			"F-": 4
@@ -463,7 +521,8 @@
 		"pK": 13.11,
 		"type": "complexation"
 	},
-	"SnF6--": {
+	{
+		"formed": "SnF6--",
 		"components": {
 			"Sn++++": 1,
 			"F-": 6
@@ -471,7 +530,8 @@
 		"pK": 25,
 		"type": "complexation"
 	},
-	"CuCl2-": {
+	{
+		"formed": "CuCl2-",
 		"components": {
 			"Cu+": 1,
 			"Cl-": 2
@@ -479,7 +539,8 @@
 		"pK": 5.48,
 		"type": "complexation"
 	},
-	"AgCl2-": {
+	{
+		"formed": "AgCl2-",
 		"components": {
 			"Ag+": 1,
 			"Cl-": 2
@@ -487,7 +548,8 @@
 		"pK": 5.26,
 		"type": "complexation"
 	},
-	"PbCl4--": {
+	{
+		"formed": "PbCl4--",
 		"components": {
 			"Pb++": 1,
 			"Cl-": 4
@@ -495,7 +557,8 @@
 		"pK": 15.4,
 		"type": "complexation"
 	},
-	"HgCl4--": {
+	{
+		"formed": "HgCl4--",
 		"components": {
 			"Hg++": 1,
 			"Cl-": 4
@@ -503,7 +566,8 @@
 		"pK": 15.7,
 		"type": "complexation"
 	},
-	"CuBr2-": {
+	{
+		"formed": "CuBr2-",
 		"components": {
 			"Cu+": 1,
 			"Br-": 2
@@ -511,7 +575,8 @@
 		"pK": 5.9,
 		"type": "complexation"
 	},
-	"AgBr2-": {
+	{
+		"formed": "AgBr2-",
 		"components": {
 			"Ag+": 1,
 			"Br-": 2
@@ -519,7 +584,8 @@
 		"pK": 11,
 		"type": "complexation"
 	},
-	"HgBr4--": {
+	{
+		"formed": "HgBr4--",
 		"components": {
 			"Hg++": 1,
 			"Br-": 4
@@ -527,7 +593,8 @@
 		"pK": 4.48,
 		"type": "complexation"
 	},
-	"CuI2-": {
+	{
+		"formed": "CuI2-",
 		"components": {
 			"Cu+": 1,
 			"I-": 2
@@ -535,7 +602,8 @@
 		"pK": 8.9,
 		"type": "complexation"
 	},
-	"AgI2-": {
+	{
+		"formed": "AgI2-",
 		"components": {
 			"Ag+": 1,
 			"I-": 2
@@ -543,7 +611,8 @@
 		"pK": 11,
 		"type": "complexation"
 	},
-	"PbI4--": {
+	{
+		"formed": "PbI4--",
 		"components": {
 			"Pb++": 1,
 			"I-": 4
@@ -551,7 +620,8 @@
 		"pK": 4.48,
 		"type": "complexation"
 	},
-	"HgI4--": {
+	{
+		"formed": "HgI4--",
 		"components": {
 			"Hg++": 1,
 			"I-": 4
@@ -559,7 +629,8 @@
 		"pK": 30.28,
 		"type": "complexation"
 	},
-	"Ag(CH3NH2)2+": {
+	{
+		"formed": "Ag(CH3NH2)2+",
 		"components": {
 			"Ag+": 1,
 			"CH3NH2": 2
@@ -567,7 +638,8 @@
 		"pK": 6.89,
 		"type": "complexation"
 	},
-	"Ag(S2O3)2---": {
+	{
+		"formed": "Ag(S2O3)2---",
 		"components": {
 			"Ag+": 1,
 			"S2O3--": 2
@@ -575,7 +647,8 @@
 		"pK": 13.46,
 		"type": "complexation"
 	},
-	"Cd(SCN)4--": {
+	{
+		"formed": "Cd(SCN)4--",
 		"components": {
 			"Cd++": 1,
 			"SCN-": 4
@@ -583,7 +656,8 @@
 		"pK": 3,
 		"type": "complexation"
 	},
-	"Cu(SCN)2": {
+	{
+		"formed": "Cu(SCN)2",
 		"components": {
 			"Cu++": 1,
 			"SCN-": 2
@@ -591,7 +665,8 @@
 		"pK": 3.75,
 		"type": "complexation"
 	},
-	"Fe(SCN)3": {
+	{
+		"formed": "Fe(SCN)3",
 		"components": {
 			"Fe+++": 1,
 			"SCN-": 3
@@ -599,7 +674,8 @@
 		"pK": 6.3,
 		"type": "complexation"
 	},
-	"Hg(SCN)4--": {
+	{
+		"formed": "Hg(SCN)4--",
 		"components": {
 			"Hg++": 1,
 			"SCN-": 4
@@ -607,7 +683,8 @@
 		"pK": 21.7,
 		"type": "complexation"
 	},
-	"Cu(OH)4--": {
+	{
+		"formed": "Cu(OH)4--",
 		"components": {
 			"Cu++": 1,
 			"OH-": 4
@@ -615,7 +692,8 @@
 		"pK": 16.11,
 		"type": "complexation"
 	},
-	"Zn(OH)4--": {
+	{
+		"formed": "Zn(OH)4--",
 		"components": {
 			"Zn++": 1,
 			"OH-": 4
@@ -623,7 +701,8 @@
 		"pK": 15.45,
 		"type": "complexation"
 	},
-	"Mn(en)3++": {
+	{
+		"formed": "Mn(en)3++",
 		"components": {
 			"Mn++": 1,
 			"en": 1
@@ -631,7 +710,8 @@
 		"pK": 5.81,
 		"type": "complexation"
 	},
-	"Fe(en)3++": {
+	{
+		"formed": "Fe(en)3++",
 		"components": {
 			"Fe++": 1,
 			"en": 1
@@ -639,7 +719,8 @@
 		"pK": 9.72,
 		"type": "complexation"
 	},
-	"Co(en)3++": {
+	{
+		"formed": "Co(en)3++",
 		"components": {
 			"Co++": 1,
 			"en": 1
@@ -647,7 +728,8 @@
 		"pK": 14.11,
 		"type": "complexation"
 	},
-	"Co(en)3+++": {
+	{
+		"formed": "Co(en)3+++",
 		"components": {
 			"Co+++": 1,
 			"en": 1
@@ -655,7 +737,8 @@
 		"pK": 48.68,
 		"type": "complexation"
 	},
-	"Ni(en)3++": {
+	{
+		"formed": "Ni(en)3++",
 		"components": {
 			"Ni++": 1,
 			"en": 1
@@ -663,7 +746,8 @@
 		"pK": 17.61,
 		"type": "complexation"
 	},
-	"Cu(en)2++": {
+	{
+		"formed": "Cu(en)2++",
 		"components": {
 			"Cu++": 1,
 			"en": 1
@@ -671,7 +755,8 @@
 		"pK": 19.54,
 		"type": "complexation"
 	},
-	"Co(C2O4)3----": {
+	{
+		"formed": "Co(C2O4)3----",
 		"components": {
 			"Co++": 1,
 			"C2O4--": 3
@@ -679,7 +764,8 @@
 		"pK": 6.65,
 		"type": "complexation"
 	},
-	"Fe(C2O4)3---": {
+	{
+		"formed": "Fe(C2O4)3---",
 		"components": {
 			"Fe+++": 1,
 			"C2O4--": 3
@@ -687,7 +773,8 @@
 		"pK": 20.52,
 		"type": "complexation"
 	},
-	"AgBr": {
+	{
+		"formed": "AgBr",
 		"components": {
 			"Ag+": 1,
 			"Br-": 1
@@ -695,7 +782,8 @@
 		"pK": 12.27,
 		"type": "precipitation"
 	},
-	"AgBrO3": {
+	{
+		"formed": "AgBrO3",
 		"components": {
 			"Ag+": 1,
 			"BrO3-": 1
@@ -703,7 +791,8 @@
 		"pK": 4.24,
 		"type": "precipitation"
 	},
-	"Ag2CO3": {
+	{
+		"formed": "Ag2CO3",
 		"components": {
 			"Ag+": 2,
 			"CO3--": 1
@@ -711,7 +800,8 @@
 		"pK": 11.1,
 		"type": "precipitation"
 	},
-	"AgCl": {
+	{
+		"formed": "AgCl",
 		"components": {
 			"Ag+": 1,
 			"Cl-": 1
@@ -719,7 +809,8 @@
 		"pK": 9.74,
 		"type": "precipitation"
 	},
-	"Ag2CrO4": {
+	{
+		"formed": "Ag2CrO4",
 		"components": {
 			"Ag+": 2,
 			"CrO4--": 1
@@ -727,7 +818,8 @@
 		"pK": 11.05,
 		"type": "precipitation"
 	},
-	"AgI": {
+	{
+		"formed": "AgI",
 		"components": {
 			"Ag+": 1,
 			"I-": 1
@@ -735,7 +827,8 @@
 		"pK": 16.07,
 		"type": "precipitation"
 	},
-	"AgOH": {
+	{
+		"formed": "AgOH",
 		"components": {
 			"Ag+": 1,
 			"OH-": 1
@@ -743,7 +836,8 @@
 		"pK": 7.72,
 		"type": "precipitation"
 	},
-	"Ag2S": {
+	{
+		"formed": "Ag2S",
 		"components": {
 			"Ag+": 2,
 			"S--": 1
@@ -751,7 +845,8 @@
 		"pK": 50.22,
 		"type": "precipitation"
 	},
-	"Al(OH)3": {
+	{
+		"formed": "Al(OH)3",
 		"components": {
 			"Al+++": 1,
 			"OH-": 3
@@ -759,7 +854,8 @@
 		"pK": 32.74,
 		"type": "precipitation"
 	},
-	"BaCO3": {
+	{
+		"formed": "BaCO3",
 		"components": {
 			"Ba++": 1,
 			"CO3--": 1
@@ -767,7 +863,8 @@
 		"pK": 8.7,
 		"type": "precipitation"
 	},
-	"BaCrO4": {
+	{
+		"formed": "BaCrO4",
 		"components": {
 			"Ba++": 1,
 			"CrO4--": 1
@@ -775,7 +872,8 @@
 		"pK": 10.07,
 		"type": "precipitation"
 	},
-	"BaF2": {
+	{
+		"formed": "BaF2",
 		"components": {
 			"Ba++": 1,
 			"F-": 2
@@ -783,7 +881,8 @@
 		"pK": 6.74,
 		"type": "precipitation"
 	},
-	"BaSO4": {
+	{
+		"formed": "BaSO4",
 		"components": {
 			"Ba++": 1,
 			"SO4--": 1
@@ -791,7 +890,8 @@
 		"pK": 9.96,
 		"type": "precipitation"
 	},
-	"Bi2S3": {
+	{
+		"formed": "Bi2S3",
 		"components": {
 			"Bi+++": 2,
 			"S--": 3
@@ -799,7 +899,8 @@
 		"pK": 71.8,
 		"type": "precipitation"
 	},
-	"CaCO3": {
+	{
+		"formed": "CaCO3",
 		"components": {
 			"Ca++": 1,
 			"CO3--": 1
@@ -807,7 +908,8 @@
 		"pK": 8.47,
 		"type": "precipitation"
 	},
-	"CaF2": {
+	{
+		"formed": "CaF2",
 		"components": {
 			"Ca++": 1,
 			"F-": 2
@@ -815,7 +917,8 @@
 		"pK": 10.46,
 		"type": "precipitation"
 	},
-	"Ca(OH)2": {
+	{
+		"formed": "Ca(OH)2",
 		"components": {
 			"Ca++": 1,
 			"OH-": 2
@@ -823,7 +926,8 @@
 		"pK": 5.3,
 		"type": "precipitation"
 	},
-	"Ca3(PO4)2": {
+	{
+		"formed": "Ca3(PO4)2",
 		"components": {
 			"Ca++": 3,
 			"PO4---": 2
@@ -831,7 +935,8 @@
 		"pK": 32.68,
 		"type": "precipitation"
 	},
-	"CaSO4": {
+	{
+		"formed": "CaSO4",
 		"components": {
 			"Ca++": 1,
 			"SO4--": 1
@@ -839,7 +944,8 @@
 		"pK": 4.35,
 		"type": "precipitation"
 	},
-	"CdS": {
+	{
+		"formed": "CdS",
 		"components": {
 			"Cd++": 1,
 			"S--": 1
@@ -847,7 +953,8 @@
 		"pK": 28,
 		"type": "precipitation"
 	},
-	"CuCl": {
+	{
+		"formed": "CuCl",
 		"components": {
 			"Cu+": 1,
 			"Cl-": 1
@@ -855,7 +962,8 @@
 		"pK": 6.77,
 		"type": "precipitation"
 	},
-	"Cu(OH)2": {
+	{
+		"formed": "Cu(OH)2",
 		"components": {
 			"Cu++": 1,
 			"OH-": 2
@@ -863,7 +971,8 @@
 		"pK": 18.8,
 		"type": "precipitation"
 	},
-	"CuS": {
+	{
+		"formed": "CuS",
 		"components": {
 			"Cu++": 1,
 			"S--": 1
@@ -871,7 +980,8 @@
 		"pK": 44.07,
 		"type": "precipitation"
 	},
-	"Fe(OH)2": {
+	{
+		"formed": "Fe(OH)2",
 		"components": {
 			"Fe++": 1,
 			"OH-": 2
@@ -879,7 +989,8 @@
 		"pK": 16.31,
 		"type": "precipitation"
 	},
-	"Fe(OH)3": {
+	{
+		"formed": "Fe(OH)3",
 		"components": {
 			"Fe+++": 1,
 			"OH-": 3
@@ -887,7 +998,8 @@
 		"pK": 38.55,
 		"type": "precipitation"
 	},
-	"FeS": {
+	{
+		"formed": "FeS",
 		"components": {
 			"Fe++": 1,
 			"S--": 1
@@ -895,7 +1007,8 @@
 		"pK": 18.22,
 		"type": "precipitation"
 	},
-	"Hg2Cl2": {
+	{
+		"formed": "Hg2Cl2",
 		"components": {
 			"Hg+": 2,
 			"Cl-": 2
@@ -903,7 +1016,8 @@
 		"pK": 17.85,
 		"type": "precipitation"
 	},
-	"Li2CO3": {
+	{
+		"formed": "Li2CO3",
 		"components": {
 			"Li+": 2,
 			"CO3--": 1
@@ -911,7 +1025,8 @@
 		"pK": 2.96,
 		"type": "precipitation"
 	},
-	"MgCO3": {
+	{
+		"formed": "MgCO3",
 		"components": {
 			"Mg++": 1,
 			"CO3--": 1
@@ -919,7 +1034,8 @@
 		"pK": 4.17,
 		"type": "precipitation"
 	},
-	"Mg(OH)2": {
+	{
+		"formed": "Mg(OH)2",
 		"components": {
 			"Mg++": 1,
 			"OH-": 2
@@ -927,7 +1043,8 @@
 		"pK": 11.15,
 		"type": "precipitation"
 	},
-	"Mn(OH)2": {
+	{
+		"formed": "Mn(OH)2",
 		"components": {
 			"Mn--": 1,
 			"OH-": 2
@@ -935,7 +1052,8 @@
 		"pK": 12.7,
 		"type": "precipitation"
 	},
-	"PbCl2": {
+	{
+		"formed": "PbCl2",
 		"components": {
 			"Pb++": 1,
 			"Cl-": 2
@@ -943,7 +1061,8 @@
 		"pK": 4.77,
 		"type": "precipitation"
 	},
-	"PbCrO4": {
+	{
+		"formed": "PbCrO4",
 		"components": {
 			"Pb++": 1,
 			"CrO4--": 1
@@ -951,7 +1070,8 @@
 		"pK": 15.7,
 		"type": "precipitation"
 	},
-	"PbI2": {
+	{
+		"formed": "PbI2",
 		"components": {
 			"Pb++": 1,
 			"I--": 2
@@ -959,7 +1079,8 @@
 		"pK": 7.85,
 		"type": "precipitation"
 	},
-	"Pb(OH)2": {
+	{
+		"formed": "Pb(OH)2",
 		"components": {
 			"Pb++": 1,
 			"OH-": 2
@@ -967,7 +1088,8 @@
 		"pK": 14.92,
 		"type": "precipitation"
 	},
-	"PbS": {
+	{
+		"formed": "PbS",
 		"components": {
 			"Pb++": 1,
 			"S--": 1
@@ -975,7 +1097,8 @@
 		"pK": 28.15,
 		"type": "precipitation"
 	},
-	"PbSO4": {
+	{
+		"formed": "PbSO4",
 		"components": {
 			"Pb++": 1,
 			"SO4--": 1
@@ -983,7 +1106,8 @@
 		"pK": 7.8,
 		"type": "precipitation"
 	},
-	"Zn(OH)2": {
+	{
+		"formed": "Zn(OH)2",
 		"components": {
 			"Zn++": 1,
 			"OH-": 2
@@ -991,7 +1115,8 @@
 		"pK": 16.35,
 		"type": "precipitation"
 	},
-	"ZnS": {
+	{
+		"formed": "ZnS",
 		"components": {
 			"Zn++": 1,
 			"S--": 1
@@ -999,4 +1124,4 @@
 		"pK": 22.52,
 		"type": "precipitation"
 	}
-}
+]

@@ -4,7 +4,6 @@ const Equation = require('./Equation');
 class EquationSet {
     constructor(equations) {
         equations = equations || [];
-        this._changed = false;
         this._normalized = false;
         this._disabledKeys = new Set();
         this.equations = new Map();
@@ -19,9 +18,8 @@ class EquationSet {
 
     add(eq, key) {
         var equation = Equation.create(eq);
-        var key = key || getHash(eq.formed);
+        key = key || getHash(eq.formed);
         this.equations.set(key, equation);
-        this._changed = true;
         this._normalized = false;
     }
 
