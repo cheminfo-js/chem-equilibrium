@@ -43,13 +43,13 @@ const equations2 = [
 ];
 
 describe('EquationSet', function () {
-    it('should create an equation library (no inter-dependencies)', function () {
+    it('should create and normalize an equation set (no inter-dependencies)', function () {
         var eqSet = new EquationSet(equations1);
         var norm = eqSet.getNormalized('E');
         norm.size.should.equal(2);
     });
 
-    it('should create an equation library (with inter-dependencies', function () {
+    it('should create and normalize an equation set (with inter-dependencies', function () {
         var eqSet = new EquationSet(equations2);
         var norm = eqSet.getNormalized('E');
         norm.size.should.equal(2);
@@ -57,5 +57,11 @@ describe('EquationSet', function () {
         var B = norm.get('B', true);
         A.pK.should.equal(8);
         B.pK.should.equal(3);
+    });
+
+    it('should get a subset of an equation set', function () {
+        var eqSet = new EquationSet(equations2);
+        var subSet = eqSet.getSubset(['C', 'D']);
+        subSet.size.should.equal(2);
     });
 });

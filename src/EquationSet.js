@@ -7,7 +7,7 @@ class EquationSet {
         this._changed = false;
         this.equations = new Map();
         for (var i = 0; i < equations.length; i++) {
-            this.addEquation(equations[i]);
+            this.add(equations[i]);
         }
     }
 
@@ -15,14 +15,20 @@ class EquationSet {
         return this.equations.values();
     }
 
-    addEquation(eq, key) {
+    add(eq, key) {
         var equation = Equation.create(eq);
         var key = key || getHash(eq.formed);
-        if (this.equations.get(key)) {
-            throw new Error('Could not add equation, another equation with the same key already exists');
-        }
         this.equations.set(key, equation);
         this._changed = true;
+    }
+
+    has(eq) {
+        if(eq instanceof Equation) {
+            var key = getHash(eq.formed);
+        } else {
+            key = eq;
+        }
+        return this.equations.has(key);
     }
 
     disableEquation(eq) {
@@ -73,7 +79,7 @@ class EquationSet {
 
         var normSet = new EquationSet();
         for (var i = 0; i < norm.length; i++) {
-            normSet.addEquation(norm[i], keys[i]);
+            normSet.add(norm[i], keys[i]);
         }
 
         // return a new equation set that has been normalized
@@ -95,8 +101,31 @@ class EquationSet {
     }
 
     getSubset(species) {
+        var speciesSet = new Set();
+        species.forEach(s => speciesSet.add(s));
         // get a subset of the equations given a set of species
+        var newSet = new EquationSet();
+        this.forEach(function(eq) {
+            if(species.indexOf(eq.formed) !== -1) {
+                newSet.add(eq);
+                speciesSet.add(eq.formed);
+                Object.keys(eq.components).forEach(s => speciesSet.add(s));
+            }
+        });
 
+        var moreAdded = true;
+        while(moreAdded) {
+            moreAdded = false;
+            this.forEach(function(eq) {
+                var hasAll = !Object.keys(eq.components).some(c => !speciesSet.has(c));
+                if(hasAll && !newSet.has(eq)) {
+                    newSet.add(eq);
+                    speciesSet.add(eq.formed);
+                    moreAdded = true;
+                }
+            });
+        }
+        return newSet;
     }
 
     getEquationById() {
