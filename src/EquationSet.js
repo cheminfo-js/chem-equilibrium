@@ -75,6 +75,10 @@ class EquationSet {
         return this.equations.keys();
     }
 
+    values() {
+        return this.equations.values();
+    }
+
     entries() {
         return this.equations.entries();
     }
@@ -113,10 +117,58 @@ class EquationSet {
         return this._normalized;
     }
 
-    getModel() {
+    getModel(totals) {
         if (!this.isNormalized()) {
             throw new Error('Cannot get model from un-normalized equation set');
         }
+        var totalComp = {};
+        var subset = this.getSubset(Object.keys(totals));
+        var components = subset.components;
+        const subsetArr = [...subset.values()];
+        components.forEach(c => totalComp[c] = 0);
+        for(var key in totals) {
+            if(totals.hasOwnProperty(key)) {
+                var total = totals[key];
+                if(components.indexOf(key) !== -1) {
+                    totalComp[key] += total;
+                } else {
+                    var eq = subsetArr.find(eq => {
+                        console.log(eq.formed);
+                        return eq.formed === key
+                    });
+                    console.log(key, eq);
+                    if(eq) {
+                        var keys = Object.keys(eq.components);
+                        for(var i=0; i<keys.length; i++) {
+                            totalComp[keys[i]] += eq.components[keys[i]] * total;
+                        }
+                    }
+                }
+            }
+        }
+
+        var model =  {
+            volume: 1
+        };
+
+        model.components = components.map(key => {
+            return {
+                label: key,
+                total: totalComp[key]
+            }
+        });
+
+        model.formedSpecies = subsetArr.map(eq => {
+            return {
+                label: eq.formed,
+                beta: Math.pow(10, -eq.pK),
+                components: components.map(key => {
+                    return eq.components[key] || 0
+                })
+            }
+        });
+
+        return model;
     }
 
     getSubset(species) {

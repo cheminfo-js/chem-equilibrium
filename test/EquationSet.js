@@ -105,5 +105,11 @@ describe('EquationSet', function () {
         subSet.size.should.equal(2);
     });
 
+    it.only('should get the model given the totals', function () {
+        var eqSet = new EquationSet(equations2);
+        var normSet = eqSet.getNormalized('E');
+        var model = normSet.getModel({A: 1});
+        console.log(JSON.stringify(model, null, '\t'));
+    });
 
 });
