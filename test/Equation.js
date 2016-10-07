@@ -14,8 +14,8 @@ const eqA = new Equation({
 describe('Equation', function () {
     it('solvent is the formed specie', function () {
         var eq = eqA.withSolvent('A');
-        eq.formed.should.equal('C');
-        eq.components.should.deepEqual({B: -1});
+        eq.formed.should.equal('B');
+        eq.components.should.deepEqual({C: -1});
         eq.pK.should.equal(-1);
         eq.type.should.equal('acidoBasic');
     });

@@ -50,11 +50,11 @@ class Equation {
         var formed = this._eq.formed;
         var compKeys = Object.keys(comp);
         if (formed === solvent) {
-            eq.formed = compKeys[compKeys.length - 1];
+            eq.formed = compKeys[0];
             eq.components = {};
             eq.pK = -this._eq.pK;
             eq.type = this._eq.type;
-            for (let j = 0; j < compKeys.length - 1; j++) {
+            for (let j = 1; j < compKeys.length; j++) {
                 let compKey = compKeys[j];
                 eq.components[compKey] = -this._eq.components[compKey];
             }
