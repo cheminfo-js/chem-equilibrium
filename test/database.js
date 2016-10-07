@@ -2,7 +2,7 @@
 
 const EquationSet = require('../src/EquationSet');
 const equations = require('../data/data.json');
-describe.only('database', function () {
+describe('database', function () {
     it('verify database can be initialized  in an EquationSet', function () {
         new EquationSet(equations);
     });

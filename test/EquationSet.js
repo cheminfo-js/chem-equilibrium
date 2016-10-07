@@ -42,6 +42,26 @@ const equations2 = [
     }
 ];
 
+const equations3 = [
+    {
+        formed: 'A',
+        components: {
+            B: 1,
+            C: 1
+        },
+        pK: -2,
+        type: 'acidoBasic'
+    },
+    {
+        formed: 'B',
+        components: {
+            D: 1
+        },
+        pK: 3,
+        type: 'acidoBasic'
+    }
+];
+
 describe('EquationSet', function () {
     it('should create and normalize an equation set (no inter-dependencies)', function () {
         var eqSet = new EquationSet(equations1);
@@ -49,7 +69,7 @@ describe('EquationSet', function () {
         norm.size.should.equal(2);
     });
 
-    it('should create and normalize an equation set (with inter-dependencies', function () {
+    it('should create and normalize an equation set (with inter-dependencies, example 1)', function () {
         var eqSet = new EquationSet(equations2);
         var norm = eqSet.getNormalized('E');
         norm.size.should.equal(2);
@@ -59,9 +79,21 @@ describe('EquationSet', function () {
         B.pK.should.equal(3);
     });
 
+    it('should create and normalize an equation set (with inter-dependencies, example 2)', function () {
+        var eqSet = new EquationSet(equations3);
+        var norm = eqSet.getNormalized('E');
+        norm.size.should.equal(2);
+        var A = norm.get('A', true);
+        var B = norm.get('B', true);
+        A.pK.should.equal(1);
+        B.pK.should.equal(3);
+    });
+
     it('should get a subset of an equation set', function () {
         var eqSet = new EquationSet(equations2);
         var subSet = eqSet.getSubset(['C', 'D']);
         subSet.size.should.equal(2);
     });
+
+
 });

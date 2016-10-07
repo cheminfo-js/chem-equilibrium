@@ -209,7 +209,7 @@ function isIndependent(equations, idx) {
 function allDefined(arr, idx) {
     if (idx !== undefined) {
         return !idx.some(function (idx) {
-            return !arr[idx];
+            return idx !== -1 && !arr[idx];
         });
     } else {
         return !arr.some(function (el) {
