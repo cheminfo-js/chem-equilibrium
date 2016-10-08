@@ -16,10 +16,9 @@ class Factory {
         this.addSpecie(options.solvent);
     }
 
-    static getSpecieLabels(type) {
-        return eqSet.species;
+    getSpecies(type) {
+        return this.eqSet.getSpecies(type);
     }
-
 
     addSpecie(label, total) {
         total = total || 0;

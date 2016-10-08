@@ -1,7 +1,13 @@
 'use strict';
 const Factory = require('../src/Factory');
+const eq = require('./data/equations');
 
 describe('Factory', function () {
+    it('should create a Factory with a custom reaction database', function () {
+        var factory = new Factory({database: eq.equations1});
+        factory.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);
+        factory.getSpecies('acidoBasic').sort().should.deepEqual(['A', 'B']);
+    });
     it('in water, it should create acid/base model just by adding one component', function () {
         var factory = new Factory();
         factory.addSpecie('CH3COO-', 1);

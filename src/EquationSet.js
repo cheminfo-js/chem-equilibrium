@@ -33,13 +33,19 @@ class EquationSet {
     }
 
     get species() {
+        return this.getSpecies();
+    }
+
+    getSpecies(type) {
         var speciesSet = new Set();
         this.forEach(eq => {
+            if(type && type !== eq.type) return;
             speciesSet.add(eq.formed);
             Object.keys(eq.components).forEach(c => speciesSet.add(c));
         });
         return Array.from(speciesSet);
     }
+
 
     get components() {
         var speciesSet = new Set();
