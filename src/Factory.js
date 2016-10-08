@@ -1,6 +1,7 @@
 'use strict';
 const database = require('../data/data.json');
 const EquationSet = require('./EquationSet');
+const deepcopy = require('deepcopy');
 
 const defaultOptions = {
     solvent: 'H2O'
@@ -10,9 +11,11 @@ class Factory {
     constructor(options) {
         this.atEquilibrium = new Set();
         options = Object.assign({}, defaultOptions, options);
+        var db = options.database || database;
+        db = processDB(db, options);
         this.species = {};
         this.options = options;
-        this.eqSet = new EquationSet(options.database || database);
+        this.eqSet = new EquationSet(db);
         this.addSpecie(options.solvent);
     }
 
@@ -37,8 +40,8 @@ class Factory {
         this.atEquilibrium.delete(label);
     }
 
-    setAtEquilibrium(componentLabel, atEquilibrium) {
-        this.species[label] = total;
+    setAtEquilibrium(label, value) {
+        this.species[label] = value;
         this.atEquilibrium.add(label);
     }
 
@@ -104,3 +107,24 @@ class Factory {
 
 module.exports = Factory;
 
+function processDB(db, options) {
+    db = deepcopy(db);
+    var toRemove = [];
+    for(var i=0; i<db.length; i++) {
+        if(typeof db[i].pK !== 'number' || options.solvent !== 'H2O') {
+            if(!db[i].pK[options.solvent]) {
+                toRemove.push(i);
+            } else {
+                db[i].pK = db[i].pK[options.solvent];
+            }
+        }
+    }
+
+    for(i = db.length -1; i >= 0; i--) {
+        if(toRemove.indexOf(i) > -1) {
+            db.splice(i, 1);
+        }
+    }
+
+    return db;
+}

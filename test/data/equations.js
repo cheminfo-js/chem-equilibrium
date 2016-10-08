@@ -1,5 +1,40 @@
 'use strict';
 
+const multiSolvent = [
+    {
+        formed: 'A',
+        components: {
+            B: 1,
+            C: 2
+        },
+        type: 'acidoBasic',
+        pK: 1
+    },
+    {
+        formed: 'D',
+        components: {
+            E: 1,
+            F: 2
+        },
+        type: 'acidoBasic',
+        pK: {
+            H2O: 4,
+            DMSO: 3
+        }
+    },
+    {
+        formed: 'G',
+        components: {
+            H: 1,
+            I: 2
+        },
+        type: 'acidoBasic',
+        pK: {
+            DMSO: 3
+        }
+    },
+];
+
 const equations1 = [
     {
         formed: 'A',
@@ -88,11 +123,34 @@ const circularEquations = [
     }
 ];
 
+const AgClInDMSO = [
+    {
+        formed: 'AgCl',
+        components: {
+            'Ag+': 1,
+            'Cl-': 1
+        },
+        pK: {DMSO: 9.74},
+        type: 'precipitation'
+    },
+    {
+        formed: 'AgCl2-',
+        components: {
+            'Ag+': 1,
+            'Cl-': 2
+        },
+        pK: {DMSO: 5.26},
+        type: 'complexation'
+    }
+];
+
 
 module.exports = {
     equations1,
     equations2,
     equations3,
     equations4,
-    circularEquations
+    circularEquations,
+    multiSolvent,
+    AgClInDMSO
 };

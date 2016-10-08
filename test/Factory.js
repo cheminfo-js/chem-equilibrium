@@ -8,6 +8,14 @@ describe('Factory', function () {
         factory.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);
         factory.getSpecies('acidoBasic').sort().should.deepEqual(['A', 'B']);
     });
+
+    it('should create a Factory when from multi-solvent database', function () {
+        var factory = new Factory({database: eq.multiSolvent});
+        factory.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E', 'F']);
+        factory = new Factory({database: eq.multiSolvent, solvent: 'DMSO'});
+        factory.getSpecies().sort().should.deepEqual(['D', 'E', 'F', 'G', 'H', 'I']);
+    });
+
     it('in water, it should create acid/base model just by adding one component', function () {
         var factory = new Factory();
         factory.addSpecie('CH3COO-', 1);
@@ -52,7 +60,7 @@ describe('Factory', function () {
     });
 
     it('should create a very simple precipitation model (in DMSO)', function () {
-        var factory = new Factory({solvent: 'DMSO'});
+        var factory = new Factory({solvent: 'DMSO', database: eq.AgClInDMSO});
         factory.addSpecie('AgCl', 1);
         var model = factory.getModel();
         model.components.length.should.equal(2);
