@@ -36,22 +36,50 @@ class EquationSet {
         return this.getSpecies();
     }
 
-    getSpecies(type) {
+    getSpecies(species, type) {
         var speciesSet = new Set();
         this.forEach(eq => {
             if(type && type !== eq.type) return;
-            speciesSet.add(eq.formed);
-            Object.keys(eq.components).forEach(c => speciesSet.add(c));
+            if(species) {
+                if(species.indexOf(eq.formed) > -1) {
+                    speciesSet.add(eq.formed);
+                    Object.keys(eq.components).forEach(c => speciesSet.add(c));
+                } else {
+                    Object.keys(eq.components).forEach(c => {
+                        if(species.indexOf(c) > -1) speciesSet.add(c);
+                    });
+                }
+            } else {
+                speciesSet.add(eq.formed);
+                Object.keys(eq.components).forEach(c => speciesSet.add(c));
+            }
         });
         return Array.from(speciesSet);
     }
 
 
     get components() {
+        return this.getComponents();
+    }
+
+    getComponents(species, type) {
         var speciesSet = new Set();
         this.forEach(eq => {
-            Object.keys(eq.components).forEach(c => speciesSet.add(c));
+            if (type && type !== eq.type) return;
+            if (species) {
+                if (species.indexOf(eq.formed) > -1) {
+                    Object.keys(eq.components).forEach(c => speciesSet.add(c));
+                } else {
+                    Object.keys(eq.components).forEach(c => {
+                        if(species.indexOf(c) > -1) speciesSet.add(c);
+                    });
+                }
+            } else {
+                Object.keys(eq.components).forEach(c => speciesSet.add(c));
+            }
+
         });
+
         return Array.from(speciesSet);
     }
 

@@ -19,8 +19,9 @@ class Factory {
         this.addSpecie(options.solvent);
     }
 
-    getSpecies(type) {
-        return this.eqSet.getSpecies(type);
+    getSpecies(filtered, type) {
+        var species = filtered ? Object.keys(this.species) : null;
+        return this.eqSet.getSpecies(species, type);
     }
 
     addSpecie(label, total) {
@@ -33,6 +34,11 @@ class Factory {
         } else {
             this.species[label] += total;
         }
+    }
+
+    getComponents(filtered, type) {
+        var species = filtered ? Object.keys(this.species) : null;
+        return this.eqSet.getComponents(species, type);
     }
 
     setTotal(label, total) {

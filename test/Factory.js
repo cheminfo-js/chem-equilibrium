@@ -6,7 +6,15 @@ describe('Factory', function () {
     it('should create a Factory with a custom reaction database', function () {
         var factory = new Factory({database: eq.equations1});
         factory.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);
-        factory.getSpecies('acidoBasic').sort().should.deepEqual(['A', 'B']);
+        factory.getSpecies(false, 'acidoBasic').sort().should.deepEqual(['A', 'B']);
+        factory.getComponents().sort().should.deepEqual(['B', 'D', 'E']);
+        factory.getComponents(false, 'acidoBasic').sort().should.deepEqual(['B']);
+        factory.addSpecie('D', 1);
+        factory.getSpecies(true).should.deepEqual(['D']);
+        factory.getComponents(true).should.deepEqual(['D']);
+        factory.addSpecie('C', 1);
+        factory.getSpecies(true).sort().should.deepEqual(['C', 'D', 'E']);
+        factory.getComponents(true).sort().should.deepEqual(['D', 'E']);
     });
 
     it('should create a Factory when from multi-solvent database', function () {
