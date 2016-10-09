@@ -32,6 +32,34 @@ describe('Factory', function () {
         model.formedSpecies.should.have.length(2);
     });
 
+
+    it('should create a model where one component has a fixed concentration at equilibrium', function () {
+        var factory = new Factory({database: eq.equations1});
+        factory.addSpecie('A', 1);
+        factory.addSpecie('C', 1);
+        factory.addSpecie('B', 1);
+
+        factory.addSpecie('X', 1); // should have no effect (specie not in database)
+        factory.setAtEquilibrium('E', 2);
+        factory.setAtEquilibrium('Y', 1); // should have no effect (specie not in database)
+        var model = factory.getModel();
+        getComponent('B', model).should.deepEqual({label: 'B', total: 0});
+        getComponent('D', model).should.deepEqual({label: 'D', total: 2});
+        getComponent('E', model).should.deepEqual({label: 'E', atEquilibrium: 2});
+        getFormedSpecie('A', model).should.deepEqual({
+            label: 'A',
+            beta: 10,
+            components: getExpectedComponents(['B', -1], model),
+            solid: false
+        });
+        getFormedSpecie('C', model).should.deepEqual({
+            label: 'C',
+            beta: 0.1,
+            components: getExpectedComponents(['D', 2, 'E', 1], model),
+            solid: true
+        });
+    });
+
     it('should create acid/base model', function () {
         var factory = new Factory({database: eq.acidBase});
         factory.addSpecie('CO3--', 1);

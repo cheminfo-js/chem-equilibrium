@@ -108,8 +108,8 @@ class Factory {
         var normSet = subSet.getNormalized(this.options.solvent);
         var model = normSet.getModel(this.species, true);
         model.components.forEach(c => {
-            if(this.atEquilibrium.has(c)) {
-                c.atEquilibrium = c.total;
+            if(this.atEquilibrium.has(c.label)) {
+                c.atEquilibrium = this.species[c.label];
                 delete c.total;
             }
         });
