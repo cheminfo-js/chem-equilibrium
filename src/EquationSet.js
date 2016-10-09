@@ -83,11 +83,13 @@ class EquationSet {
         return Array.from(speciesSet);
     }
 
-    disableEquation(key) {
+    disableEquation(key, hashIt) {
+        key = hashIt ? getHash(key) : key;
         this._disabledKeys.add(key);
     }
 
-    enableEquation(key) {
+    enableEquation(key, hashIt) {
+        key = hashIt ? getHash(key) : key;
         this._disabledKeys.delete(key);
     }
 

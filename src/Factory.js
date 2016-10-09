@@ -24,6 +24,14 @@ class Factory {
         return this.eqSet.getSpecies(species, type);
     }
 
+    disableEquation(formedSpecie) {
+        this.eqSet.disableEquation(formedSpecie, true);
+    }
+
+    enableEquation(formedSpecie) {
+        this.eqSet.enableEquation(formedSpecie, true);
+    }
+
     addSpecie(label, total) {
         total = total || 0;
         if (label === this.solvent) {
@@ -38,7 +46,7 @@ class Factory {
 
     getComponents(filtered, type) {
         var species = filtered ? Object.keys(this.species) : null;
-        return this.eqSet.getComponents(species, type);
+        return this.eqSet.getComponents({species, type});
     }
 
     setTotal(label, total) {

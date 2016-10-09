@@ -3,7 +3,7 @@ const Factory = require('../src/Factory');
 const eq = require('./data/equations');
 
 describe('Factory', function () {
-    it('should test various getters', function () {
+    it.only('should test various getters', function () {
         var factory = new Factory({database: eq.equations1});
         factory.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);
         factory.getSpecies(false, 'acidoBasic').sort().should.deepEqual(['A', 'B']);
@@ -23,7 +23,13 @@ describe('Factory', function () {
         factory.getEquations(true).sort(equationSort).should.deepEqual([
             { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 } ]
         );
+
+        // Test getters when there with inter-dependency
+        factory = new Factory({database: eq.acidBase});
+        factory.addSpecie('HPO4--', 1);
+        factory.getComponents(true).sort().should.deepEqual(['H+', 'PO4---'])
     });
+
 
     it('should create a Factory when from multi-solvent database', function () {
         var factory = new Factory({database: eq.multiSolvent});
