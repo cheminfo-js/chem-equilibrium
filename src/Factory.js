@@ -20,7 +20,7 @@ class Factory {
     }
 
     getSpecies(filtered, type) {
-        var species = filtered ? Object.keys(this.species) : null;
+        var species = filtered ? Object.keys(this.species).concat(this.options.solvent) : null;
         return this.eqSet.getSpecies(species, type);
     }
 
@@ -45,8 +45,8 @@ class Factory {
     }
 
     getComponents(filtered, type) {
-        var species = filtered ? Object.keys(this.species) : null;
-        return this.eqSet.getComponents({species, type});
+        var species = filtered ? Object.keys(this.species).concat(this.options.solvent) : null;
+        return this.eqSet.getNormalized(this.options.solvent).getComponents(species, type);
     }
 
     setTotal(label, total) {

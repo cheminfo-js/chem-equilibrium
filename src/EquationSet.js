@@ -63,6 +63,9 @@ class EquationSet {
     }
 
     getComponents(species, type) {
+        if(!this.isNormalized()) {
+            throw new Error('Cannot get components from non-normalized equation set')
+        }
         var speciesSet = new Set();
         this.forEach(eq => {
             if (type && type !== eq.type) return;
@@ -79,7 +82,6 @@ class EquationSet {
             }
 
         });
-
         return Array.from(speciesSet);
     }
 
