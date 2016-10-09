@@ -144,6 +144,66 @@ const AgClInDMSO = [
     }
 ];
 
+const acidBase = [
+    {
+        "formed": "CH3CO2H",
+        "components": {
+            "CH3COO-": 1,
+            "H+": 1
+        },
+        "pK": 4.7,
+        "type": "acidoBasic"
+    },
+    {
+        "formed": "HCO3-",
+        "components": {
+            "CO3--": 1,
+            "H+": 1
+        },
+        "pK": 10.33,
+        "type": "acidoBasic"
+    },
+    {
+        "formed": "H2CO3",
+        "components": {
+            "HCO3-": 1,
+            "H+": 1
+        },
+        "pK": 6.3,
+        "type": "acidoBasic"
+    },
+    {
+        "formed": "H2O",
+        "components": {
+            "OH-": 1,
+            "H+": 1
+        },
+        "pK": 14,
+        "type": "acidoBasic"
+    }
+];
+
+const AgInWater = [
+    {
+        "formed": "AgOH",
+        "components": {
+            "Ag+": 1,
+            "OH-": 1
+        },
+        "pK": 7.72,
+        "type": "precipitation"
+    },
+    {
+        "formed": "H2O",
+        "components": {
+            "OH-": 1,
+            "H+": 1
+        },
+        "pK": 14,
+        "type": "acidoBasic"
+    }
+];
+
 
 module.exports = {
     equations1,
@@ -152,5 +212,7 @@ module.exports = {
     equations4,
     circularEquations,
     multiSolvent,
-    AgClInDMSO
+    AgClInDMSO,
+    acidBase,
+    AgInWater
 };

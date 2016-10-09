@@ -106,7 +106,14 @@ class Factory {
     getModel() {
         var subSet = this.eqSet.getSubset(Object.keys(this.species));
         var normSet = subSet.getNormalized(this.options.solvent);
-        return normSet.getModel(this.species, true);
+        var model = normSet.getModel(this.species, true);
+        model.components.forEach(c => {
+            if(this.atEquilibrium.has(c)) {
+                c.atEquilibrium = c.total;
+                delete c.total;
+            }
+        });
+        return model;
     }
 
 }

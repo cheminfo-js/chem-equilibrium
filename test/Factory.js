@@ -25,7 +25,7 @@ describe('Factory', function () {
     });
 
     it('in water, it should create acid/base model just by adding one component', function () {
-        var factory = new Factory();
+        var factory = new Factory({database: eq.acidBase});
         factory.addSpecie('CH3COO-', 1);
         var model = factory.getModel();
         model.components.should.have.length(2);
@@ -33,7 +33,7 @@ describe('Factory', function () {
     });
 
     it('should create acid/base model', function () {
-        var factory = new Factory();
+        var factory = new Factory({database: eq.acidBase});
         factory.addSpecie('CO3--', 1);
         factory.addSpecie('HCO3-', 1);
         factory.addSpecie('OH-', 1);
@@ -91,7 +91,7 @@ describe('Factory', function () {
     });
 
     it('should create precipitation model with OH- precipitation', function () {
-        var factory = new Factory();
+        var factory = new Factory({database: eq.AgInWater});
         factory.addSpecie('Ag+', 1);
         var model = factory.getModel();
         model.components.should.have.length(2);
