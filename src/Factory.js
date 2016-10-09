@@ -12,6 +12,7 @@ class Factory {
         this.atEquilibrium = new Set();
         options = Object.assign({}, defaultOptions, options);
         var db = options.database || database;
+        if(options.extend && options.database) db = db.concat(database);
         db = processDB(db, options);
         this.species = {};
         this.options = options;
