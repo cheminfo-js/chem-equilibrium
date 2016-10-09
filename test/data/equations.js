@@ -180,6 +180,33 @@ const acidBase = [
         },
         "pK": 14,
         "type": "acidoBasic"
+    },
+    {
+        "formed": "HPO4--",
+        "components": {
+            "PO4---": 1,
+            "H+": 1
+        },
+        "pK": 12.32,
+        "type": "acidoBasic"
+    },
+    {
+        "formed": "H3PO4",
+        "components": {
+            "H2PO4-": 1,
+            "H+": 1
+        },
+        "pK": 2.12,
+        "type": "acidoBasic"
+    },
+    {
+        "formed": "H2PO4-",
+        "components": {
+            "HPO4--": 1,
+            "H+": 1
+        },
+        "pK": 7.2,
+        "type": "acidoBasic"
     }
 ];
 
