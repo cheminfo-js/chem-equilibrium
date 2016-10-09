@@ -3,7 +3,7 @@ const Factory = require('../src/Factory');
 const eq = require('./data/equations');
 
 describe('Factory', function () {
-    it.only('should test various getters', function () {
+    it('should test various getters', function () {
         var factory = new Factory({database: eq.equations1});
         factory.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);
         factory.getSpecies(false, 'acidoBasic').sort().should.deepEqual(['A', 'B']);
@@ -24,13 +24,34 @@ describe('Factory', function () {
             { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 } ]
         );
 
-        // Test getters when there with inter-dependency
+        // Test getters when there is inter-dependency
         factory = new Factory({database: eq.acidBase});
         factory.addSpecie('HPO4--', 1);
         factory.getComponents(true).sort().should.deepEqual(['H+', 'PO4---'])
     });
 
-
+    it('should enable/disable equations', function () {
+        var factory = new Factory({database: eq.equations1});
+        factory.disableEquation('A');
+        factory.getSpecies().sort().should.deepEqual(['C', 'D', 'E']);
+        factory.getSpecies(false, 'acidoBasic').sort().should.deepEqual([]);
+        factory.getComponents().sort().should.deepEqual(['D', 'E']);
+        factory.getComponents(false, 'acidoBasic').sort().should.deepEqual([]);
+        factory.getEquations().sort(equationSort).should.deepEqual([
+            { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 } ]
+        );
+        factory.addSpecie('A', 1);
+        factory.addSpecie('C', 1);
+        var model = factory.getModel();
+        getComponent('D', model).should.deepEqual({label: 'D', total: 2});
+        getComponent('E', model).should.deepEqual({label: 'E', total: 1});
+        getFormedSpecie('C', model).should.deepEqual({
+            label: 'C',
+            components: getExpectedComponents(['D', 2, 'E', 1], model),
+            beta: 0.1,
+            solid: true
+        });
+    });
     it('should create a Factory when from multi-solvent database', function () {
         var factory = new Factory({database: eq.multiSolvent});
         factory.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E', 'F']);

@@ -38,8 +38,9 @@ class EquationSet {
 
     getSpecies(species, type) {
         var speciesSet = new Set();
-        this.forEach(eq => {
-            if(type && type !== eq.type) return;
+        for(var [key, eq] of this.entries()) {
+            if(this._disabledKeys.has(key)) continue;
+            if(type && type !== eq.type) continue;
             if(species) {
                 if(species.indexOf(eq.formed) > -1) {
                     speciesSet.add(eq.formed);
@@ -53,7 +54,7 @@ class EquationSet {
                 speciesSet.add(eq.formed);
                 Object.keys(eq.components).forEach(c => speciesSet.add(c));
             }
-        });
+        }
         return Array.from(speciesSet);
     }
 
@@ -67,8 +68,9 @@ class EquationSet {
             throw new Error('Cannot get components from non-normalized equation set')
         }
         var speciesSet = new Set();
-        this.forEach(eq => {
-            if (type && type !== eq.type) return;
+        for(var [key, eq] of this.entries()) {
+            if(this._disabledKeys.has(key)) continue;
+            if (type && type !== eq.type) continue;
             if (species) {
                 if (species.indexOf(eq.formed) > -1) {
                     Object.keys(eq.components).forEach(c => speciesSet.add(c));
@@ -81,7 +83,7 @@ class EquationSet {
                 Object.keys(eq.components).forEach(c => speciesSet.add(c));
             }
 
-        });
+        }
         return Array.from(speciesSet);
     }
 
@@ -156,7 +158,9 @@ class EquationSet {
     }
 
     getEquations() {
-        return Array.from(this.equations).map(e => e[1].toJSON());
+        return Array.from(this.equations)
+            .filter(e => !this._disabledKeys.has(e[0]))
+            .map(e => e[1].toJSON());
     }
 
     getModel(totals, all) {
@@ -170,7 +174,9 @@ class EquationSet {
             subset = this.getSubset(Object.keys(totals));
         }
         var components = subset.components;
-        const subsetArr = [...subset.values()];
+        const subsetKeys = [...subset.keys()];
+        const subsetArr = [...subset.values()]
+            .filter((s, idx) => !this._disabledKeys.has(subsetKeys[idx]));
         components.forEach(c => totalComp[c] = 0);
         for(var key in totals) {
             if(totals.hasOwnProperty(key)) {
