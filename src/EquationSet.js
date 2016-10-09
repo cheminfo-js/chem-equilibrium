@@ -151,6 +151,10 @@ class EquationSet {
         return this._normalized;
     }
 
+    getEquations() {
+        return Array.from(this.equations).map(e => e[1].toJSON());
+    }
+
     getModel(totals, all) {
         if (!this.isNormalized()) {
             throw new Error('Cannot get model from un-normalized equation set');
@@ -244,10 +248,6 @@ class EquationSet {
         newSet._disabledKeys = new Set(this._disabledKeys);
         newSet._normalized = this._normalized;
         return newSet;
-    }
-
-    getEquationById() {
-
     }
 }
 

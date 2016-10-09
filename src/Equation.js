@@ -42,6 +42,10 @@ class Equation {
         return new Equation(deepcopy(this._eq));
     }
 
+    toJSON() {
+        return this._eq;
+    }
+
     // Get a new representation of the equation given a solvent
     // Returns a new equation that does not include the solvent
     withSolvent(solvent) {

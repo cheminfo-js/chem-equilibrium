@@ -59,50 +59,6 @@ class Factory {
         return new Equilibrium(this.getModel(), this.options);
     }
 
-    getEquations(type) {
-        var that = this;
-        type = type || 'chemist';
-        this._getEquations();
-        var result = [];
-
-        function addEquations(eq, solid) {
-            var keys = Object.keys(eq);
-            for (var i = 0; i < keys.length; i++) {
-                var key = keys[i];
-                var label, currentEq;
-                if (type === 'decomposed') {
-                    label = key;
-                    currentEq = equations[key];
-                } else if (type === 'decomposed-solvent') {
-                    label = that.solventEquations[key] && that.solventEquations[key].formed || key;
-                    currentEq = that.solventEquations[key] || eq[key];
-                } else if (type === 'chemist') {
-                    label = key;
-                    currentEq = chemistEquations[key];
-                }
-                result.push({
-                    label: label,
-                    components: []
-                });
-                var idx = result.length - 1;
-                if (solid) result[idx].solid = true;
-
-                var ks = Object.keys(currentEq.components);
-                for (var j = 0; j < ks.length; j++) {
-                    var k = ks[j];
-                    result[idx].components.push({
-                        label: ks[j],
-                        n: currentEq.components[k]
-                    });
-                }
-            }
-        }
-
-        addEquations(this._equations);
-        addEquations(this._solidEquations, true);
-        return result;
-    }
-
     getModel() {
         var subSet = this.eqSet.getSubset(Object.keys(this.species));
         var normSet = subSet.getNormalized(this.options.solvent);
@@ -114,6 +70,17 @@ class Factory {
             }
         });
         return model;
+    }
+
+    getEquations(filtered, normalized) {
+        var eqSet = this.eqSet;
+        if(filtered) {
+            eqSet = this.eqSet.getSubset(Object.keys(this.species));
+        }
+        if(normalized) {
+            eqSet = eqSet.getNormalized(this.options.solvent);
+        }
+        return eqSet.getEquations();
     }
 
 }

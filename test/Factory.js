@@ -3,18 +3,26 @@ const Factory = require('../src/Factory');
 const eq = require('./data/equations');
 
 describe('Factory', function () {
-    it('should create a Factory with a custom reaction database', function () {
+    it('should test various getters', function () {
         var factory = new Factory({database: eq.equations1});
         factory.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);
         factory.getSpecies(false, 'acidoBasic').sort().should.deepEqual(['A', 'B']);
         factory.getComponents().sort().should.deepEqual(['B', 'D', 'E']);
         factory.getComponents(false, 'acidoBasic').sort().should.deepEqual(['B']);
+        factory.getEquations().sort(equationSort).should.deepEqual([
+            { formed: 'A', components: { B: -1 }, type: 'acidoBasic', pK: 1 },
+            { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 } ]
+        );
         factory.addSpecie('D', 1);
         factory.getSpecies(true).should.deepEqual(['D']);
         factory.getComponents(true).should.deepEqual(['D']);
+        factory.getEquations(true).sort(equationSort).should.deepEqual([]);
         factory.addSpecie('C', 1);
         factory.getSpecies(true).sort().should.deepEqual(['C', 'D', 'E']);
         factory.getComponents(true).sort().should.deepEqual(['D', 'E']);
+        factory.getEquations(true).sort(equationSort).should.deepEqual([
+            { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 } ]
+        );
     });
 
     it('should create a Factory when from multi-solvent database', function () {
@@ -165,4 +173,10 @@ function getFormedSpecie(label, model) {
 
 function getComponent(label, model) {
     return model.components.find(c => c.label === label);
+}
+
+function equationSort(a, b) {
+    if(a.formed < b.formed) return -1;
+    else if(a.formed > b.formed) return 1;
+    return 0;
 }
