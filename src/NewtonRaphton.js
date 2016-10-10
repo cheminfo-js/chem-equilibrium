@@ -1,8 +1,11 @@
 'use strict';
 var Matrix = require('ml-matrix');
 var stat = require('ml-stat').matrix;
+const defaultOptions = {
+    tolerance: 1e-15
+};
 
-function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC) {
+function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC, options) {
     // c is component concentrations. The initialization is up to the caller
     // model contains stoechiometric coefficient of the reactions
     // beta is the equilibrium constant for each reaction
@@ -10,6 +13,8 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC) {
     // solid model contains stoechiometric coefficients of the precipitation reactions
     // solidBeta contains the solubility constants
     // solidC contains the initial solid species "concentrations"
+
+    options = Object.assign({}, defaultOptions, options);
     var ncomp = cTotal.length;
     var nspec = beta.length;
 
@@ -32,7 +37,7 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC) {
     }
     // Prevent numerical difficulties
     for (var i = 0; i < cTotal.length; i++) {
-        if (cTotal[i] === 0) cTotal[i] = 1e-15;
+        if (cTotal[i] === 0) cTotal[i] = options.tolerance;
     }
 
     c = new Matrix([c]);
@@ -55,7 +60,7 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC) {
                 } else if (solidC[0][idx] > 0) {
                     // solid concentration is not 0
                     solidIndices.push(idx);
-                } else if (Math.abs(k - solidBeta[idx]) < 1e-15) {
+                } else if (Math.abs(k - solidBeta[idx]) < options.tolerance) {
                     // diff is negative but small, we keep it in the model
                     solidIndices.push(idx);
                 }
@@ -110,7 +115,7 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC) {
         }
 
         // console.log('dkorig', dkOrig);
-        if (checkEpsilon(d[0]) && checkSolid(solidC, dkOrig)) {
+        if (checkEpsilon(options.tolerance, d[0]) && checkSolid(options.tolerance, solidC, dkOrig)) {
             // console.log('final solution concentrations',c);
             // console.log('final solid concentrations', solidC);
             console.log(`solution converged in ${i} iterations`);
@@ -160,7 +165,7 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC) {
         while (checkNeg(allC[0])) {
             deltaC = deltaC.multiply(0.5);
             allC.subtract(deltaC);
-            if (checkEpsilon(deltaC[0])) break;
+            if (checkEpsilon(options.tolerance, deltaC[0])) break;
         }
 
         // console.log('allC', allC.to1DArray());
@@ -186,18 +191,18 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC) {
 
 module.exports = newtonRaphton;
 
-// Returns true if all elements in the array are smaller than 1e-15
-function checkEpsilon(arr, n) {
+// Returns true if all elements in the array are smaller than tolerance
+function checkEpsilon(tolerance, arr, n) {
     return !arr.some(function (el, idx) {
         if (n && idx >= n) return false;
-        return Math.abs(el) >= 1e-15
+        return Math.abs(el) >= tolerance
     });
 }
 
-function checkSolid(c, dk) {
+function checkSolid(tolerance, c, dk) {
     if (!c.length) return true;
     return !c[0].some(function (value, idx) {
-        return value !== 0 && Math.abs(dk[idx]) >= 1e-15;
+        return value !== 0 && Math.abs(dk[idx]) >= tolerance
     });
 }
 

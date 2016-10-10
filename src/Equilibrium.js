@@ -7,7 +7,8 @@ const defaultOptions = {
     robustMaxTries: 10,
     volume: 1,
     random: Math.random,
-    autoInitial: true
+    autoInitial: true,
+    tolerance: 1e-15
 };
 
 /**
@@ -229,7 +230,7 @@ class Equilibrium {
     solve() {
         var model = this._model;
         var initial = this._getInitial();
-        var cSpec = newtonRaphton(model.model, model.beta, model.cTotal, initial.components, model.solidModel, model.solidBeta, initial.solids);
+        var cSpec = newtonRaphton(model.model, model.beta, model.cTotal, initial.components, model.solidModel, model.solidBeta, initial.solids, this.options);
         var result = this._processResult(cSpec);
         if(this.options.autoInitial) this.setInitial(result);
         return result;
@@ -249,7 +250,7 @@ class Equilibrium {
                 components: random.logarithmic(this.options.random, model.compLabels.length),
                 solids: random.logarithmic(this.options.random, model.specSolidLabels.length)
             };
-            var cSpec = newtonRaphton(model.model, model.beta, model.cTotal, initial.components, model.solidModel, model.solidBeta, initial.solids);
+            var cSpec = newtonRaphton(model.model, model.beta, model.cTotal, initial.components, model.solidModel, model.solidBeta, initial.solids, this.options);
             if (cSpec) {
                 return this._processResult(cSpec);
             }
