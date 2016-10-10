@@ -2,7 +2,9 @@
 var Matrix = require('ml-matrix');
 var stat = require('ml-stat').matrix;
 const defaultOptions = {
-    tolerance: 1e-15
+    tolerance: 1e-15,
+    solidTolerance: 1e-5,
+    maxIterations: 99
 };
 
 function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC, options) {
@@ -43,8 +45,7 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC, op
     c = new Matrix([c]);
 
 
-    var maxIt = 99;
-    for (i = 0; i < maxIt; i++) {
+    for (i = 0; i < options.maxIterations; i++) {
         // console.log('iteration' , i);
         // console.log(c, solidC)
 
@@ -100,7 +101,7 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC, op
         var d = Matrix.subtract([cTotal], cTotCalc);
         if (nSolidPicked) {
             var dK = Matrix.subtract(lnSolidBeta, [lnKsp]).selection([0], solidIndices);
-            var dkOrig = Matrix.subtract([solidBeta], [Ksp]).selection([0], solidIndices);
+            var dkOrig = Matrix.subtract([solidBeta], [Ksp]);
             var dAll = new Matrix(1, njstar);
             dAll.setSubMatrix(d, 0, 0);
             dAll.setSubMatrix(dK, 0, ncomp);
@@ -114,8 +115,8 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC, op
             // console.log('picked ids', solidIndices);
         }
 
-        // console.log('dkorig', dkOrig);
-        if (checkEpsilon(options.tolerance, d[0]) && checkSolid(options.tolerance, solidC, dkOrig)) {
+        // console.log('dkorig', dkOrig[0]);
+        if (checkEpsilon(options.tolerance, d[0]) && checkSolid(options.solidTolerance, solidC, dkOrig)) {
             // console.log('final solution concentrations',c);
             // console.log('final solid concentrations', solidC);
             console.log(`solution converged in ${i} iterations`);
@@ -180,7 +181,7 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC, op
         }
     }
 
-    if (i >= maxIt) {
+    if (i >= options.maxIterations) {
         console.log('did not converge')
         return null;
     }
@@ -202,7 +203,11 @@ function checkEpsilon(tolerance, arr, n) {
 function checkSolid(tolerance, c, dk) {
     if (!c.length) return true;
     return !c[0].some(function (value, idx) {
-        return value !== 0 && Math.abs(dk[idx]) >= tolerance
+        if(dk[0][idx] === undefined) {
+            debugger;
+            throw 2;
+        }
+        return value !== 0 && Math.abs(dk[0][idx]) >= tolerance;
     });
 }
 
