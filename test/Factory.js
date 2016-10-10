@@ -13,9 +13,11 @@ describe('Factory', function () {
             { formed: 'A', components: { B: -1 }, type: 'acidoBasic', pK: 1 },
             { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 } ]
         );
+
         factory.addSpecie('D', 1);
         factory.getSpecies(true).should.deepEqual(['D']);
-        factory.getComponents(true).should.deepEqual(['D']);
+        // getComponents only returns components when they form an equation
+        factory.getComponents(true).should.deepEqual([]);
         factory.getEquations(true).sort(equationSort).should.deepEqual([]);
         factory.addSpecie('C', 1);
         factory.getSpecies(true).sort().should.deepEqual(['C', 'D', 'E']);
@@ -28,6 +30,10 @@ describe('Factory', function () {
         factory = new Factory({database: eq.acidBase});
         factory.addSpecie('HPO4--', 1);
         factory.getComponents(true).sort().should.deepEqual(['H+', 'PO4---']);
+
+        factory = new Factory();
+        factory.addSpecie('CH3COO-', 1);
+
     });
 
     it('should enable/disable equations', function () {

@@ -6196,6 +6196,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var database = __webpack_require__(33);
 	var EquationSet = __webpack_require__(34);
 	var deepcopy = __webpack_require__(40);
+	var Equilibrium = __webpack_require__(1);
 
 	var defaultOptions = {
 	    solvent: 'H2O'
