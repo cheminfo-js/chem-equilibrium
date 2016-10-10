@@ -2,6 +2,7 @@
 const database = require('../data/data.json');
 const EquationSet = require('./EquationSet');
 const deepcopy = require('deepcopy');
+const Equilibrium = require('./Equilibrium');
 
 const defaultOptions = {
     solvent: 'H2O'

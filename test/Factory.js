@@ -27,7 +27,7 @@ describe('Factory', function () {
         // Test getters when there is inter-dependency
         factory = new Factory({database: eq.acidBase});
         factory.addSpecie('HPO4--', 1);
-        factory.getComponents(true).sort().should.deepEqual(['H+', 'PO4---'])
+        factory.getComponents(true).sort().should.deepEqual(['H+', 'PO4---']);
     });
 
     it('should enable/disable equations', function () {
@@ -66,6 +66,7 @@ describe('Factory', function () {
         var factory = new Factory({database: eq.acidBase});
         factory.addSpecie('CH3COO-', 1);
         var model = factory.getModel();
+        factory.getEquilibrium();
         model.components.should.have.length(2);
         model.formedSpecies.should.have.length(2);
     });

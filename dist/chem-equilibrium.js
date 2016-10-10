@@ -78,7 +78,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var newtonRaphton = __webpack_require__(31);
 
 	var defaultOptions = {
-	    robustMaxTries: 15,
+	    robustMaxTries: 1000,
 	    volume: 1,
 	    random: Math.random,
 	    autoInitial: true
@@ -349,12 +349,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        value: function solveRobust() {
 	            var model = this._model;
 	            for (var i = 0; i < this.options.robustMaxTries; i++) {
-	                console.log(model.specSolidLabels);
 	                var initial = {
 	                    components: random.logarithmic(this.options.random, model.compLabels.length),
 	                    solids: random.logarithmic(this.options.random, model.specSolidLabels.length)
 	                };
-	                console.log(model.model, model.beta, model.cTotal, initial.components, model.solidModel, model.solidBeta, initial.solids);
 	                var cSpec = newtonRaphton(model.model, model.beta, model.cTotal, initial.components, model.solidModel, model.solidBeta, initial.solids);
 	                if (cSpec) {
 	                    return this._processResult(cSpec);
@@ -6018,10 +6016,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var Ksp = stat.product(c.transpose().repeat(1, nsolid).pow(solidModel), 0);
 	            Ksp.forEach(function (k, idx) {
 	                if (k > solidBeta[idx]) {
+	                    // The computed solubility product is greater than maximum value
 	                    solidIndices.push(idx);
 	                } else if (solidC[0][idx] > 0) {
+	                    // solid concentration is not 0
 	                    solidIndices.push(idx);
 	                } else if (Math.abs(k - solidBeta[idx]) < 1e-15) {
+	                    // diff is negative but small, we keep it in the model
 	                    solidIndices.push(idx);
 	                }
 	            });
@@ -6192,68 +6193,75 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	var equations = __webpack_require__(33);
-	var allComponents = getComponentList(equations);
-	var Equilibrium = __webpack_require__(1);
+	var database = __webpack_require__(33);
+	var EquationSet = __webpack_require__(34);
+	var deepcopy = __webpack_require__(40);
 
-	var Helper = function () {
-	    function Helper() {
-	        _classCallCheck(this, Helper);
+	var defaultOptions = {
+	    solvent: 'H2O'
+	};
 
-	        this.components = [];
-	        this.options = {};
-	        this._hasChanged = true;
+	var Factory = function () {
+	    function Factory(options) {
+	        _classCallCheck(this, Factory);
+
+	        this.atEquilibrium = new Set();
+	        options = Object.assign({}, defaultOptions, options);
+	        var db = options.database || database;
+	        if (options.extend && options.database) db = db.concat(database);
+	        db = processDB(db, options);
+	        this.species = {};
+	        this.options = options;
+	        this.eqSet = new EquationSet(db);
+	        this.addSpecie(options.solvent);
 	    }
 
-	    _createClass(Helper, [{
+	    _createClass(Factory, [{
+	        key: 'getSpecies',
+	        value: function getSpecies(filtered, type) {
+	            var species = filtered ? Object.keys(this.species).concat(this.options.solvent) : null;
+	            return this.eqSet.getSpecies(species, type);
+	        }
+	    }, {
+	        key: 'disableEquation',
+	        value: function disableEquation(formedSpecie) {
+	            this.eqSet.disableEquation(formedSpecie, true);
+	        }
+	    }, {
+	        key: 'enableEquation',
+	        value: function enableEquation(formedSpecie) {
+	            this.eqSet.enableEquation(formedSpecie, true);
+	        }
+	    }, {
 	        key: 'addSpecie',
 	        value: function addSpecie(label, total) {
-	            var eq = equations[label];
-	            if (eq) {
-	                for (var key in eq.components) {
-	                    this._addComponent(key, total * eq.components[key]);
-	                }
-	            } else if (allComponents.indexOf(label) >= 0 || label === 'OH-') {
-	                this._addComponent(label, total);
+	            total = total || 0;
+	            if (label === this.solvent) {
+	                total = 0;
+	            }
+	            if (!this.species[label]) {
+	                this.species[label] = total;
 	            } else {
-	                throw new Error('Specie not found');
+	                this.species[label] += total;
 	            }
 	        }
 	    }, {
-	        key: '_addComponent',
-	        value: function _addComponent(label, total) {
-	            if (label === 'OH-') {
-	                label = 'H+';
-	                total = -total;
-	            }
-	            if (!total) total = 0;
-	            var comp = this.components.find(function (c) {
-	                return c.label === label;
-	            });
-	            if (comp) comp.total += total;else {
-	                this._hasChanged = true;
-	                this.components.push({
-	                    label: label, total: total
-	                });
-	            }
+	        key: 'getComponents',
+	        value: function getComponents(filtered, type) {
+	            var species = filtered ? Object.keys(this.species).concat(this.options.solvent) : null;
+	            return this.eqSet.getNormalized(this.options.solvent).getComponents(species, type);
 	        }
 	    }, {
 	        key: 'setTotal',
-	        value: function setTotal(componentLabel, total) {
-	            var c = this.components.find(function (c) {
-	                return c.label === componentLabel;
-	            });
-	            c.total = total;
-	            c.atEquilibrium = undefined;
+	        value: function setTotal(label, total) {
+	            this.species[label] = total;
+	            this.atEquilibrium.delete(label);
 	        }
 	    }, {
 	        key: 'setAtEquilibrium',
-	        value: function setAtEquilibrium(componentLabel, atEquilibrium) {
-	            var c = this.components.find(function (c) {
-	                return c.label === componentLabel;
-	            });
-	            c.atEquilibrium = atEquilibrium;
-	            c.total = undefined;
+	        value: function setAtEquilibrium(label, value) {
+	            this.species[label] = value;
+	            this.atEquilibrium.add(label);
 	        }
 	    }, {
 	        key: 'setOptions',
@@ -6266,513 +6274,420 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return new Equilibrium(this.getModel(), this.options);
 	        }
 	    }, {
-	        key: 'ignoreEquation',
-	        value: function ignoreEquation(label) {
-	            // Update equations
-	            this._getEquations();
-	            delete this._equations[label];
-	            delete this._solidEquations[label];
-
-	            // TODO: check if it disrupted the model
-	            // is disrupted if a component does not appear in any equation
-	        }
-	    }, {
 	        key: 'getModel',
 	        value: function getModel() {
-	            var that = this;
-	            var nbComponents = this.components.length;
+	            var _this = this;
 
-	            var protonIndex = this.components.findIndex(function (c) {
-	                return c.label === 'H+';
-	            });
-
-	            var model = {};
-
-	            this._getEquations();
-	            var equations = this._equations;
-	            var solidEquations = this._solidEquations;
-
-	            function addEquations(equations, modelEq, solid) {
-	                var keys = Object.keys(equations);
-	                for (var i = 0; i < keys.length; i++) {
-	                    var key = keys[i];
-	                    var equation = equations[key];
-	                    var eq = {
-	                        label: keys[i],
-	                        beta: Math.pow(10, equation.pK),
-	                        components: new Array(that.components.length).fill(0)
-	                    };
-	                    if (solid) eq.solid = true;
-	                    modelEq.push(eq);
-	                    var comp = equation.components;
-	                    var compKeys = Object.keys(comp);
-	                    for (var j = 0; j < compKeys.length; j++) {
-	                        var idx = that.components.findIndex(function (c) {
-	                            return c.label === compKeys[j];
-	                        });
-	                        eq.components[idx] += comp[compKeys[j]];
-	                    }
+	            var subSet = this.eqSet.getSubset(Object.keys(this.species));
+	            var normSet = subSet.getNormalized(this.options.solvent);
+	            var model = normSet.getModel(this.species, true);
+	            model.components.forEach(function (c) {
+	                if (_this.atEquilibrium.has(c.label)) {
+	                    c.atEquilibrium = _this.species[c.label];
+	                    delete c.total;
 	                }
-	            }
-
-	            model.formedSpecies = [];
-	            addEquations(equations, model.formedSpecies);
-	            addEquations(solidEquations, model.formedSpecies, true);
-
-	            if (protonIndex >= 0) {
-	                model.formedSpecies.push({
-	                    label: 'OH-',
-	                    beta: Math.pow(10, -14),
-	                    components: new Array(this.components.length).fill(0)
-	                });
-	                model.formedSpecies[model.formedSpecies.length - 1].components[protonIndex] = -1;
-	            }
-
-	            // Model components
-	            model.components = new Array(nbComponents);
-	            for (var i = 0; i < this.components.length; i++) {
-	                model.components[i] = Object.assign({}, this.components[i]);
-	            }
-	            //
-	            // // Model formed species
-	            // model.formedSpecies = [{
-	            //     label: 'OH-',
-	            //     beta: Math.pow(10, -14),
-	            //     components: new Array(nbComponents).fill(0)
-	            // }];
-	            //
-	            // model.formedSpecies[0].components[protonIndex] = -1;
-	            //
-	            //
-	            // for (var i = 0; i < this.components.length; i++) {
-	            //     if (i === protonIndex) continue;
-	            //     var group = groupedAcidBase[this.components[i].label];
-	            //     if (group) {
-	            //         for (var j = 0; j < group.length; j++) {
-	            //             var el = group[j];
-	            //             model.formedSpecies.push({
-	            //                 label: String(el.AB),
-	            //                 beta: Math.pow(10, Number(el.totalPka)),
-	            //                 components: new Array(nbComponents).fill(0)
-	            //             });
-	            //             model.formedSpecies[model.formedSpecies.length - 1].components[i] = 1;
-	            //             model.formedSpecies[model.formedSpecies.length - 1].components[protonIndex] = Number(el.protons);
-	            //         }
-	            //     } else {
-	            //         console.warn('doing nothing with component');
-	            //     }
-	            // }
-
+	            });
 	            return model;
 	        }
 	    }, {
-	        key: 'reset',
-	        value: function reset() {
-	            for (var i = 0; i < this.components.length; i++) {
-	                this.components[i].total = 0;
-	                this.components[i].atEquilibrium = undefined;
+	        key: 'getEquations',
+	        value: function getEquations(filtered, normalized) {
+	            var eqSet = this.eqSet;
+	            if (filtered) {
+	                eqSet = this.eqSet.getSubset(Object.keys(this.species));
 	            }
-	        }
-	    }, {
-	        key: '_getEquations',
-	        value: function _getEquations() {
-	            var _this = this;
-
-	            if (!this._hasChanged) {
-	                // Optimization: if involved components did not change, don't find equations again
-	                return;
+	            if (normalized) {
+	                eqSet = eqSet.getNormalized(this.options.solvent);
 	            }
-	            this._equations = {};
-	            this._solidEquations = {};
-	            // Traverse all equations and find those that involve all components
-	            // of the current model
-	            var keys = Object.keys(equations);
-
-	            var _loop = function _loop() {
-	                key = keys[i];
-	                eq = equations[key];
-
-	                var compKeys = Object.keys(eq.components);
-	                for (j = 0; j < compKeys.length; j++) {
-	                    if (!_this.components.find(function (c) {
-	                        return c.label === compKeys[j];
-	                    })) {
-	                        return 'continue|loop1';
-	                    }
-	                }
-	                if (eq.type === 'precipitation') {
-	                    _this._solidEquations[key] = eq;
-	                } else {
-	                    _this._equations[key] = eq;
-	                }
-	            };
-
-	            loop1: for (var i = 0; i < keys.length; i++) {
-	                var key;
-	                var eq;
-	                var j;
-
-	                var _ret = _loop();
-
-	                if (_ret === 'continue|loop1') continue loop1;
-	            }
-	            this._hasChanged = false;
-	        }
-	    }], [{
-	        key: 'getSpecieLabels',
-	        value: function getSpecieLabels(type) {
-	            var labels = new Set();
-	            var keys = Object.keys(equations);
-	            for (var i = 0; i < keys.length; i++) {
-	                var eq = equations[keys[i]];
-	                if (!type || eq.type === type) {
-	                    labels.add(keys[i]);
-	                    for (var key in eq.components) {
-	                        labels.add(key);
-	                    }
-	                }
-	            }
-	            return Array.from(labels);
+	            return eqSet.getEquations();
 	        }
 	    }]);
 
-	    return Helper;
+	    return Factory;
 	}();
 
-	module.exports = Helper;
+	module.exports = Factory;
 
-	function getComponentList(equations) {
-	    var list = new Set();
-	    for (var key in equations) {
-	        var eq = equations[key];
-	        if (eq.components) {
-	            var keys = Object.keys(eq.components);
-	            for (var i = 0; i < keys.length; i++) {
-	                list.add(keys[i]);
+	function processDB(db, options) {
+	    db = deepcopy(db);
+	    var toRemove = [];
+	    for (var i = 0; i < db.length; i++) {
+	        if (typeof db[i].pK !== 'number' || options.solvent !== 'H2O') {
+	            if (!db[i].pK[options.solvent]) {
+	                toRemove.push(i);
+	            } else {
+	                db[i].pK = db[i].pK[options.solvent];
 	            }
 	        }
 	    }
-	    return Array.from(list);
+
+	    for (i = db.length - 1; i >= 0; i--) {
+	        if (toRemove.indexOf(i) > -1) {
+	            db.splice(i, 1);
+	        }
+	    }
+
+	    return db;
 	}
 
 /***/ },
 /* 33 */
 /***/ function(module, exports) {
 
-	module.exports = {
-		"HIO3": {
+	module.exports = [
+		{
+			"formed": "HIO3",
 			"components": {
-				"H+": 1,
-				"IO3-": 1
+				"IO3-": 1,
+				"H+": 1
 			},
 			"pK": 0.8,
 			"type": "acidoBasic"
 		},
-		"HOCN": {
+		{
+			"formed": "HOCN",
 			"components": {
-				"H+": 1,
-				"OCN-": 1
+				"OCN-": 1,
+				"H+": 1
 			},
 			"pK": 3.48,
 			"type": "acidoBasic"
 		},
-		"HBrO": {
+		{
+			"formed": "HBrO",
 			"components": {
-				"H+": 1,
-				"BrO-": 1
+				"BrO-": 1,
+				"H+": 1
 			},
 			"pK": 8.6,
 			"type": "acidoBasic"
 		},
-		"CH2ClCO2H": {
+		{
+			"formed": "CH2ClCO2H",
 			"components": {
-				"H+": 1,
-				"CH2ClCO2-": 1
+				"CH2ClCO2-": 1,
+				"H+": 1
 			},
 			"pK": 2.89,
 			"type": "acidoBasic"
 		},
-		"C6H5COOH": {
+		{
+			"formed": "C6H5COOH",
 			"components": {
-				"H+": 1,
-				"C6H5COO-": 1
+				"C6H5COO-": 1,
+				"H+": 1
 			},
 			"pK": 4.2,
 			"type": "acidoBasic"
 		},
-		"C6H5NH3+": {
+		{
+			"formed": "C6H5NH3+",
 			"components": {
-				"H+": 1,
-				"C6H5NH2": 1
+				"C6H5NH2": 1,
+				"H+": 1
 			},
 			"pK": 4.6,
 			"type": "acidoBasic"
 		},
-		"C2H5COOH": {
+		{
+			"formed": "C2H5COOH",
 			"components": {
-				"H+": 1,
-				"C2H5COO-": 1
+				"C2H5COO-": 1,
+				"H+": 1
 			},
 			"pK": 4.87,
 			"type": "acidoBasic"
 		},
-		"C5H5NH+": {
+		{
+			"formed": "C5H5NH+",
 			"components": {
-				"H+": 1,
-				"C5H5N": 1
+				"C5H5N": 1,
+				"H+": 1
 			},
 			"pK": 5.25,
 			"type": "acidoBasic"
 		},
-		"CH3NH3+": {
+		{
+			"formed": "CH3NH3+",
 			"components": {
-				"H+": 1,
-				"CH3NH2": 1
+				"CH3NH2": 1,
+				"H+": 1
 			},
 			"pK": 10.66,
 			"type": "acidoBasic"
 		},
-		"(C2H5)3NH+": {
+		{
+			"formed": "(C2H5)3NH+",
 			"components": {
-				"H+": 1,
-				"(C2H5)3N": 1
+				"(C2H5)3N": 1,
+				"H+": 1
 			},
 			"pK": 10.75,
 			"type": "acidoBasic"
 		},
-		"C2H5NH3+": {
+		{
+			"formed": "C2H5NH3+",
 			"components": {
-				"H+": 1,
-				"C2H5NH2": 1
+				"C2H5NH2": 1,
+				"H+": 1
 			},
 			"pK": 10.8,
 			"type": "acidoBasic"
 		},
-		"HClO4": {
+		{
+			"formed": "HClO4",
 			"components": {
-				"H+": 1,
-				"ClO4-": 1
+				"ClO4-": 1,
+				"H+": 1
 			},
 			"pK": -7,
 			"type": "acidoBasic"
 		},
-		"HCl": {
+		{
+			"formed": "HCl",
 			"components": {
-				"H+": 1,
-				"Cl-": 1
+				"Cl-": 1,
+				"H+": 1
 			},
 			"pK": -3,
 			"type": "acidoBasic"
 		},
-		"H2SO4": {
+		{
+			"formed": "H2SO4",
 			"components": {
-				"H+": 2,
-				"SO4--": 1
+				"HSO4-": 1,
+				"H+": 1
 			},
-			"pK": -1.1,
+			"pK": -3,
 			"type": "acidoBasic"
 		},
-		"HNO3": {
+		{
+			"formed": "HNO3",
 			"components": {
-				"H+": 1,
-				"NO3-": 1
+				"NO3-": 1,
+				"H+": 1
 			},
 			"pK": -1,
 			"type": "acidoBasic"
 		},
-		"H3O+": {
+		{
+			"formed": "H2SO3",
 			"components": {
-				"H+": 1,
-				"H2O": 1
+				"HSO3-": 1,
+				"H+": 1
 			},
-			"pK": 0,
+			"pK": 1.8,
 			"type": "acidoBasic"
 		},
-		"H2SO3": {
+		{
+			"formed": "HSO4-",
 			"components": {
-				"H+": 2,
-				"SO3--": 1
-			},
-			"pK": 9.01,
-			"type": "acidoBasic"
-		},
-		"HSO4-": {
-			"components": {
-				"H+": 1,
-				"SO4--": 1
+				"SO4--": 1,
+				"H+": 1
 			},
 			"pK": 1.9,
 			"type": "acidoBasic"
 		},
-		"HClO2": {
+		{
+			"formed": "HClO2",
 			"components": {
-				"H+": 1,
-				"ClO2-": 1
+				"ClO2-": 1,
+				"H+": 1
 			},
 			"pK": 1.93,
 			"type": "acidoBasic"
 		},
-		"H2PO3": {
+		{
+			"formed": "H2PO3",
 			"components": {
-				"H+": 2,
-				"PO3--": 1
+				"HPO3-": 1,
+				"H+": 1
 			},
-			"pK": 8.59,
+			"pK": 2,
 			"type": "acidoBasic"
 		},
-		"Fe(H2O)6+++": {
+		{
+			"formed": "Fe(H2O)6+++",
 			"components": {
-				"H+": 1,
-				"Fe(H2O)5OH++": 1
+				"Fe(H2O)5OH++": 1,
+				"H+": 1
 			},
 			"pK": 2.1,
 			"type": "acidoBasic"
 		},
-		"H3PO4": {
+		{
+			"formed": "H3PO4",
 			"components": {
-				"H+": 3,
-				"PO4---": 1
+				"H2PO4-": 1,
+				"H+": 1
 			},
-			"pK": 21.64,
+			"pK": 2.12,
 			"type": "acidoBasic"
 		},
-		"HF": {
+		{
+			"formed": "HF",
 			"components": {
-				"H+": 1,
-				"F-": 1
+				"F-": 1,
+				"H+": 1
 			},
 			"pK": 3.2,
 			"type": "acidoBasic"
 		},
-		"HNO2": {
+		{
+			"formed": "HNO2",
 			"components": {
-				"H+": 1,
-				"NO2-": 1
+				"NO2-": 1,
+				"H+": 1
 			},
 			"pK": 3.35,
 			"type": "acidoBasic"
 		},
-		"HCO2H": {
+		{
+			"formed": "HCO2H",
 			"components": {
-				"H+": 1,
-				"HCO2-": 1
+				"HCO2-": 1,
+				"H+": 1
 			},
 			"pK": 3.75,
 			"type": "acidoBasic"
 		},
-		"CH3CO2H": {
+		{
+			"formed": "CH3CO2H",
 			"components": {
-				"H+": 1,
-				"CH3COO-": 1
+				"CH3COO-": 1,
+				"H+": 1
 			},
 			"pK": 4.7,
 			"type": "acidoBasic"
 		},
-		"Al(H2O)6+++": {
+		{
+			"formed": "Al(H2O)6+++",
 			"components": {
-				"H+": 1,
-				"Al(H2O)5OH++": 1
+				"Al(H2O)5OH++": 1,
+				"H+": 1
 			},
 			"pK": 4.9,
 			"type": "acidoBasic"
 		},
-		"H2CO3": {
+		{
+			"formed": "H2CO3",
 			"components": {
-				"H+": 2,
-				"CO3--": 1
+				"HCO3-": 1,
+				"H+": 1
 			},
-			"pK": 16.63,
+			"pK": 6.3,
 			"type": "acidoBasic"
 		},
-		"HPO3-": {
+		{
+			"formed": "HPO3-",
 			"components": {
-				"H+": 1,
-				"PO3--": 1
+				"PO3--": 1,
+				"H+": 1
 			},
 			"pK": 6.59,
 			"type": "acidoBasic"
 		},
-		"H2S": {
+		{
+			"formed": "H2S",
 			"components": {
-				"H+": 2,
-				"S--": 1
+				"HS-": 1,
+				"H+": 1
 			},
-			"pK": 26.04,
+			"pK": 7.04,
 			"type": "acidoBasic"
 		},
-		"HSO3-": {
+		{
+			"formed": "HSO3-",
 			"components": {
-				"H+": 1,
-				"SO3--": 1
+				"SO3--": 1,
+				"H+": 1
 			},
 			"pK": 7.21,
 			"type": "acidoBasic"
 		},
-		"HClO": {
+		{
+			"formed": "HClO",
 			"components": {
-				"H+": 1,
-				"ClO-": 1
+				"ClO-": 1,
+				"H+": 1
 			},
 			"pK": 8,
 			"type": "acidoBasic"
 		},
-		"HCN": {
+		{
+			"formed": "HCN",
 			"components": {
-				"H+": 1,
-				"CN-": 1
+				"CN-": 1,
+				"H+": 1
 			},
 			"pK": 9.2,
 			"type": "acidoBasic"
 		},
-		"NH4+": {
+		{
+			"formed": "NH4+",
 			"components": {
-				"H+": 2,
-				"NH2-": 1
+				"NH3": 1,
+				"H+": 1
 			},
-			"pK": 32.25,
+			"pK": 9.25,
 			"type": "acidoBasic"
 		},
-		"HCO3-": {
+		{
+			"formed": "HCO3-",
 			"components": {
-				"H+": 1,
-				"CO3--": 1
+				"CO3--": 1,
+				"H+": 1
 			},
 			"pK": 10.33,
 			"type": "acidoBasic"
 		},
-		"H2PO4-": {
+		{
+			"formed": "H2PO4-",
 			"components": {
-				"H+": 2,
-				"PO4---": 1
+				"HPO4--": 1,
+				"H+": 1
 			},
-			"pK": 19.52,
+			"pK": 7.2,
 			"type": "acidoBasic"
 		},
-		"HPO4--": {
+		{
+			"formed": "HPO4--",
 			"components": {
-				"H+": 1,
-				"PO4---": 1
+				"PO4---": 1,
+				"H+": 1
 			},
 			"pK": 12.32,
 			"type": "acidoBasic"
 		},
-		"HS-": {
+		{
+			"formed": "H2O",
 			"components": {
-				"H+": 1,
-				"S--": 1
+				"OH-": 1,
+				"H+": 1
+			},
+			"pK": 14,
+			"type": "acidoBasic"
+		},
+		{
+			"formed": "HS-",
+			"components": {
+				"S--": 1,
+				"H+": 1
 			},
 			"pK": 19,
 			"type": "acidoBasic"
 		},
-		"NH3": {
+		{
+			"formed": "NH3",
 			"components": {
-				"H+": 1,
-				"NH2-": 1
+				"NH2-": 1,
+				"H+": 1
 			},
 			"pK": 23,
 			"type": "acidoBasic"
 		},
-		"Ag(NH3)2+": {
+		{
+			"formed": "Ag(NH3)2+",
 			"components": {
 				"Ag+": 1,
 				"NH3": 2
@@ -6780,7 +6695,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 7.2,
 			"type": "complexation"
 		},
-		"Zn(NH3)4++": {
+		{
+			"formed": "Zn(NH3)4++",
 			"components": {
 				"Zn++": 1,
 				"NH3": 4
@@ -6788,7 +6704,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 8.89,
 			"type": "complexation"
 		},
-		"Cu(NH3)4++": {
+		{
+			"formed": "Cu(NH3)4++",
 			"components": {
 				"Cu++": 1,
 				"NH3": 4
@@ -6796,7 +6713,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 13.04,
 			"type": "complexation"
 		},
-		"Hg(NH3)4++": {
+		{
+			"formed": "Hg(NH3)4++",
 			"components": {
 				"Hg++": 1,
 				"NH3": 4
@@ -6804,7 +6722,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 19.26,
 			"type": "complexation"
 		},
-		"Co(NH3)6++": {
+		{
+			"formed": "Co(NH3)6++",
 			"components": {
 				"Co++": 1,
 				"NH3": 6
@@ -6812,7 +6731,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 4.7,
 			"type": "complexation"
 		},
-		"Co(NH3)4+++": {
+		{
+			"formed": "Co(NH3)4+++",
 			"components": {
 				"Co+++": 1,
 				"NH3": 4
@@ -6820,7 +6740,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 33.66,
 			"type": "complexation"
 		},
-		"Cd(NH3)6++": {
+		{
+			"formed": "Cd(NH3)6++",
 			"components": {
 				"Cd++": 1,
 				"NH3": 6
@@ -6828,7 +6749,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 5.41,
 			"type": "complexation"
 		},
-		"Cd(NH3)4++": {
+		{
+			"formed": "Cd(NH3)4++",
 			"components": {
 				"Cd++": 1,
 				"NH3": 4
@@ -6836,7 +6758,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 7,
 			"type": "complexation"
 		},
-		"Ni(NH3)6++": {
+		{
+			"formed": "Ni(NH3)6++",
 			"components": {
 				"Ni++": 1,
 				"NH3": 6
@@ -6844,7 +6767,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 8.3,
 			"type": "complexation"
 		},
-		"Fe(CN)6----": {
+		{
+			"formed": "Fe(CN)6----",
 			"components": {
 				"Fe++": 1,
 				"CN-": 6
@@ -6852,7 +6776,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 35,
 			"type": "complexation"
 		},
-		"Fe(CN)6---": {
+		{
+			"formed": "Fe(CN)6---",
 			"components": {
 				"Fe+++": 1,
 				"CN-": 6
@@ -6860,7 +6785,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 41.96,
 			"type": "complexation"
 		},
-		"Ag(CN)2-": {
+		{
+			"formed": "Ag(CN)2-",
 			"components": {
 				"Ag+": 1,
 				"CN-": 2
@@ -6868,7 +6794,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 18.72,
 			"type": "complexation"
 		},
-		"Cu(CN)2-": {
+		{
+			"formed": "Cu(CN)2-",
 			"components": {
 				"Cu+": 1,
 				"CN-": 2
@@ -6876,7 +6803,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 16,
 			"type": "complexation"
 		},
-		"Cd(CN)4--": {
+		{
+			"formed": "Cd(CN)4--",
 			"components": {
 				"Cd++": 1,
 				"CN-": 4
@@ -6884,7 +6812,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 16.89,
 			"type": "complexation"
 		},
-		"Au(CN)2-": {
+		{
+			"formed": "Au(CN)2-",
 			"components": {
 				"Au+": 1,
 				"CN-": 2
@@ -6892,7 +6821,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 38.3,
 			"type": "complexation"
 		},
-		"Ni(CN)4--": {
+		{
+			"formed": "Ni(CN)4--",
 			"components": {
 				"Ni++": 1,
 				"CN-": 4
@@ -6900,7 +6830,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 31,
 			"type": "complexation"
 		},
-		"AlF6---": {
+		{
+			"formed": "AlF6---",
 			"components": {
 				"Al+++": 1,
 				"F-": 6
@@ -6908,7 +6839,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 4.4,
 			"type": "complexation"
 		},
-		"AlF4-": {
+		{
+			"formed": "AlF4-",
 			"components": {
 				"Al+++": 1,
 				"F-": 4
@@ -6916,7 +6848,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 8.3,
 			"type": "complexation"
 		},
-		"BeF4--": {
+		{
+			"formed": "BeF4--",
 			"components": {
 				"Be++": 1,
 				"F-": 4
@@ -6924,7 +6857,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 13.11,
 			"type": "complexation"
 		},
-		"SnF6--": {
+		{
+			"formed": "SnF6--",
 			"components": {
 				"Sn++++": 1,
 				"F-": 6
@@ -6932,7 +6866,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 25,
 			"type": "complexation"
 		},
-		"CuCl2-": {
+		{
+			"formed": "CuCl2-",
 			"components": {
 				"Cu+": 1,
 				"Cl-": 2
@@ -6940,7 +6875,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 5.48,
 			"type": "complexation"
 		},
-		"AgCl2-": {
+		{
+			"formed": "AgCl2-",
 			"components": {
 				"Ag+": 1,
 				"Cl-": 2
@@ -6948,7 +6884,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 5.26,
 			"type": "complexation"
 		},
-		"PbCl4--": {
+		{
+			"formed": "PbCl4--",
 			"components": {
 				"Pb++": 1,
 				"Cl-": 4
@@ -6956,7 +6893,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 15.4,
 			"type": "complexation"
 		},
-		"HgCl4--": {
+		{
+			"formed": "HgCl4--",
 			"components": {
 				"Hg++": 1,
 				"Cl-": 4
@@ -6964,7 +6902,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 15.7,
 			"type": "complexation"
 		},
-		"CuBr2-": {
+		{
+			"formed": "CuBr2-",
 			"components": {
 				"Cu+": 1,
 				"Br-": 2
@@ -6972,7 +6911,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 5.9,
 			"type": "complexation"
 		},
-		"AgBr2-": {
+		{
+			"formed": "AgBr2-",
 			"components": {
 				"Ag+": 1,
 				"Br-": 2
@@ -6980,15 +6920,17 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 11,
 			"type": "complexation"
 		},
-		"HgBr4--": {
+		{
+			"formed": "HgBr4--",
 			"components": {
 				"Hg++": 1,
-				"Br-  ": 4
+				"Br-": 4
 			},
 			"pK": 4.48,
 			"type": "complexation"
 		},
-		"CuI2-": {
+		{
+			"formed": "CuI2-",
 			"components": {
 				"Cu+": 1,
 				"I-": 2
@@ -6996,7 +6938,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 8.9,
 			"type": "complexation"
 		},
-		"AgI2-": {
+		{
+			"formed": "AgI2-",
 			"components": {
 				"Ag+": 1,
 				"I-": 2
@@ -7004,7 +6947,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 11,
 			"type": "complexation"
 		},
-		"PbI4--": {
+		{
+			"formed": "PbI4--",
 			"components": {
 				"Pb++": 1,
 				"I-": 4
@@ -7012,7 +6956,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 4.48,
 			"type": "complexation"
 		},
-		"HgI4--": {
+		{
+			"formed": "HgI4--",
 			"components": {
 				"Hg++": 1,
 				"I-": 4
@@ -7020,7 +6965,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 30.28,
 			"type": "complexation"
 		},
-		"Ag(CH3NH2)2+": {
+		{
+			"formed": "Ag(CH3NH2)2+",
 			"components": {
 				"Ag+": 1,
 				"CH3NH2": 2
@@ -7028,7 +6974,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 6.89,
 			"type": "complexation"
 		},
-		"Ag(S2O3)2---": {
+		{
+			"formed": "Ag(S2O3)2---",
 			"components": {
 				"Ag+": 1,
 				"S2O3--": 2
@@ -7036,7 +6983,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 13.46,
 			"type": "complexation"
 		},
-		"Cd(SCN)4--": {
+		{
+			"formed": "Cd(SCN)4--",
 			"components": {
 				"Cd++": 1,
 				"SCN-": 4
@@ -7044,7 +6992,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 3,
 			"type": "complexation"
 		},
-		"Cu(SCN)2": {
+		{
+			"formed": "Cu(SCN)2",
 			"components": {
 				"Cu++": 1,
 				"SCN-": 2
@@ -7052,7 +7001,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 3.75,
 			"type": "complexation"
 		},
-		"Fe(SCN)3": {
+		{
+			"formed": "Fe(SCN)3",
 			"components": {
 				"Fe+++": 1,
 				"SCN-": 3
@@ -7060,7 +7010,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 6.3,
 			"type": "complexation"
 		},
-		"Hg(SCN)4--": {
+		{
+			"formed": "Hg(SCN)4--",
 			"components": {
 				"Hg++": 1,
 				"SCN-": 4
@@ -7068,7 +7019,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 21.7,
 			"type": "complexation"
 		},
-		"Cu(OH)4--": {
+		{
+			"formed": "Cu(OH)4--",
 			"components": {
 				"Cu++": 1,
 				"OH-": 4
@@ -7076,7 +7028,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 16.11,
 			"type": "complexation"
 		},
-		"Zn(OH)4--": {
+		{
+			"formed": "Zn(OH)4--",
 			"components": {
 				"Zn++": 1,
 				"OH-": 4
@@ -7084,7 +7037,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 15.45,
 			"type": "complexation"
 		},
-		"Mn(en)3++": {
+		{
+			"formed": "Mn(en)3++",
 			"components": {
 				"Mn++": 1,
 				"en": 1
@@ -7092,7 +7046,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 5.81,
 			"type": "complexation"
 		},
-		"Fe(en)3++": {
+		{
+			"formed": "Fe(en)3++",
 			"components": {
 				"Fe++": 1,
 				"en": 1
@@ -7100,7 +7055,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 9.72,
 			"type": "complexation"
 		},
-		"Co(en)3++": {
+		{
+			"formed": "Co(en)3++",
 			"components": {
 				"Co++": 1,
 				"en": 1
@@ -7108,7 +7064,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 14.11,
 			"type": "complexation"
 		},
-		"Co(en)3+++": {
+		{
+			"formed": "Co(en)3+++",
 			"components": {
 				"Co+++": 1,
 				"en": 1
@@ -7116,7 +7073,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 48.68,
 			"type": "complexation"
 		},
-		"Ni(en)3++": {
+		{
+			"formed": "Ni(en)3++",
 			"components": {
 				"Ni++": 1,
 				"en": 1
@@ -7124,7 +7082,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 17.61,
 			"type": "complexation"
 		},
-		"Cu(en)2++": {
+		{
+			"formed": "Cu(en)2++",
 			"components": {
 				"Cu++": 1,
 				"en": 1
@@ -7132,7 +7091,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 19.54,
 			"type": "complexation"
 		},
-		"Co(C2O4)3----": {
+		{
+			"formed": "Co(C2O4)3----",
 			"components": {
 				"Co++": 1,
 				"C2O4--": 3
@@ -7140,7 +7100,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 6.65,
 			"type": "complexation"
 		},
-		"Fe(C2O4)3---": {
+		{
+			"formed": "Fe(C2O4)3---",
 			"components": {
 				"Fe+++": 1,
 				"C2O4--": 3
@@ -7148,7 +7109,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 20.52,
 			"type": "complexation"
 		},
-		"AgBr": {
+		{
+			"formed": "AgBr",
 			"components": {
 				"Ag+": 1,
 				"Br-": 1
@@ -7156,7 +7118,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 12.27,
 			"type": "precipitation"
 		},
-		"AgBrO3": {
+		{
+			"formed": "AgBrO3",
 			"components": {
 				"Ag+": 1,
 				"BrO3-": 1
@@ -7164,7 +7127,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 4.24,
 			"type": "precipitation"
 		},
-		"Ag2CO3": {
+		{
+			"formed": "Ag2CO3",
 			"components": {
 				"Ag+": 2,
 				"CO3--": 1
@@ -7172,7 +7136,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 11.1,
 			"type": "precipitation"
 		},
-		"AgCl": {
+		{
+			"formed": "AgCl",
 			"components": {
 				"Ag+": 1,
 				"Cl-": 1
@@ -7180,31 +7145,35 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 9.74,
 			"type": "precipitation"
 		},
-		"Ag2CrO4": {
+		{
+			"formed": "Ag2CrO4",
 			"components": {
-				"Ag+ ": 2,
+				"Ag+": 2,
 				"CrO4--": 1
 			},
 			"pK": 11.05,
 			"type": "precipitation"
 		},
-		"AgI": {
+		{
+			"formed": "AgI",
 			"components": {
-				"Ag+ ": 1,
+				"Ag+": 1,
 				"I-": 1
 			},
 			"pK": 16.07,
 			"type": "precipitation"
 		},
-		"AgOH": {
+		{
+			"formed": "AgOH",
 			"components": {
-				"Ag+ ": 1,
+				"Ag+": 1,
 				"OH-": 1
 			},
 			"pK": 7.72,
 			"type": "precipitation"
 		},
-		"Ag2S": {
+		{
+			"formed": "Ag2S",
 			"components": {
 				"Ag+": 2,
 				"S--": 1
@@ -7212,7 +7181,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 50.22,
 			"type": "precipitation"
 		},
-		"Al(OH)3": {
+		{
+			"formed": "Al(OH)3",
 			"components": {
 				"Al+++": 1,
 				"OH-": 3
@@ -7220,7 +7190,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 32.74,
 			"type": "precipitation"
 		},
-		"BaCO3": {
+		{
+			"formed": "BaCO3",
 			"components": {
 				"Ba++": 1,
 				"CO3--": 1
@@ -7228,7 +7199,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 8.7,
 			"type": "precipitation"
 		},
-		"BaCrO4": {
+		{
+			"formed": "BaCrO4",
 			"components": {
 				"Ba++": 1,
 				"CrO4--": 1
@@ -7236,7 +7208,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 10.07,
 			"type": "precipitation"
 		},
-		"BaF2": {
+		{
+			"formed": "BaF2",
 			"components": {
 				"Ba++": 1,
 				"F-": 2
@@ -7244,7 +7217,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 6.74,
 			"type": "precipitation"
 		},
-		"BaSO4": {
+		{
+			"formed": "BaSO4",
 			"components": {
 				"Ba++": 1,
 				"SO4--": 1
@@ -7252,7 +7226,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 9.96,
 			"type": "precipitation"
 		},
-		"Bi2S3": {
+		{
+			"formed": "Bi2S3",
 			"components": {
 				"Bi+++": 2,
 				"S--": 3
@@ -7260,7 +7235,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 71.8,
 			"type": "precipitation"
 		},
-		"CaCO3": {
+		{
+			"formed": "CaCO3",
 			"components": {
 				"Ca++": 1,
 				"CO3--": 1
@@ -7268,7 +7244,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 8.47,
 			"type": "precipitation"
 		},
-		"CaF2": {
+		{
+			"formed": "CaF2",
 			"components": {
 				"Ca++": 1,
 				"F-": 2
@@ -7276,7 +7253,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 10.46,
 			"type": "precipitation"
 		},
-		"Ca(OH)2": {
+		{
+			"formed": "Ca(OH)2",
 			"components": {
 				"Ca++": 1,
 				"OH-": 2
@@ -7284,7 +7262,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 5.3,
 			"type": "precipitation"
 		},
-		"Ca3(PO4)2": {
+		{
+			"formed": "Ca3(PO4)2",
 			"components": {
 				"Ca++": 3,
 				"PO4---": 2
@@ -7292,7 +7271,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 32.68,
 			"type": "precipitation"
 		},
-		"CaSO4": {
+		{
+			"formed": "CaSO4",
 			"components": {
 				"Ca++": 1,
 				"SO4--": 1
@@ -7300,23 +7280,26 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 4.35,
 			"type": "precipitation"
 		},
-		"CdS": {
+		{
+			"formed": "CdS",
 			"components": {
-				"Cd++ ": 1,
+				"Cd++": 1,
 				"S--": 1
 			},
 			"pK": 28,
 			"type": "precipitation"
 		},
-		"CuCl": {
+		{
+			"formed": "CuCl",
 			"components": {
-				"Cu+ ": 1,
+				"Cu+": 1,
 				"Cl-": 1
 			},
 			"pK": 6.77,
 			"type": "precipitation"
 		},
-		"Cu(OH)2": {
+		{
+			"formed": "Cu(OH)2",
 			"components": {
 				"Cu++": 1,
 				"OH-": 2
@@ -7324,7 +7307,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 18.8,
 			"type": "precipitation"
 		},
-		"CuS": {
+		{
+			"formed": "CuS",
 			"components": {
 				"Cu++": 1,
 				"S--": 1
@@ -7332,7 +7316,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 44.07,
 			"type": "precipitation"
 		},
-		"Fe(OH)2": {
+		{
+			"formed": "Fe(OH)2",
 			"components": {
 				"Fe++": 1,
 				"OH-": 2
@@ -7340,7 +7325,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 16.31,
 			"type": "precipitation"
 		},
-		"Fe(OH)3": {
+		{
+			"formed": "Fe(OH)3",
 			"components": {
 				"Fe+++": 1,
 				"OH-": 3
@@ -7348,15 +7334,17 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 38.55,
 			"type": "precipitation"
 		},
-		"FeS": {
+		{
+			"formed": "FeS",
 			"components": {
-				"Fe++ ": 1,
+				"Fe++": 1,
 				"S--": 1
 			},
 			"pK": 18.22,
 			"type": "precipitation"
 		},
-		"Hg2Cl2": {
+		{
+			"formed": "Hg2Cl2",
 			"components": {
 				"Hg+": 2,
 				"Cl-": 2
@@ -7364,7 +7352,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 17.85,
 			"type": "precipitation"
 		},
-		"Li2CO3": {
+		{
+			"formed": "Li2CO3",
 			"components": {
 				"Li+": 2,
 				"CO3--": 1
@@ -7372,7 +7361,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 2.96,
 			"type": "precipitation"
 		},
-		"MgCO3": {
+		{
+			"formed": "MgCO3",
 			"components": {
 				"Mg++": 1,
 				"CO3--": 1
@@ -7380,7 +7370,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 4.17,
 			"type": "precipitation"
 		},
-		"Mg(OH)2": {
+		{
+			"formed": "Mg(OH)2",
 			"components": {
 				"Mg++": 1,
 				"OH-": 2
@@ -7388,7 +7379,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 11.15,
 			"type": "precipitation"
 		},
-		"Mn(OH)2": {
+		{
+			"formed": "Mn(OH)2",
 			"components": {
 				"Mn--": 1,
 				"OH-": 2
@@ -7396,7 +7388,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 12.7,
 			"type": "precipitation"
 		},
-		"PbCl2": {
+		{
+			"formed": "PbCl2",
 			"components": {
 				"Pb++": 1,
 				"Cl-": 2
@@ -7404,7 +7397,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 4.77,
 			"type": "precipitation"
 		},
-		"PbCrO4": {
+		{
+			"formed": "PbCrO4",
 			"components": {
 				"Pb++": 1,
 				"CrO4--": 1
@@ -7412,15 +7406,17 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 15.7,
 			"type": "precipitation"
 		},
-		"PbI2": {
+		{
+			"formed": "PbI2",
 			"components": {
-				"Pb++ ": 1,
+				"Pb++": 1,
 				"I--": 2
 			},
 			"pK": 7.85,
 			"type": "precipitation"
 		},
-		"Pb(OH)2": {
+		{
+			"formed": "Pb(OH)2",
 			"components": {
 				"Pb++": 1,
 				"OH-": 2
@@ -7428,7 +7424,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 14.92,
 			"type": "precipitation"
 		},
-		"PbS": {
+		{
+			"formed": "PbS",
 			"components": {
 				"Pb++": 1,
 				"S--": 1
@@ -7436,7 +7433,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 28.15,
 			"type": "precipitation"
 		},
-		"PbSO4": {
+		{
+			"formed": "PbSO4",
 			"components": {
 				"Pb++": 1,
 				"SO4--": 1
@@ -7444,7 +7442,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 7.8,
 			"type": "precipitation"
 		},
-		"Zn(OH)2": {
+		{
+			"formed": "Zn(OH)2",
 			"components": {
 				"Zn++": 1,
 				"OH-": 2
@@ -7452,15 +7451,2751 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pK": 16.35,
 			"type": "precipitation"
 		},
-		"ZnS": {
+		{
+			"formed": "ZnS",
 			"components": {
-				"Zn++ ": 1,
+				"Zn++": 1,
 				"S--": 1
 			},
 			"pK": 22.52,
 			"type": "precipitation"
 		}
+	];
+
+/***/ },
+/* 34 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
+
+	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var Equation = __webpack_require__(39);
+
+	var EquationSet = function () {
+	    function EquationSet(equations) {
+	        _classCallCheck(this, EquationSet);
+
+	        equations = equations || [];
+	        this._normalized = false;
+	        this._disabledKeys = new Set();
+	        this.equations = new Map();
+	        for (var i = 0; i < equations.length; i++) {
+	            this.add(equations[i]);
+	        }
+	    }
+
+	    _createClass(EquationSet, [{
+	        key: Symbol.iterator,
+	        value: function value() {
+	            return this.equations.values();
+	        }
+	    }, {
+	        key: 'add',
+	        value: function add(eq, key) {
+	            var equation = Equation.create(eq);
+	            key = key || getHash(eq.formed);
+	            this.equations.set(key, equation);
+	            this._normalized = false;
+	        }
+	    }, {
+	        key: 'has',
+	        value: function has(eq) {
+	            if (eq instanceof Equation) {
+	                var key = getHash(eq.formed);
+	            } else {
+	                key = eq;
+	            }
+	            return this.equations.has(key);
+	        }
+	    }, {
+	        key: 'getSpecies',
+	        value: function getSpecies(species, type) {
+	            var speciesSet = new Set();
+	            var _iteratorNormalCompletion = true;
+	            var _didIteratorError = false;
+	            var _iteratorError = undefined;
+
+	            try {
+	                for (var _iterator = this.entries()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+	                    var _step$value = _slicedToArray(_step.value, 2);
+
+	                    var key = _step$value[0];
+	                    var eq = _step$value[1];
+
+	                    if (this._disabledKeys.has(key)) continue;
+	                    if (type && type !== eq.type) continue;
+	                    if (species) {
+	                        if (species.indexOf(eq.formed) > -1) {
+	                            speciesSet.add(eq.formed);
+	                            Object.keys(eq.components).forEach(function (c) {
+	                                return speciesSet.add(c);
+	                            });
+	                        } else {
+	                            Object.keys(eq.components).forEach(function (c) {
+	                                if (species.indexOf(c) > -1) speciesSet.add(c);
+	                            });
+	                        }
+	                    } else {
+	                        speciesSet.add(eq.formed);
+	                        Object.keys(eq.components).forEach(function (c) {
+	                            return speciesSet.add(c);
+	                        });
+	                    }
+	                }
+	            } catch (err) {
+	                _didIteratorError = true;
+	                _iteratorError = err;
+	            } finally {
+	                try {
+	                    if (!_iteratorNormalCompletion && _iterator.return) {
+	                        _iterator.return();
+	                    }
+	                } finally {
+	                    if (_didIteratorError) {
+	                        throw _iteratorError;
+	                    }
+	                }
+	            }
+
+	            return Array.from(speciesSet);
+	        }
+	    }, {
+	        key: 'getComponents',
+	        value: function getComponents(species, type) {
+	            if (!this.isNormalized()) {
+	                throw new Error('Cannot get components from non-normalized equation set');
+	            }
+	            var speciesSet = new Set();
+	            var _iteratorNormalCompletion2 = true;
+	            var _didIteratorError2 = false;
+	            var _iteratorError2 = undefined;
+
+	            try {
+	                for (var _iterator2 = this.entries()[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+	                    var _step2$value = _slicedToArray(_step2.value, 2);
+
+	                    var key = _step2$value[0];
+	                    var eq = _step2$value[1];
+
+	                    if (this._disabledKeys.has(key)) continue;
+	                    if (type && type !== eq.type) continue;
+	                    if (species) {
+	                        if (species.indexOf(eq.formed) > -1) {
+	                            Object.keys(eq.components).forEach(function (c) {
+	                                return speciesSet.add(c);
+	                            });
+	                        } else {
+	                            Object.keys(eq.components).forEach(function (c) {
+	                                if (species.indexOf(c) > -1) speciesSet.add(c);
+	                            });
+	                        }
+	                    } else {
+	                        Object.keys(eq.components).forEach(function (c) {
+	                            return speciesSet.add(c);
+	                        });
+	                    }
+	                }
+	            } catch (err) {
+	                _didIteratorError2 = true;
+	                _iteratorError2 = err;
+	            } finally {
+	                try {
+	                    if (!_iteratorNormalCompletion2 && _iterator2.return) {
+	                        _iterator2.return();
+	                    }
+	                } finally {
+	                    if (_didIteratorError2) {
+	                        throw _iteratorError2;
+	                    }
+	                }
+	            }
+
+	            return Array.from(speciesSet);
+	        }
+	    }, {
+	        key: 'disableEquation',
+	        value: function disableEquation(key, hashIt) {
+	            key = hashIt ? getHash(key) : key;
+	            this._disabledKeys.add(key);
+	        }
+	    }, {
+	        key: 'enableEquation',
+	        value: function enableEquation(key, hashIt) {
+	            key = hashIt ? getHash(key) : key;
+	            this._disabledKeys.delete(key);
+	        }
+	    }, {
+	        key: 'get',
+	        value: function get(id, hashIt) {
+	            var key;
+	            if (hashIt) {
+	                key = getHash(id);
+	            } else {
+	                key = id;
+	            }
+	            return this.equations.get(key);
+	        }
+	    }, {
+	        key: 'keys',
+	        value: function keys() {
+	            return this.equations.keys();
+	        }
+	    }, {
+	        key: 'values',
+	        value: function values() {
+	            return this.equations.values();
+	        }
+	    }, {
+	        key: 'entries',
+	        value: function entries() {
+	            return this.equations.entries();
+	        }
+	    }, {
+	        key: 'forEach',
+	        value: function forEach() {
+	            return this.equations.forEach.apply(this.equations, arguments);
+	        }
+	    }, {
+	        key: 'getNormalized',
+	        value: function getNormalized(solvent) {
+	            // In a normalized set, formed species can be found in any of the components
+	            // of the equation set
+	            var norm = new Array(this.equations.size);
+	            var keys = new Array(this.equations.size);
+	            var idx = 0;
+	            var _iteratorNormalCompletion3 = true;
+	            var _didIteratorError3 = false;
+	            var _iteratorError3 = undefined;
+
+	            try {
+	                for (var _iterator3 = this.entries()[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+	                    var _step3$value = _slicedToArray(_step3.value, 2);
+
+	                    var key = _step3$value[0];
+	                    var entry = _step3$value[1];
+
+	                    norm[idx] = entry.withSolvent(solvent);
+	                    keys[idx] = key;
+	                    idx++;
+	                }
+	            } catch (err) {
+	                _didIteratorError3 = true;
+	                _iteratorError3 = err;
+	            } finally {
+	                try {
+	                    if (!_iteratorNormalCompletion3 && _iterator3.return) {
+	                        _iterator3.return();
+	                    }
+	                } finally {
+	                    if (_didIteratorError3) {
+	                        throw _iteratorError3;
+	                    }
+	                }
+	            }
+
+	            norm = normalize(norm);
+
+	            var normSet = new EquationSet();
+	            for (var i = 0; i < norm.length; i++) {
+	                normSet.add(norm[i], keys[i]);
+	            }
+
+	            // return a new equation set that has been normalized
+	            // normalization requires the solvent to be set
+	            normSet._normalized = true;
+	            normSet._disabledKeys = new Set(this._disabledKeys);
+	            return normSet;
+	        }
+	    }, {
+	        key: 'isNormalized',
+	        value: function isNormalized() {
+	            return this._normalized;
+	        }
+	    }, {
+	        key: 'getEquations',
+	        value: function getEquations() {
+	            var _this = this;
+
+	            return Array.from(this.equations).filter(function (e) {
+	                return !_this._disabledKeys.has(e[0]);
+	            }).map(function (e) {
+	                return e[1].toJSON();
+	            });
+	        }
+	    }, {
+	        key: 'getModel',
+	        value: function getModel(totals, all) {
+	            var _this2 = this;
+
+	            if (!this.isNormalized()) {
+	                throw new Error('Cannot get model from un-normalized equation set');
+	            }
+	            var totalComp = {};
+	            if (all) {
+	                var subset = this;
+	            } else {
+	                subset = this.getSubset(Object.keys(totals));
+	            }
+	            var components = subset.components;
+	            var subsetKeys = [].concat(_toConsumableArray(subset.keys()));
+	            var subsetArr = [].concat(_toConsumableArray(subset.values())).filter(function (s, idx) {
+	                return !_this2._disabledKeys.has(subsetKeys[idx]);
+	            });
+	            components.forEach(function (c) {
+	                return totalComp[c] = 0;
+	            });
+	            for (var key in totals) {
+	                if (totals.hasOwnProperty(key)) {
+	                    var total = totals[key] || 0;
+	                    if (components.indexOf(key) !== -1) {
+	                        totalComp[key] += total;
+	                    } else {
+	                        var eq = subsetArr.find(function (eq) {
+	                            return eq.formed === key;
+	                        });
+	                        if (eq) {
+	                            var keys = Object.keys(eq.components);
+	                            for (var i = 0; i < keys.length; i++) {
+	                                totalComp[keys[i]] += eq.components[keys[i]] * total;
+	                            }
+	                        }
+	                    }
+	                }
+	            }
+
+	            var model = {
+	                volume: 1
+	            };
+
+	            model.components = components.map(function (key) {
+	                return {
+	                    label: key,
+	                    total: totalComp[key]
+	                };
+	            });
+
+	            model.formedSpecies = subsetArr.map(function (eq) {
+	                return {
+	                    solid: eq.type === 'precipitation',
+	                    label: eq.formed,
+	                    beta: eq.type === 'precipitation' ? Math.pow(10, -eq.pK) : Math.pow(10, eq.pK),
+	                    components: components.map(function (key) {
+	                        return eq.components[key] || 0;
+	                    })
+	                };
+	            });
+
+	            return model;
+	        }
+	    }, {
+	        key: 'getSubset',
+	        value: function getSubset(species) {
+	            var speciesSet = new Set();
+	            species.forEach(function (s) {
+	                return speciesSet.add(s);
+	            });
+	            // get a subset of the equations given a set of species
+	            var newSet = new EquationSet();
+	            this.forEach(function (eq) {
+	                if (species.indexOf(eq.formed) !== -1) {
+	                    newSet.add(eq);
+	                    speciesSet.add(eq.formed);
+	                    Object.keys(eq.components).forEach(function (s) {
+	                        return speciesSet.add(s);
+	                    });
+	                }
+	            });
+
+	            var moreAdded = true;
+	            var passes = 0;
+	            while (passes <= 10 && moreAdded) {
+	                passes++;
+	                moreAdded = false;
+	                this.forEach(function (eq) {
+	                    var hasAll = !Object.keys(eq.components).some(function (c) {
+	                        return !speciesSet.has(c);
+	                    });
+	                    if (hasAll && !newSet.has(eq)) {
+	                        newSet.add(eq);
+	                        speciesSet.add(eq.formed);
+	                        moreAdded = true;
+	                    }
+	                });
+	            }
+
+	            if (passes === 10) {
+	                throw new Error('You might have a circular dependency in your equations');
+	            }
+
+	            // Pass along some properties
+	            newSet._disabledKeys = new Set(this._disabledKeys);
+	            newSet._normalized = this._normalized;
+	            return newSet;
+	        }
+	    }, {
+	        key: 'species',
+	        get: function get() {
+	            return this.getSpecies();
+	        }
+	    }, {
+	        key: 'components',
+	        get: function get() {
+	            return this.getComponents();
+	        }
+	    }, {
+	        key: 'size',
+	        get: function get() {
+	            return this.equations.size;
+	        }
+	    }]);
+
+	    return EquationSet;
+	}();
+
+	module.exports = EquationSet;
+
+	function normalize(equations) {
+	    var N = equations.length;
+	    var newEquations = new Array(N).fill(0);
+	    var needs = new Array(N);
+
+	    // First, find the independent equations
+	    for (var i = 0; i < N; i++) {
+	        if (isIndependent(equations, i)) {
+	            newEquations[i] = equations[i];
+	        } else {
+	            var keys = Object.keys(equations[i].components);
+	            needs[i] = keys.map(function (key) {
+	                return equations.findIndex(function (eq) {
+	                    return eq.formed === key;
+	                });
+	            });
+	        }
+	    }
+
+	    var iter = 0;
+	    while (!allDefined(newEquations) && iter < 10) {
+	        for (var i = 0; i < N; i++) {
+	            if (!newEquations[i]) {
+	                if (allDefined(newEquations, needs[i])) {
+	                    fillLine(equations, newEquations, i);
+	                }
+	            }
+	        }
+	        iter++;
+	    }
+	    if (!allDefined(newEquations)) {
+	        throw new Error('There may be a circular dependency in the equations');
+	    }
+	    return newEquations;
+	}
+
+	function isIndependent(equations, idx) {
+	    var keys = Object.keys(equations[idx].components);
+	    for (var i = 0; i < keys.length; i++) {
+	        var key = keys[i];
+	        var eq = equations.find(function (eq) {
+	            return eq.formed === key;
+	        });
+	        if (eq) return false;
+	    }
+	    return true;
+	}
+
+	function allDefined(arr, idx) {
+	    if (idx !== undefined) {
+	        return !idx.some(function (idx) {
+	            return idx !== -1 && !arr[idx];
+	        });
+	    } else {
+	        return !arr.some(function (el) {
+	            return el === 0;
+	        });
+	    }
+	}
+
+	function fillLine(equations, newEquations, i) {
+	    var eq = equations[i];
+	    var newEq = {
+	        type: eq.type,
+	        formed: eq.formed,
+	        components: {}
+	    };
+	    fillRec(equations, eq, newEq, 1);
+	    newEquations[i] = newEq;
+	}
+
+	function fillRec(equations, eq, eqToFill, n) {
+	    var componentsToFill = eqToFill.components;
+	    var components = eq.components;
+	    var keys = Object.keys(components);
+
+	    var _loop = function _loop(j) {
+	        key = keys[j];
+
+	        var nn = n * components[key];
+	        rep = equations.find(function (eq) {
+	            return eq.formed === keys[j];
+	        });
+
+	        if (!rep) {
+	            componentsToFill[keys[j]] = componentsToFill[keys[j]] || 0;
+	            componentsToFill[keys[j]] += nn;
+	        } else {
+	            fillRec(equations, rep, eqToFill, nn);
+	        }
+	    };
+
+	    for (var j = 0; j < keys.length; j++) {
+	        var key;
+	        var rep;
+
+	        _loop(j);
+	    }
+	    eqToFill.pK = eqToFill.pK || 0;
+	    eqToFill.pK += n * eq.pK;
+	}
+
+	function getHash(id) {
+	    return new Buffer(id).toString('base64');
+	}
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(35).Buffer))
+
+/***/ },
+/* 35 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer, global) {/*!
+	 * The buffer module from node.js, for the browser.
+	 *
+	 * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+	 * @license  MIT
+	 */
+	/* eslint-disable no-proto */
+
+	'use strict'
+
+	var base64 = __webpack_require__(36)
+	var ieee754 = __webpack_require__(37)
+	var isArray = __webpack_require__(38)
+
+	exports.Buffer = Buffer
+	exports.SlowBuffer = SlowBuffer
+	exports.INSPECT_MAX_BYTES = 50
+	Buffer.poolSize = 8192 // not used by this implementation
+
+	var rootParent = {}
+
+	/**
+	 * If `Buffer.TYPED_ARRAY_SUPPORT`:
+	 *   === true    Use Uint8Array implementation (fastest)
+	 *   === false   Use Object implementation (most compatible, even IE6)
+	 *
+	 * Browsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,
+	 * Opera 11.6+, iOS 4.2+.
+	 *
+	 * Due to various browser bugs, sometimes the Object implementation will be used even
+	 * when the browser supports typed arrays.
+	 *
+	 * Note:
+	 *
+	 *   - Firefox 4-29 lacks support for adding new properties to `Uint8Array` instances,
+	 *     See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.
+	 *
+	 *   - Safari 5-7 lacks support for changing the `Object.prototype.constructor` property
+	 *     on objects.
+	 *
+	 *   - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.
+	 *
+	 *   - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of
+	 *     incorrect length in some situations.
+
+	 * We detect these buggy browsers and set `Buffer.TYPED_ARRAY_SUPPORT` to `false` so they
+	 * get the Object implementation, which is slower but behaves correctly.
+	 */
+	Buffer.TYPED_ARRAY_SUPPORT = global.TYPED_ARRAY_SUPPORT !== undefined
+	  ? global.TYPED_ARRAY_SUPPORT
+	  : typedArraySupport()
+
+	function typedArraySupport () {
+	  function Bar () {}
+	  try {
+	    var arr = new Uint8Array(1)
+	    arr.foo = function () { return 42 }
+	    arr.constructor = Bar
+	    return arr.foo() === 42 && // typed array instances can be augmented
+	        arr.constructor === Bar && // constructor can be set
+	        typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
+	        arr.subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
+	  } catch (e) {
+	    return false
+	  }
+	}
+
+	function kMaxLength () {
+	  return Buffer.TYPED_ARRAY_SUPPORT
+	    ? 0x7fffffff
+	    : 0x3fffffff
+	}
+
+	/**
+	 * Class: Buffer
+	 * =============
+	 *
+	 * The Buffer constructor returns instances of `Uint8Array` that are augmented
+	 * with function properties for all the node `Buffer` API functions. We use
+	 * `Uint8Array` so that square bracket notation works as expected -- it returns
+	 * a single octet.
+	 *
+	 * By augmenting the instances, we can avoid modifying the `Uint8Array`
+	 * prototype.
+	 */
+	function Buffer (arg) {
+	  if (!(this instanceof Buffer)) {
+	    // Avoid going through an ArgumentsAdaptorTrampoline in the common case.
+	    if (arguments.length > 1) return new Buffer(arg, arguments[1])
+	    return new Buffer(arg)
+	  }
+
+	  if (!Buffer.TYPED_ARRAY_SUPPORT) {
+	    this.length = 0
+	    this.parent = undefined
+	  }
+
+	  // Common case.
+	  if (typeof arg === 'number') {
+	    return fromNumber(this, arg)
+	  }
+
+	  // Slightly less common case.
+	  if (typeof arg === 'string') {
+	    return fromString(this, arg, arguments.length > 1 ? arguments[1] : 'utf8')
+	  }
+
+	  // Unusual.
+	  return fromObject(this, arg)
+	}
+
+	function fromNumber (that, length) {
+	  that = allocate(that, length < 0 ? 0 : checked(length) | 0)
+	  if (!Buffer.TYPED_ARRAY_SUPPORT) {
+	    for (var i = 0; i < length; i++) {
+	      that[i] = 0
+	    }
+	  }
+	  return that
+	}
+
+	function fromString (that, string, encoding) {
+	  if (typeof encoding !== 'string' || encoding === '') encoding = 'utf8'
+
+	  // Assumption: byteLength() return value is always < kMaxLength.
+	  var length = byteLength(string, encoding) | 0
+	  that = allocate(that, length)
+
+	  that.write(string, encoding)
+	  return that
+	}
+
+	function fromObject (that, object) {
+	  if (Buffer.isBuffer(object)) return fromBuffer(that, object)
+
+	  if (isArray(object)) return fromArray(that, object)
+
+	  if (object == null) {
+	    throw new TypeError('must start with number, buffer, array or string')
+	  }
+
+	  if (typeof ArrayBuffer !== 'undefined') {
+	    if (object.buffer instanceof ArrayBuffer) {
+	      return fromTypedArray(that, object)
+	    }
+	    if (object instanceof ArrayBuffer) {
+	      return fromArrayBuffer(that, object)
+	    }
+	  }
+
+	  if (object.length) return fromArrayLike(that, object)
+
+	  return fromJsonObject(that, object)
+	}
+
+	function fromBuffer (that, buffer) {
+	  var length = checked(buffer.length) | 0
+	  that = allocate(that, length)
+	  buffer.copy(that, 0, 0, length)
+	  return that
+	}
+
+	function fromArray (that, array) {
+	  var length = checked(array.length) | 0
+	  that = allocate(that, length)
+	  for (var i = 0; i < length; i += 1) {
+	    that[i] = array[i] & 255
+	  }
+	  return that
+	}
+
+	// Duplicate of fromArray() to keep fromArray() monomorphic.
+	function fromTypedArray (that, array) {
+	  var length = checked(array.length) | 0
+	  that = allocate(that, length)
+	  // Truncating the elements is probably not what people expect from typed
+	  // arrays with BYTES_PER_ELEMENT > 1 but it's compatible with the behavior
+	  // of the old Buffer constructor.
+	  for (var i = 0; i < length; i += 1) {
+	    that[i] = array[i] & 255
+	  }
+	  return that
+	}
+
+	function fromArrayBuffer (that, array) {
+	  if (Buffer.TYPED_ARRAY_SUPPORT) {
+	    // Return an augmented `Uint8Array` instance, for best performance
+	    array.byteLength
+	    that = Buffer._augment(new Uint8Array(array))
+	  } else {
+	    // Fallback: Return an object instance of the Buffer class
+	    that = fromTypedArray(that, new Uint8Array(array))
+	  }
+	  return that
+	}
+
+	function fromArrayLike (that, array) {
+	  var length = checked(array.length) | 0
+	  that = allocate(that, length)
+	  for (var i = 0; i < length; i += 1) {
+	    that[i] = array[i] & 255
+	  }
+	  return that
+	}
+
+	// Deserialize { type: 'Buffer', data: [1,2,3,...] } into a Buffer object.
+	// Returns a zero-length buffer for inputs that don't conform to the spec.
+	function fromJsonObject (that, object) {
+	  var array
+	  var length = 0
+
+	  if (object.type === 'Buffer' && isArray(object.data)) {
+	    array = object.data
+	    length = checked(array.length) | 0
+	  }
+	  that = allocate(that, length)
+
+	  for (var i = 0; i < length; i += 1) {
+	    that[i] = array[i] & 255
+	  }
+	  return that
+	}
+
+	if (Buffer.TYPED_ARRAY_SUPPORT) {
+	  Buffer.prototype.__proto__ = Uint8Array.prototype
+	  Buffer.__proto__ = Uint8Array
+	} else {
+	  // pre-set for values that may exist in the future
+	  Buffer.prototype.length = undefined
+	  Buffer.prototype.parent = undefined
+	}
+
+	function allocate (that, length) {
+	  if (Buffer.TYPED_ARRAY_SUPPORT) {
+	    // Return an augmented `Uint8Array` instance, for best performance
+	    that = Buffer._augment(new Uint8Array(length))
+	    that.__proto__ = Buffer.prototype
+	  } else {
+	    // Fallback: Return an object instance of the Buffer class
+	    that.length = length
+	    that._isBuffer = true
+	  }
+
+	  var fromPool = length !== 0 && length <= Buffer.poolSize >>> 1
+	  if (fromPool) that.parent = rootParent
+
+	  return that
+	}
+
+	function checked (length) {
+	  // Note: cannot use `length < kMaxLength` here because that fails when
+	  // length is NaN (which is otherwise coerced to zero.)
+	  if (length >= kMaxLength()) {
+	    throw new RangeError('Attempt to allocate Buffer larger than maximum ' +
+	                         'size: 0x' + kMaxLength().toString(16) + ' bytes')
+	  }
+	  return length | 0
+	}
+
+	function SlowBuffer (subject, encoding) {
+	  if (!(this instanceof SlowBuffer)) return new SlowBuffer(subject, encoding)
+
+	  var buf = new Buffer(subject, encoding)
+	  delete buf.parent
+	  return buf
+	}
+
+	Buffer.isBuffer = function isBuffer (b) {
+	  return !!(b != null && b._isBuffer)
+	}
+
+	Buffer.compare = function compare (a, b) {
+	  if (!Buffer.isBuffer(a) || !Buffer.isBuffer(b)) {
+	    throw new TypeError('Arguments must be Buffers')
+	  }
+
+	  if (a === b) return 0
+
+	  var x = a.length
+	  var y = b.length
+
+	  var i = 0
+	  var len = Math.min(x, y)
+	  while (i < len) {
+	    if (a[i] !== b[i]) break
+
+	    ++i
+	  }
+
+	  if (i !== len) {
+	    x = a[i]
+	    y = b[i]
+	  }
+
+	  if (x < y) return -1
+	  if (y < x) return 1
+	  return 0
+	}
+
+	Buffer.isEncoding = function isEncoding (encoding) {
+	  switch (String(encoding).toLowerCase()) {
+	    case 'hex':
+	    case 'utf8':
+	    case 'utf-8':
+	    case 'ascii':
+	    case 'binary':
+	    case 'base64':
+	    case 'raw':
+	    case 'ucs2':
+	    case 'ucs-2':
+	    case 'utf16le':
+	    case 'utf-16le':
+	      return true
+	    default:
+	      return false
+	  }
+	}
+
+	Buffer.concat = function concat (list, length) {
+	  if (!isArray(list)) throw new TypeError('list argument must be an Array of Buffers.')
+
+	  if (list.length === 0) {
+	    return new Buffer(0)
+	  }
+
+	  var i
+	  if (length === undefined) {
+	    length = 0
+	    for (i = 0; i < list.length; i++) {
+	      length += list[i].length
+	    }
+	  }
+
+	  var buf = new Buffer(length)
+	  var pos = 0
+	  for (i = 0; i < list.length; i++) {
+	    var item = list[i]
+	    item.copy(buf, pos)
+	    pos += item.length
+	  }
+	  return buf
+	}
+
+	function byteLength (string, encoding) {
+	  if (typeof string !== 'string') string = '' + string
+
+	  var len = string.length
+	  if (len === 0) return 0
+
+	  // Use a for loop to avoid recursion
+	  var loweredCase = false
+	  for (;;) {
+	    switch (encoding) {
+	      case 'ascii':
+	      case 'binary':
+	      // Deprecated
+	      case 'raw':
+	      case 'raws':
+	        return len
+	      case 'utf8':
+	      case 'utf-8':
+	        return utf8ToBytes(string).length
+	      case 'ucs2':
+	      case 'ucs-2':
+	      case 'utf16le':
+	      case 'utf-16le':
+	        return len * 2
+	      case 'hex':
+	        return len >>> 1
+	      case 'base64':
+	        return base64ToBytes(string).length
+	      default:
+	        if (loweredCase) return utf8ToBytes(string).length // assume utf8
+	        encoding = ('' + encoding).toLowerCase()
+	        loweredCase = true
+	    }
+	  }
+	}
+	Buffer.byteLength = byteLength
+
+	function slowToString (encoding, start, end) {
+	  var loweredCase = false
+
+	  start = start | 0
+	  end = end === undefined || end === Infinity ? this.length : end | 0
+
+	  if (!encoding) encoding = 'utf8'
+	  if (start < 0) start = 0
+	  if (end > this.length) end = this.length
+	  if (end <= start) return ''
+
+	  while (true) {
+	    switch (encoding) {
+	      case 'hex':
+	        return hexSlice(this, start, end)
+
+	      case 'utf8':
+	      case 'utf-8':
+	        return utf8Slice(this, start, end)
+
+	      case 'ascii':
+	        return asciiSlice(this, start, end)
+
+	      case 'binary':
+	        return binarySlice(this, start, end)
+
+	      case 'base64':
+	        return base64Slice(this, start, end)
+
+	      case 'ucs2':
+	      case 'ucs-2':
+	      case 'utf16le':
+	      case 'utf-16le':
+	        return utf16leSlice(this, start, end)
+
+	      default:
+	        if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding)
+	        encoding = (encoding + '').toLowerCase()
+	        loweredCase = true
+	    }
+	  }
+	}
+
+	Buffer.prototype.toString = function toString () {
+	  var length = this.length | 0
+	  if (length === 0) return ''
+	  if (arguments.length === 0) return utf8Slice(this, 0, length)
+	  return slowToString.apply(this, arguments)
+	}
+
+	Buffer.prototype.equals = function equals (b) {
+	  if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
+	  if (this === b) return true
+	  return Buffer.compare(this, b) === 0
+	}
+
+	Buffer.prototype.inspect = function inspect () {
+	  var str = ''
+	  var max = exports.INSPECT_MAX_BYTES
+	  if (this.length > 0) {
+	    str = this.toString('hex', 0, max).match(/.{2}/g).join(' ')
+	    if (this.length > max) str += ' ... '
+	  }
+	  return '<Buffer ' + str + '>'
+	}
+
+	Buffer.prototype.compare = function compare (b) {
+	  if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
+	  if (this === b) return 0
+	  return Buffer.compare(this, b)
+	}
+
+	Buffer.prototype.indexOf = function indexOf (val, byteOffset) {
+	  if (byteOffset > 0x7fffffff) byteOffset = 0x7fffffff
+	  else if (byteOffset < -0x80000000) byteOffset = -0x80000000
+	  byteOffset >>= 0
+
+	  if (this.length === 0) return -1
+	  if (byteOffset >= this.length) return -1
+
+	  // Negative offsets start from the end of the buffer
+	  if (byteOffset < 0) byteOffset = Math.max(this.length + byteOffset, 0)
+
+	  if (typeof val === 'string') {
+	    if (val.length === 0) return -1 // special case: looking for empty string always fails
+	    return String.prototype.indexOf.call(this, val, byteOffset)
+	  }
+	  if (Buffer.isBuffer(val)) {
+	    return arrayIndexOf(this, val, byteOffset)
+	  }
+	  if (typeof val === 'number') {
+	    if (Buffer.TYPED_ARRAY_SUPPORT && Uint8Array.prototype.indexOf === 'function') {
+	      return Uint8Array.prototype.indexOf.call(this, val, byteOffset)
+	    }
+	    return arrayIndexOf(this, [ val ], byteOffset)
+	  }
+
+	  function arrayIndexOf (arr, val, byteOffset) {
+	    var foundIndex = -1
+	    for (var i = 0; byteOffset + i < arr.length; i++) {
+	      if (arr[byteOffset + i] === val[foundIndex === -1 ? 0 : i - foundIndex]) {
+	        if (foundIndex === -1) foundIndex = i
+	        if (i - foundIndex + 1 === val.length) return byteOffset + foundIndex
+	      } else {
+	        foundIndex = -1
+	      }
+	    }
+	    return -1
+	  }
+
+	  throw new TypeError('val must be string, number or Buffer')
+	}
+
+	// `get` is deprecated
+	Buffer.prototype.get = function get (offset) {
+	  console.log('.get() is deprecated. Access using array indexes instead.')
+	  return this.readUInt8(offset)
+	}
+
+	// `set` is deprecated
+	Buffer.prototype.set = function set (v, offset) {
+	  console.log('.set() is deprecated. Access using array indexes instead.')
+	  return this.writeUInt8(v, offset)
+	}
+
+	function hexWrite (buf, string, offset, length) {
+	  offset = Number(offset) || 0
+	  var remaining = buf.length - offset
+	  if (!length) {
+	    length = remaining
+	  } else {
+	    length = Number(length)
+	    if (length > remaining) {
+	      length = remaining
+	    }
+	  }
+
+	  // must be an even number of digits
+	  var strLen = string.length
+	  if (strLen % 2 !== 0) throw new Error('Invalid hex string')
+
+	  if (length > strLen / 2) {
+	    length = strLen / 2
+	  }
+	  for (var i = 0; i < length; i++) {
+	    var parsed = parseInt(string.substr(i * 2, 2), 16)
+	    if (isNaN(parsed)) throw new Error('Invalid hex string')
+	    buf[offset + i] = parsed
+	  }
+	  return i
+	}
+
+	function utf8Write (buf, string, offset, length) {
+	  return blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length)
+	}
+
+	function asciiWrite (buf, string, offset, length) {
+	  return blitBuffer(asciiToBytes(string), buf, offset, length)
+	}
+
+	function binaryWrite (buf, string, offset, length) {
+	  return asciiWrite(buf, string, offset, length)
+	}
+
+	function base64Write (buf, string, offset, length) {
+	  return blitBuffer(base64ToBytes(string), buf, offset, length)
+	}
+
+	function ucs2Write (buf, string, offset, length) {
+	  return blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length)
+	}
+
+	Buffer.prototype.write = function write (string, offset, length, encoding) {
+	  // Buffer#write(string)
+	  if (offset === undefined) {
+	    encoding = 'utf8'
+	    length = this.length
+	    offset = 0
+	  // Buffer#write(string, encoding)
+	  } else if (length === undefined && typeof offset === 'string') {
+	    encoding = offset
+	    length = this.length
+	    offset = 0
+	  // Buffer#write(string, offset[, length][, encoding])
+	  } else if (isFinite(offset)) {
+	    offset = offset | 0
+	    if (isFinite(length)) {
+	      length = length | 0
+	      if (encoding === undefined) encoding = 'utf8'
+	    } else {
+	      encoding = length
+	      length = undefined
+	    }
+	  // legacy write(string, encoding, offset, length) - remove in v0.13
+	  } else {
+	    var swap = encoding
+	    encoding = offset
+	    offset = length | 0
+	    length = swap
+	  }
+
+	  var remaining = this.length - offset
+	  if (length === undefined || length > remaining) length = remaining
+
+	  if ((string.length > 0 && (length < 0 || offset < 0)) || offset > this.length) {
+	    throw new RangeError('attempt to write outside buffer bounds')
+	  }
+
+	  if (!encoding) encoding = 'utf8'
+
+	  var loweredCase = false
+	  for (;;) {
+	    switch (encoding) {
+	      case 'hex':
+	        return hexWrite(this, string, offset, length)
+
+	      case 'utf8':
+	      case 'utf-8':
+	        return utf8Write(this, string, offset, length)
+
+	      case 'ascii':
+	        return asciiWrite(this, string, offset, length)
+
+	      case 'binary':
+	        return binaryWrite(this, string, offset, length)
+
+	      case 'base64':
+	        // Warning: maxLength not taken into account in base64Write
+	        return base64Write(this, string, offset, length)
+
+	      case 'ucs2':
+	      case 'ucs-2':
+	      case 'utf16le':
+	      case 'utf-16le':
+	        return ucs2Write(this, string, offset, length)
+
+	      default:
+	        if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding)
+	        encoding = ('' + encoding).toLowerCase()
+	        loweredCase = true
+	    }
+	  }
+	}
+
+	Buffer.prototype.toJSON = function toJSON () {
+	  return {
+	    type: 'Buffer',
+	    data: Array.prototype.slice.call(this._arr || this, 0)
+	  }
+	}
+
+	function base64Slice (buf, start, end) {
+	  if (start === 0 && end === buf.length) {
+	    return base64.fromByteArray(buf)
+	  } else {
+	    return base64.fromByteArray(buf.slice(start, end))
+	  }
+	}
+
+	function utf8Slice (buf, start, end) {
+	  end = Math.min(buf.length, end)
+	  var res = []
+
+	  var i = start
+	  while (i < end) {
+	    var firstByte = buf[i]
+	    var codePoint = null
+	    var bytesPerSequence = (firstByte > 0xEF) ? 4
+	      : (firstByte > 0xDF) ? 3
+	      : (firstByte > 0xBF) ? 2
+	      : 1
+
+	    if (i + bytesPerSequence <= end) {
+	      var secondByte, thirdByte, fourthByte, tempCodePoint
+
+	      switch (bytesPerSequence) {
+	        case 1:
+	          if (firstByte < 0x80) {
+	            codePoint = firstByte
+	          }
+	          break
+	        case 2:
+	          secondByte = buf[i + 1]
+	          if ((secondByte & 0xC0) === 0x80) {
+	            tempCodePoint = (firstByte & 0x1F) << 0x6 | (secondByte & 0x3F)
+	            if (tempCodePoint > 0x7F) {
+	              codePoint = tempCodePoint
+	            }
+	          }
+	          break
+	        case 3:
+	          secondByte = buf[i + 1]
+	          thirdByte = buf[i + 2]
+	          if ((secondByte & 0xC0) === 0x80 && (thirdByte & 0xC0) === 0x80) {
+	            tempCodePoint = (firstByte & 0xF) << 0xC | (secondByte & 0x3F) << 0x6 | (thirdByte & 0x3F)
+	            if (tempCodePoint > 0x7FF && (tempCodePoint < 0xD800 || tempCodePoint > 0xDFFF)) {
+	              codePoint = tempCodePoint
+	            }
+	          }
+	          break
+	        case 4:
+	          secondByte = buf[i + 1]
+	          thirdByte = buf[i + 2]
+	          fourthByte = buf[i + 3]
+	          if ((secondByte & 0xC0) === 0x80 && (thirdByte & 0xC0) === 0x80 && (fourthByte & 0xC0) === 0x80) {
+	            tempCodePoint = (firstByte & 0xF) << 0x12 | (secondByte & 0x3F) << 0xC | (thirdByte & 0x3F) << 0x6 | (fourthByte & 0x3F)
+	            if (tempCodePoint > 0xFFFF && tempCodePoint < 0x110000) {
+	              codePoint = tempCodePoint
+	            }
+	          }
+	      }
+	    }
+
+	    if (codePoint === null) {
+	      // we did not generate a valid codePoint so insert a
+	      // replacement char (U+FFFD) and advance only 1 byte
+	      codePoint = 0xFFFD
+	      bytesPerSequence = 1
+	    } else if (codePoint > 0xFFFF) {
+	      // encode to utf16 (surrogate pair dance)
+	      codePoint -= 0x10000
+	      res.push(codePoint >>> 10 & 0x3FF | 0xD800)
+	      codePoint = 0xDC00 | codePoint & 0x3FF
+	    }
+
+	    res.push(codePoint)
+	    i += bytesPerSequence
+	  }
+
+	  return decodeCodePointsArray(res)
+	}
+
+	// Based on http://stackoverflow.com/a/22747272/680742, the browser with
+	// the lowest limit is Chrome, with 0x10000 args.
+	// We go 1 magnitude less, for safety
+	var MAX_ARGUMENTS_LENGTH = 0x1000
+
+	function decodeCodePointsArray (codePoints) {
+	  var len = codePoints.length
+	  if (len <= MAX_ARGUMENTS_LENGTH) {
+	    return String.fromCharCode.apply(String, codePoints) // avoid extra slice()
+	  }
+
+	  // Decode in chunks to avoid "call stack size exceeded".
+	  var res = ''
+	  var i = 0
+	  while (i < len) {
+	    res += String.fromCharCode.apply(
+	      String,
+	      codePoints.slice(i, i += MAX_ARGUMENTS_LENGTH)
+	    )
+	  }
+	  return res
+	}
+
+	function asciiSlice (buf, start, end) {
+	  var ret = ''
+	  end = Math.min(buf.length, end)
+
+	  for (var i = start; i < end; i++) {
+	    ret += String.fromCharCode(buf[i] & 0x7F)
+	  }
+	  return ret
+	}
+
+	function binarySlice (buf, start, end) {
+	  var ret = ''
+	  end = Math.min(buf.length, end)
+
+	  for (var i = start; i < end; i++) {
+	    ret += String.fromCharCode(buf[i])
+	  }
+	  return ret
+	}
+
+	function hexSlice (buf, start, end) {
+	  var len = buf.length
+
+	  if (!start || start < 0) start = 0
+	  if (!end || end < 0 || end > len) end = len
+
+	  var out = ''
+	  for (var i = start; i < end; i++) {
+	    out += toHex(buf[i])
+	  }
+	  return out
+	}
+
+	function utf16leSlice (buf, start, end) {
+	  var bytes = buf.slice(start, end)
+	  var res = ''
+	  for (var i = 0; i < bytes.length; i += 2) {
+	    res += String.fromCharCode(bytes[i] + bytes[i + 1] * 256)
+	  }
+	  return res
+	}
+
+	Buffer.prototype.slice = function slice (start, end) {
+	  var len = this.length
+	  start = ~~start
+	  end = end === undefined ? len : ~~end
+
+	  if (start < 0) {
+	    start += len
+	    if (start < 0) start = 0
+	  } else if (start > len) {
+	    start = len
+	  }
+
+	  if (end < 0) {
+	    end += len
+	    if (end < 0) end = 0
+	  } else if (end > len) {
+	    end = len
+	  }
+
+	  if (end < start) end = start
+
+	  var newBuf
+	  if (Buffer.TYPED_ARRAY_SUPPORT) {
+	    newBuf = Buffer._augment(this.subarray(start, end))
+	  } else {
+	    var sliceLen = end - start
+	    newBuf = new Buffer(sliceLen, undefined)
+	    for (var i = 0; i < sliceLen; i++) {
+	      newBuf[i] = this[i + start]
+	    }
+	  }
+
+	  if (newBuf.length) newBuf.parent = this.parent || this
+
+	  return newBuf
+	}
+
+	/*
+	 * Need to make sure that buffer isn't trying to write out of bounds.
+	 */
+	function checkOffset (offset, ext, length) {
+	  if ((offset % 1) !== 0 || offset < 0) throw new RangeError('offset is not uint')
+	  if (offset + ext > length) throw new RangeError('Trying to access beyond buffer length')
+	}
+
+	Buffer.prototype.readUIntLE = function readUIntLE (offset, byteLength, noAssert) {
+	  offset = offset | 0
+	  byteLength = byteLength | 0
+	  if (!noAssert) checkOffset(offset, byteLength, this.length)
+
+	  var val = this[offset]
+	  var mul = 1
+	  var i = 0
+	  while (++i < byteLength && (mul *= 0x100)) {
+	    val += this[offset + i] * mul
+	  }
+
+	  return val
+	}
+
+	Buffer.prototype.readUIntBE = function readUIntBE (offset, byteLength, noAssert) {
+	  offset = offset | 0
+	  byteLength = byteLength | 0
+	  if (!noAssert) {
+	    checkOffset(offset, byteLength, this.length)
+	  }
+
+	  var val = this[offset + --byteLength]
+	  var mul = 1
+	  while (byteLength > 0 && (mul *= 0x100)) {
+	    val += this[offset + --byteLength] * mul
+	  }
+
+	  return val
+	}
+
+	Buffer.prototype.readUInt8 = function readUInt8 (offset, noAssert) {
+	  if (!noAssert) checkOffset(offset, 1, this.length)
+	  return this[offset]
+	}
+
+	Buffer.prototype.readUInt16LE = function readUInt16LE (offset, noAssert) {
+	  if (!noAssert) checkOffset(offset, 2, this.length)
+	  return this[offset] | (this[offset + 1] << 8)
+	}
+
+	Buffer.prototype.readUInt16BE = function readUInt16BE (offset, noAssert) {
+	  if (!noAssert) checkOffset(offset, 2, this.length)
+	  return (this[offset] << 8) | this[offset + 1]
+	}
+
+	Buffer.prototype.readUInt32LE = function readUInt32LE (offset, noAssert) {
+	  if (!noAssert) checkOffset(offset, 4, this.length)
+
+	  return ((this[offset]) |
+	      (this[offset + 1] << 8) |
+	      (this[offset + 2] << 16)) +
+	      (this[offset + 3] * 0x1000000)
+	}
+
+	Buffer.prototype.readUInt32BE = function readUInt32BE (offset, noAssert) {
+	  if (!noAssert) checkOffset(offset, 4, this.length)
+
+	  return (this[offset] * 0x1000000) +
+	    ((this[offset + 1] << 16) |
+	    (this[offset + 2] << 8) |
+	    this[offset + 3])
+	}
+
+	Buffer.prototype.readIntLE = function readIntLE (offset, byteLength, noAssert) {
+	  offset = offset | 0
+	  byteLength = byteLength | 0
+	  if (!noAssert) checkOffset(offset, byteLength, this.length)
+
+	  var val = this[offset]
+	  var mul = 1
+	  var i = 0
+	  while (++i < byteLength && (mul *= 0x100)) {
+	    val += this[offset + i] * mul
+	  }
+	  mul *= 0x80
+
+	  if (val >= mul) val -= Math.pow(2, 8 * byteLength)
+
+	  return val
+	}
+
+	Buffer.prototype.readIntBE = function readIntBE (offset, byteLength, noAssert) {
+	  offset = offset | 0
+	  byteLength = byteLength | 0
+	  if (!noAssert) checkOffset(offset, byteLength, this.length)
+
+	  var i = byteLength
+	  var mul = 1
+	  var val = this[offset + --i]
+	  while (i > 0 && (mul *= 0x100)) {
+	    val += this[offset + --i] * mul
+	  }
+	  mul *= 0x80
+
+	  if (val >= mul) val -= Math.pow(2, 8 * byteLength)
+
+	  return val
+	}
+
+	Buffer.prototype.readInt8 = function readInt8 (offset, noAssert) {
+	  if (!noAssert) checkOffset(offset, 1, this.length)
+	  if (!(this[offset] & 0x80)) return (this[offset])
+	  return ((0xff - this[offset] + 1) * -1)
+	}
+
+	Buffer.prototype.readInt16LE = function readInt16LE (offset, noAssert) {
+	  if (!noAssert) checkOffset(offset, 2, this.length)
+	  var val = this[offset] | (this[offset + 1] << 8)
+	  return (val & 0x8000) ? val | 0xFFFF0000 : val
+	}
+
+	Buffer.prototype.readInt16BE = function readInt16BE (offset, noAssert) {
+	  if (!noAssert) checkOffset(offset, 2, this.length)
+	  var val = this[offset + 1] | (this[offset] << 8)
+	  return (val & 0x8000) ? val | 0xFFFF0000 : val
+	}
+
+	Buffer.prototype.readInt32LE = function readInt32LE (offset, noAssert) {
+	  if (!noAssert) checkOffset(offset, 4, this.length)
+
+	  return (this[offset]) |
+	    (this[offset + 1] << 8) |
+	    (this[offset + 2] << 16) |
+	    (this[offset + 3] << 24)
+	}
+
+	Buffer.prototype.readInt32BE = function readInt32BE (offset, noAssert) {
+	  if (!noAssert) checkOffset(offset, 4, this.length)
+
+	  return (this[offset] << 24) |
+	    (this[offset + 1] << 16) |
+	    (this[offset + 2] << 8) |
+	    (this[offset + 3])
+	}
+
+	Buffer.prototype.readFloatLE = function readFloatLE (offset, noAssert) {
+	  if (!noAssert) checkOffset(offset, 4, this.length)
+	  return ieee754.read(this, offset, true, 23, 4)
+	}
+
+	Buffer.prototype.readFloatBE = function readFloatBE (offset, noAssert) {
+	  if (!noAssert) checkOffset(offset, 4, this.length)
+	  return ieee754.read(this, offset, false, 23, 4)
+	}
+
+	Buffer.prototype.readDoubleLE = function readDoubleLE (offset, noAssert) {
+	  if (!noAssert) checkOffset(offset, 8, this.length)
+	  return ieee754.read(this, offset, true, 52, 8)
+	}
+
+	Buffer.prototype.readDoubleBE = function readDoubleBE (offset, noAssert) {
+	  if (!noAssert) checkOffset(offset, 8, this.length)
+	  return ieee754.read(this, offset, false, 52, 8)
+	}
+
+	function checkInt (buf, value, offset, ext, max, min) {
+	  if (!Buffer.isBuffer(buf)) throw new TypeError('buffer must be a Buffer instance')
+	  if (value > max || value < min) throw new RangeError('value is out of bounds')
+	  if (offset + ext > buf.length) throw new RangeError('index out of range')
+	}
+
+	Buffer.prototype.writeUIntLE = function writeUIntLE (value, offset, byteLength, noAssert) {
+	  value = +value
+	  offset = offset | 0
+	  byteLength = byteLength | 0
+	  if (!noAssert) checkInt(this, value, offset, byteLength, Math.pow(2, 8 * byteLength), 0)
+
+	  var mul = 1
+	  var i = 0
+	  this[offset] = value & 0xFF
+	  while (++i < byteLength && (mul *= 0x100)) {
+	    this[offset + i] = (value / mul) & 0xFF
+	  }
+
+	  return offset + byteLength
+	}
+
+	Buffer.prototype.writeUIntBE = function writeUIntBE (value, offset, byteLength, noAssert) {
+	  value = +value
+	  offset = offset | 0
+	  byteLength = byteLength | 0
+	  if (!noAssert) checkInt(this, value, offset, byteLength, Math.pow(2, 8 * byteLength), 0)
+
+	  var i = byteLength - 1
+	  var mul = 1
+	  this[offset + i] = value & 0xFF
+	  while (--i >= 0 && (mul *= 0x100)) {
+	    this[offset + i] = (value / mul) & 0xFF
+	  }
+
+	  return offset + byteLength
+	}
+
+	Buffer.prototype.writeUInt8 = function writeUInt8 (value, offset, noAssert) {
+	  value = +value
+	  offset = offset | 0
+	  if (!noAssert) checkInt(this, value, offset, 1, 0xff, 0)
+	  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
+	  this[offset] = (value & 0xff)
+	  return offset + 1
+	}
+
+	function objectWriteUInt16 (buf, value, offset, littleEndian) {
+	  if (value < 0) value = 0xffff + value + 1
+	  for (var i = 0, j = Math.min(buf.length - offset, 2); i < j; i++) {
+	    buf[offset + i] = (value & (0xff << (8 * (littleEndian ? i : 1 - i)))) >>>
+	      (littleEndian ? i : 1 - i) * 8
+	  }
+	}
+
+	Buffer.prototype.writeUInt16LE = function writeUInt16LE (value, offset, noAssert) {
+	  value = +value
+	  offset = offset | 0
+	  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
+	  if (Buffer.TYPED_ARRAY_SUPPORT) {
+	    this[offset] = (value & 0xff)
+	    this[offset + 1] = (value >>> 8)
+	  } else {
+	    objectWriteUInt16(this, value, offset, true)
+	  }
+	  return offset + 2
+	}
+
+	Buffer.prototype.writeUInt16BE = function writeUInt16BE (value, offset, noAssert) {
+	  value = +value
+	  offset = offset | 0
+	  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
+	  if (Buffer.TYPED_ARRAY_SUPPORT) {
+	    this[offset] = (value >>> 8)
+	    this[offset + 1] = (value & 0xff)
+	  } else {
+	    objectWriteUInt16(this, value, offset, false)
+	  }
+	  return offset + 2
+	}
+
+	function objectWriteUInt32 (buf, value, offset, littleEndian) {
+	  if (value < 0) value = 0xffffffff + value + 1
+	  for (var i = 0, j = Math.min(buf.length - offset, 4); i < j; i++) {
+	    buf[offset + i] = (value >>> (littleEndian ? i : 3 - i) * 8) & 0xff
+	  }
+	}
+
+	Buffer.prototype.writeUInt32LE = function writeUInt32LE (value, offset, noAssert) {
+	  value = +value
+	  offset = offset | 0
+	  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
+	  if (Buffer.TYPED_ARRAY_SUPPORT) {
+	    this[offset + 3] = (value >>> 24)
+	    this[offset + 2] = (value >>> 16)
+	    this[offset + 1] = (value >>> 8)
+	    this[offset] = (value & 0xff)
+	  } else {
+	    objectWriteUInt32(this, value, offset, true)
+	  }
+	  return offset + 4
+	}
+
+	Buffer.prototype.writeUInt32BE = function writeUInt32BE (value, offset, noAssert) {
+	  value = +value
+	  offset = offset | 0
+	  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
+	  if (Buffer.TYPED_ARRAY_SUPPORT) {
+	    this[offset] = (value >>> 24)
+	    this[offset + 1] = (value >>> 16)
+	    this[offset + 2] = (value >>> 8)
+	    this[offset + 3] = (value & 0xff)
+	  } else {
+	    objectWriteUInt32(this, value, offset, false)
+	  }
+	  return offset + 4
+	}
+
+	Buffer.prototype.writeIntLE = function writeIntLE (value, offset, byteLength, noAssert) {
+	  value = +value
+	  offset = offset | 0
+	  if (!noAssert) {
+	    var limit = Math.pow(2, 8 * byteLength - 1)
+
+	    checkInt(this, value, offset, byteLength, limit - 1, -limit)
+	  }
+
+	  var i = 0
+	  var mul = 1
+	  var sub = value < 0 ? 1 : 0
+	  this[offset] = value & 0xFF
+	  while (++i < byteLength && (mul *= 0x100)) {
+	    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
+	  }
+
+	  return offset + byteLength
+	}
+
+	Buffer.prototype.writeIntBE = function writeIntBE (value, offset, byteLength, noAssert) {
+	  value = +value
+	  offset = offset | 0
+	  if (!noAssert) {
+	    var limit = Math.pow(2, 8 * byteLength - 1)
+
+	    checkInt(this, value, offset, byteLength, limit - 1, -limit)
+	  }
+
+	  var i = byteLength - 1
+	  var mul = 1
+	  var sub = value < 0 ? 1 : 0
+	  this[offset + i] = value & 0xFF
+	  while (--i >= 0 && (mul *= 0x100)) {
+	    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
+	  }
+
+	  return offset + byteLength
+	}
+
+	Buffer.prototype.writeInt8 = function writeInt8 (value, offset, noAssert) {
+	  value = +value
+	  offset = offset | 0
+	  if (!noAssert) checkInt(this, value, offset, 1, 0x7f, -0x80)
+	  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
+	  if (value < 0) value = 0xff + value + 1
+	  this[offset] = (value & 0xff)
+	  return offset + 1
+	}
+
+	Buffer.prototype.writeInt16LE = function writeInt16LE (value, offset, noAssert) {
+	  value = +value
+	  offset = offset | 0
+	  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
+	  if (Buffer.TYPED_ARRAY_SUPPORT) {
+	    this[offset] = (value & 0xff)
+	    this[offset + 1] = (value >>> 8)
+	  } else {
+	    objectWriteUInt16(this, value, offset, true)
+	  }
+	  return offset + 2
+	}
+
+	Buffer.prototype.writeInt16BE = function writeInt16BE (value, offset, noAssert) {
+	  value = +value
+	  offset = offset | 0
+	  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
+	  if (Buffer.TYPED_ARRAY_SUPPORT) {
+	    this[offset] = (value >>> 8)
+	    this[offset + 1] = (value & 0xff)
+	  } else {
+	    objectWriteUInt16(this, value, offset, false)
+	  }
+	  return offset + 2
+	}
+
+	Buffer.prototype.writeInt32LE = function writeInt32LE (value, offset, noAssert) {
+	  value = +value
+	  offset = offset | 0
+	  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
+	  if (Buffer.TYPED_ARRAY_SUPPORT) {
+	    this[offset] = (value & 0xff)
+	    this[offset + 1] = (value >>> 8)
+	    this[offset + 2] = (value >>> 16)
+	    this[offset + 3] = (value >>> 24)
+	  } else {
+	    objectWriteUInt32(this, value, offset, true)
+	  }
+	  return offset + 4
+	}
+
+	Buffer.prototype.writeInt32BE = function writeInt32BE (value, offset, noAssert) {
+	  value = +value
+	  offset = offset | 0
+	  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
+	  if (value < 0) value = 0xffffffff + value + 1
+	  if (Buffer.TYPED_ARRAY_SUPPORT) {
+	    this[offset] = (value >>> 24)
+	    this[offset + 1] = (value >>> 16)
+	    this[offset + 2] = (value >>> 8)
+	    this[offset + 3] = (value & 0xff)
+	  } else {
+	    objectWriteUInt32(this, value, offset, false)
+	  }
+	  return offset + 4
+	}
+
+	function checkIEEE754 (buf, value, offset, ext, max, min) {
+	  if (value > max || value < min) throw new RangeError('value is out of bounds')
+	  if (offset + ext > buf.length) throw new RangeError('index out of range')
+	  if (offset < 0) throw new RangeError('index out of range')
+	}
+
+	function writeFloat (buf, value, offset, littleEndian, noAssert) {
+	  if (!noAssert) {
+	    checkIEEE754(buf, value, offset, 4, 3.4028234663852886e+38, -3.4028234663852886e+38)
+	  }
+	  ieee754.write(buf, value, offset, littleEndian, 23, 4)
+	  return offset + 4
+	}
+
+	Buffer.prototype.writeFloatLE = function writeFloatLE (value, offset, noAssert) {
+	  return writeFloat(this, value, offset, true, noAssert)
+	}
+
+	Buffer.prototype.writeFloatBE = function writeFloatBE (value, offset, noAssert) {
+	  return writeFloat(this, value, offset, false, noAssert)
+	}
+
+	function writeDouble (buf, value, offset, littleEndian, noAssert) {
+	  if (!noAssert) {
+	    checkIEEE754(buf, value, offset, 8, 1.7976931348623157E+308, -1.7976931348623157E+308)
+	  }
+	  ieee754.write(buf, value, offset, littleEndian, 52, 8)
+	  return offset + 8
+	}
+
+	Buffer.prototype.writeDoubleLE = function writeDoubleLE (value, offset, noAssert) {
+	  return writeDouble(this, value, offset, true, noAssert)
+	}
+
+	Buffer.prototype.writeDoubleBE = function writeDoubleBE (value, offset, noAssert) {
+	  return writeDouble(this, value, offset, false, noAssert)
+	}
+
+	// copy(targetBuffer, targetStart=0, sourceStart=0, sourceEnd=buffer.length)
+	Buffer.prototype.copy = function copy (target, targetStart, start, end) {
+	  if (!start) start = 0
+	  if (!end && end !== 0) end = this.length
+	  if (targetStart >= target.length) targetStart = target.length
+	  if (!targetStart) targetStart = 0
+	  if (end > 0 && end < start) end = start
+
+	  // Copy 0 bytes; we're done
+	  if (end === start) return 0
+	  if (target.length === 0 || this.length === 0) return 0
+
+	  // Fatal error conditions
+	  if (targetStart < 0) {
+	    throw new RangeError('targetStart out of bounds')
+	  }
+	  if (start < 0 || start >= this.length) throw new RangeError('sourceStart out of bounds')
+	  if (end < 0) throw new RangeError('sourceEnd out of bounds')
+
+	  // Are we oob?
+	  if (end > this.length) end = this.length
+	  if (target.length - targetStart < end - start) {
+	    end = target.length - targetStart + start
+	  }
+
+	  var len = end - start
+	  var i
+
+	  if (this === target && start < targetStart && targetStart < end) {
+	    // descending copy from end
+	    for (i = len - 1; i >= 0; i--) {
+	      target[i + targetStart] = this[i + start]
+	    }
+	  } else if (len < 1000 || !Buffer.TYPED_ARRAY_SUPPORT) {
+	    // ascending copy from start
+	    for (i = 0; i < len; i++) {
+	      target[i + targetStart] = this[i + start]
+	    }
+	  } else {
+	    target._set(this.subarray(start, start + len), targetStart)
+	  }
+
+	  return len
+	}
+
+	// fill(value, start=0, end=buffer.length)
+	Buffer.prototype.fill = function fill (value, start, end) {
+	  if (!value) value = 0
+	  if (!start) start = 0
+	  if (!end) end = this.length
+
+	  if (end < start) throw new RangeError('end < start')
+
+	  // Fill 0 bytes; we're done
+	  if (end === start) return
+	  if (this.length === 0) return
+
+	  if (start < 0 || start >= this.length) throw new RangeError('start out of bounds')
+	  if (end < 0 || end > this.length) throw new RangeError('end out of bounds')
+
+	  var i
+	  if (typeof value === 'number') {
+	    for (i = start; i < end; i++) {
+	      this[i] = value
+	    }
+	  } else {
+	    var bytes = utf8ToBytes(value.toString())
+	    var len = bytes.length
+	    for (i = start; i < end; i++) {
+	      this[i] = bytes[i % len]
+	    }
+	  }
+
+	  return this
+	}
+
+	/**
+	 * Creates a new `ArrayBuffer` with the *copied* memory of the buffer instance.
+	 * Added in Node 0.12. Only available in browsers that support ArrayBuffer.
+	 */
+	Buffer.prototype.toArrayBuffer = function toArrayBuffer () {
+	  if (typeof Uint8Array !== 'undefined') {
+	    if (Buffer.TYPED_ARRAY_SUPPORT) {
+	      return (new Buffer(this)).buffer
+	    } else {
+	      var buf = new Uint8Array(this.length)
+	      for (var i = 0, len = buf.length; i < len; i += 1) {
+	        buf[i] = this[i]
+	      }
+	      return buf.buffer
+	    }
+	  } else {
+	    throw new TypeError('Buffer.toArrayBuffer not supported in this browser')
+	  }
+	}
+
+	// HELPER FUNCTIONS
+	// ================
+
+	var BP = Buffer.prototype
+
+	/**
+	 * Augment a Uint8Array *instance* (not the Uint8Array class!) with Buffer methods
+	 */
+	Buffer._augment = function _augment (arr) {
+	  arr.constructor = Buffer
+	  arr._isBuffer = true
+
+	  // save reference to original Uint8Array set method before overwriting
+	  arr._set = arr.set
+
+	  // deprecated
+	  arr.get = BP.get
+	  arr.set = BP.set
+
+	  arr.write = BP.write
+	  arr.toString = BP.toString
+	  arr.toLocaleString = BP.toString
+	  arr.toJSON = BP.toJSON
+	  arr.equals = BP.equals
+	  arr.compare = BP.compare
+	  arr.indexOf = BP.indexOf
+	  arr.copy = BP.copy
+	  arr.slice = BP.slice
+	  arr.readUIntLE = BP.readUIntLE
+	  arr.readUIntBE = BP.readUIntBE
+	  arr.readUInt8 = BP.readUInt8
+	  arr.readUInt16LE = BP.readUInt16LE
+	  arr.readUInt16BE = BP.readUInt16BE
+	  arr.readUInt32LE = BP.readUInt32LE
+	  arr.readUInt32BE = BP.readUInt32BE
+	  arr.readIntLE = BP.readIntLE
+	  arr.readIntBE = BP.readIntBE
+	  arr.readInt8 = BP.readInt8
+	  arr.readInt16LE = BP.readInt16LE
+	  arr.readInt16BE = BP.readInt16BE
+	  arr.readInt32LE = BP.readInt32LE
+	  arr.readInt32BE = BP.readInt32BE
+	  arr.readFloatLE = BP.readFloatLE
+	  arr.readFloatBE = BP.readFloatBE
+	  arr.readDoubleLE = BP.readDoubleLE
+	  arr.readDoubleBE = BP.readDoubleBE
+	  arr.writeUInt8 = BP.writeUInt8
+	  arr.writeUIntLE = BP.writeUIntLE
+	  arr.writeUIntBE = BP.writeUIntBE
+	  arr.writeUInt16LE = BP.writeUInt16LE
+	  arr.writeUInt16BE = BP.writeUInt16BE
+	  arr.writeUInt32LE = BP.writeUInt32LE
+	  arr.writeUInt32BE = BP.writeUInt32BE
+	  arr.writeIntLE = BP.writeIntLE
+	  arr.writeIntBE = BP.writeIntBE
+	  arr.writeInt8 = BP.writeInt8
+	  arr.writeInt16LE = BP.writeInt16LE
+	  arr.writeInt16BE = BP.writeInt16BE
+	  arr.writeInt32LE = BP.writeInt32LE
+	  arr.writeInt32BE = BP.writeInt32BE
+	  arr.writeFloatLE = BP.writeFloatLE
+	  arr.writeFloatBE = BP.writeFloatBE
+	  arr.writeDoubleLE = BP.writeDoubleLE
+	  arr.writeDoubleBE = BP.writeDoubleBE
+	  arr.fill = BP.fill
+	  arr.inspect = BP.inspect
+	  arr.toArrayBuffer = BP.toArrayBuffer
+
+	  return arr
+	}
+
+	var INVALID_BASE64_RE = /[^+\/0-9A-Za-z-_]/g
+
+	function base64clean (str) {
+	  // Node strips out invalid characters like \n and \t from the string, base64-js does not
+	  str = stringtrim(str).replace(INVALID_BASE64_RE, '')
+	  // Node converts strings with length < 2 to ''
+	  if (str.length < 2) return ''
+	  // Node allows for non-padded base64 strings (missing trailing ===), base64-js does not
+	  while (str.length % 4 !== 0) {
+	    str = str + '='
+	  }
+	  return str
+	}
+
+	function stringtrim (str) {
+	  if (str.trim) return str.trim()
+	  return str.replace(/^\s+|\s+$/g, '')
+	}
+
+	function toHex (n) {
+	  if (n < 16) return '0' + n.toString(16)
+	  return n.toString(16)
+	}
+
+	function utf8ToBytes (string, units) {
+	  units = units || Infinity
+	  var codePoint
+	  var length = string.length
+	  var leadSurrogate = null
+	  var bytes = []
+
+	  for (var i = 0; i < length; i++) {
+	    codePoint = string.charCodeAt(i)
+
+	    // is surrogate component
+	    if (codePoint > 0xD7FF && codePoint < 0xE000) {
+	      // last char was a lead
+	      if (!leadSurrogate) {
+	        // no lead yet
+	        if (codePoint > 0xDBFF) {
+	          // unexpected trail
+	          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+	          continue
+	        } else if (i + 1 === length) {
+	          // unpaired lead
+	          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+	          continue
+	        }
+
+	        // valid lead
+	        leadSurrogate = codePoint
+
+	        continue
+	      }
+
+	      // 2 leads in a row
+	      if (codePoint < 0xDC00) {
+	        if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+	        leadSurrogate = codePoint
+	        continue
+	      }
+
+	      // valid surrogate pair
+	      codePoint = (leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00) + 0x10000
+	    } else if (leadSurrogate) {
+	      // valid bmp char, but last char was a lead
+	      if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+	    }
+
+	    leadSurrogate = null
+
+	    // encode utf8
+	    if (codePoint < 0x80) {
+	      if ((units -= 1) < 0) break
+	      bytes.push(codePoint)
+	    } else if (codePoint < 0x800) {
+	      if ((units -= 2) < 0) break
+	      bytes.push(
+	        codePoint >> 0x6 | 0xC0,
+	        codePoint & 0x3F | 0x80
+	      )
+	    } else if (codePoint < 0x10000) {
+	      if ((units -= 3) < 0) break
+	      bytes.push(
+	        codePoint >> 0xC | 0xE0,
+	        codePoint >> 0x6 & 0x3F | 0x80,
+	        codePoint & 0x3F | 0x80
+	      )
+	    } else if (codePoint < 0x110000) {
+	      if ((units -= 4) < 0) break
+	      bytes.push(
+	        codePoint >> 0x12 | 0xF0,
+	        codePoint >> 0xC & 0x3F | 0x80,
+	        codePoint >> 0x6 & 0x3F | 0x80,
+	        codePoint & 0x3F | 0x80
+	      )
+	    } else {
+	      throw new Error('Invalid code point')
+	    }
+	  }
+
+	  return bytes
+	}
+
+	function asciiToBytes (str) {
+	  var byteArray = []
+	  for (var i = 0; i < str.length; i++) {
+	    // Node's code seems to be doing this and not & 0x7F..
+	    byteArray.push(str.charCodeAt(i) & 0xFF)
+	  }
+	  return byteArray
+	}
+
+	function utf16leToBytes (str, units) {
+	  var c, hi, lo
+	  var byteArray = []
+	  for (var i = 0; i < str.length; i++) {
+	    if ((units -= 2) < 0) break
+
+	    c = str.charCodeAt(i)
+	    hi = c >> 8
+	    lo = c % 256
+	    byteArray.push(lo)
+	    byteArray.push(hi)
+	  }
+
+	  return byteArray
+	}
+
+	function base64ToBytes (str) {
+	  return base64.toByteArray(base64clean(str))
+	}
+
+	function blitBuffer (src, dst, offset, length) {
+	  for (var i = 0; i < length; i++) {
+	    if ((i + offset >= dst.length) || (i >= src.length)) break
+	    dst[i + offset] = src[i]
+	  }
+	  return i
+	}
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(35).Buffer, (function() { return this; }())))
+
+/***/ },
+/* 36 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+	;(function (exports) {
+		'use strict';
+
+	  var Arr = (typeof Uint8Array !== 'undefined')
+	    ? Uint8Array
+	    : Array
+
+		var PLUS   = '+'.charCodeAt(0)
+		var SLASH  = '/'.charCodeAt(0)
+		var NUMBER = '0'.charCodeAt(0)
+		var LOWER  = 'a'.charCodeAt(0)
+		var UPPER  = 'A'.charCodeAt(0)
+		var PLUS_URL_SAFE = '-'.charCodeAt(0)
+		var SLASH_URL_SAFE = '_'.charCodeAt(0)
+
+		function decode (elt) {
+			var code = elt.charCodeAt(0)
+			if (code === PLUS ||
+			    code === PLUS_URL_SAFE)
+				return 62 // '+'
+			if (code === SLASH ||
+			    code === SLASH_URL_SAFE)
+				return 63 // '/'
+			if (code < NUMBER)
+				return -1 //no match
+			if (code < NUMBER + 10)
+				return code - NUMBER + 26 + 26
+			if (code < UPPER + 26)
+				return code - UPPER
+			if (code < LOWER + 26)
+				return code - LOWER + 26
+		}
+
+		function b64ToByteArray (b64) {
+			var i, j, l, tmp, placeHolders, arr
+
+			if (b64.length % 4 > 0) {
+				throw new Error('Invalid string. Length must be a multiple of 4')
+			}
+
+			// the number of equal signs (place holders)
+			// if there are two placeholders, than the two characters before it
+			// represent one byte
+			// if there is only one, then the three characters before it represent 2 bytes
+			// this is just a cheap hack to not do indexOf twice
+			var len = b64.length
+			placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
+
+			// base64 is 4/3 + up to two characters of the original data
+			arr = new Arr(b64.length * 3 / 4 - placeHolders)
+
+			// if there are placeholders, only get up to the last complete 4 chars
+			l = placeHolders > 0 ? b64.length - 4 : b64.length
+
+			var L = 0
+
+			function push (v) {
+				arr[L++] = v
+			}
+
+			for (i = 0, j = 0; i < l; i += 4, j += 3) {
+				tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
+				push((tmp & 0xFF0000) >> 16)
+				push((tmp & 0xFF00) >> 8)
+				push(tmp & 0xFF)
+			}
+
+			if (placeHolders === 2) {
+				tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
+				push(tmp & 0xFF)
+			} else if (placeHolders === 1) {
+				tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
+				push((tmp >> 8) & 0xFF)
+				push(tmp & 0xFF)
+			}
+
+			return arr
+		}
+
+		function uint8ToBase64 (uint8) {
+			var i,
+				extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
+				output = "",
+				temp, length
+
+			function encode (num) {
+				return lookup.charAt(num)
+			}
+
+			function tripletToBase64 (num) {
+				return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
+			}
+
+			// go through the array every three bytes, we'll deal with trailing stuff later
+			for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
+				temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+				output += tripletToBase64(temp)
+			}
+
+			// pad the end with zeros, but make sure to not forget the extra bytes
+			switch (extraBytes) {
+				case 1:
+					temp = uint8[uint8.length - 1]
+					output += encode(temp >> 2)
+					output += encode((temp << 4) & 0x3F)
+					output += '=='
+					break
+				case 2:
+					temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
+					output += encode(temp >> 10)
+					output += encode((temp >> 4) & 0x3F)
+					output += encode((temp << 2) & 0x3F)
+					output += '='
+					break
+			}
+
+			return output
+		}
+
+		exports.toByteArray = b64ToByteArray
+		exports.fromByteArray = uint8ToBase64
+	}( false ? (this.base64js = {}) : exports))
+
+
+/***/ },
+/* 37 */
+/***/ function(module, exports) {
+
+	exports.read = function (buffer, offset, isLE, mLen, nBytes) {
+	  var e, m
+	  var eLen = nBytes * 8 - mLen - 1
+	  var eMax = (1 << eLen) - 1
+	  var eBias = eMax >> 1
+	  var nBits = -7
+	  var i = isLE ? (nBytes - 1) : 0
+	  var d = isLE ? -1 : 1
+	  var s = buffer[offset + i]
+
+	  i += d
+
+	  e = s & ((1 << (-nBits)) - 1)
+	  s >>= (-nBits)
+	  nBits += eLen
+	  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+
+	  m = e & ((1 << (-nBits)) - 1)
+	  e >>= (-nBits)
+	  nBits += mLen
+	  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+
+	  if (e === 0) {
+	    e = 1 - eBias
+	  } else if (e === eMax) {
+	    return m ? NaN : ((s ? -1 : 1) * Infinity)
+	  } else {
+	    m = m + Math.pow(2, mLen)
+	    e = e - eBias
+	  }
+	  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
+	}
+
+	exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
+	  var e, m, c
+	  var eLen = nBytes * 8 - mLen - 1
+	  var eMax = (1 << eLen) - 1
+	  var eBias = eMax >> 1
+	  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
+	  var i = isLE ? 0 : (nBytes - 1)
+	  var d = isLE ? 1 : -1
+	  var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
+
+	  value = Math.abs(value)
+
+	  if (isNaN(value) || value === Infinity) {
+	    m = isNaN(value) ? 1 : 0
+	    e = eMax
+	  } else {
+	    e = Math.floor(Math.log(value) / Math.LN2)
+	    if (value * (c = Math.pow(2, -e)) < 1) {
+	      e--
+	      c *= 2
+	    }
+	    if (e + eBias >= 1) {
+	      value += rt / c
+	    } else {
+	      value += rt * Math.pow(2, 1 - eBias)
+	    }
+	    if (value * c >= 2) {
+	      e++
+	      c /= 2
+	    }
+
+	    if (e + eBias >= eMax) {
+	      m = 0
+	      e = eMax
+	    } else if (e + eBias >= 1) {
+	      m = (value * c - 1) * Math.pow(2, mLen)
+	      e = e + eBias
+	    } else {
+	      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
+	      e = 0
+	    }
+	  }
+
+	  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
+
+	  e = (e << mLen) | m
+	  eLen += mLen
+	  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
+
+	  buffer[offset + i - d] |= s * 128
+	}
+
+
+/***/ },
+/* 38 */
+/***/ function(module, exports) {
+
+	var toString = {}.toString;
+
+	module.exports = Array.isArray || function (arr) {
+	  return toString.call(arr) == '[object Array]';
 	};
+
+
+/***/ },
+/* 39 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var deepcopy = __webpack_require__(40);
+	var types = ['acidoBasic', 'precipitation', 'complexation'];
+
+	var Equation = function () {
+	    function Equation(eq) {
+	        _classCallCheck(this, Equation);
+
+	        // Sanity checks
+	        if (typeof eq.formed !== 'string') throw new Error('equation expects a property "formed" that is a string');
+	        if (typeof eq.pK !== 'number') throw new Error('equation expects a property "pK" that is a number');
+	        if (types.indexOf(eq.type) === -1) throw new Error('Unexpected type');
+	        if (Object.prototype.toString.call(eq.components) !== '[object Object]') throw new Error('Unexpected components');
+	        if (Object.keys(eq.components).length < 1) throw new Error('Components is expected to have at least one key');
+
+	        this._eq = deepcopy(eq);
+	    }
+
+	    _createClass(Equation, [{
+	        key: 'clone',
+	        value: function clone() {
+	            return new Equation(deepcopy(this._eq));
+	        }
+	    }, {
+	        key: 'toJSON',
+	        value: function toJSON() {
+	            return this._eq;
+	        }
+
+	        // Get a new representation of the equation given a solvent
+	        // Returns a new equation that does not include the solvent
+
+	    }, {
+	        key: 'withSolvent',
+	        value: function withSolvent(solvent) {
+	            var eq = {};
+	            var comp = this._eq.components;
+	            var formed = this._eq.formed;
+	            var compKeys = Object.keys(comp);
+	            if (formed === solvent) {
+	                eq.formed = compKeys[0];
+	                eq.components = {};
+	                eq.pK = -this._eq.pK;
+	                eq.type = this._eq.type;
+	                for (var j = 1; j < compKeys.length; j++) {
+	                    var compKey = compKeys[j];
+	                    eq.components[compKey] = -this._eq.components[compKey];
+	                }
+	            } else {
+	                for (var _j = 0; _j < compKeys.length; _j++) {
+	                    var _compKey = compKeys[_j];
+	                    if (_compKey === solvent) {
+	                        eq = deepcopy(this._eq);
+	                        // Remove solvent from equation
+	                        delete eq.components[_compKey];
+	                        break;
+	                    }
+	                }
+	            }
+	            if (!eq.components) {
+	                return this.clone();
+	            }
+
+	            return new Equation(eq);
+	        }
+	    }, {
+	        key: 'pK',
+	        get: function get() {
+	            return this._eq.pK;
+	        }
+	    }, {
+	        key: 'formed',
+	        get: function get() {
+	            return this._eq.formed;
+	        }
+	    }, {
+	        key: 'components',
+	        get: function get() {
+	            return this._eq.components;
+	        }
+	    }, {
+	        key: 'type',
+	        get: function get() {
+	            return this._eq.type;
+	        }
+	    }], [{
+	        key: 'create',
+	        value: function create(eq) {
+	            if (eq instanceof Equation) {
+	                return eq.clone();
+	            } else {
+	                return new Equation(eq);
+	            }
+	        }
+	    }]);
+
+	    return Equation;
+	}();
+
+	module.exports = Equation;
+
+/***/ },
+/* 40 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__(41);
+
+
+/***/ },
+/* 41 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	exports.__esModule = true;
+
+	var _copy = __webpack_require__(42);
+
+	var _polyfill = __webpack_require__(43);
+
+	function defaultCustomizer(target) {
+	  return void 0;
+	}
+
+	function deepcopy(target) {
+	  var customizer = arguments.length <= 1 || arguments[1] === void 0 ? defaultCustomizer : arguments[1];
+
+	  if (target === null) {
+	    // copy null
+	    return null;
+	  }
+
+	  var resultValue = (0, _copy.copyValue)(target);
+
+	  if (resultValue !== null) {
+	    // copy some primitive types
+	    return resultValue;
+	  }
+
+	  var resultCollection = (0, _copy.copyCollection)(target, customizer),
+	      clone = resultCollection !== null ? resultCollection : target;
+
+	  var visited = [target],
+	      reference = [clone];
+
+	  // recursively copy from collection
+	  return recursiveCopy(target, customizer, clone, visited, reference);
+	}
+
+	function recursiveCopy(target, customizer, clone, visited, reference) {
+	  if (target === null) {
+	    // copy null
+	    return null;
+	  }
+
+	  var resultValue = (0, _copy.copyValue)(target);
+
+	  if (resultValue !== null) {
+	    // copy some primitive types
+	    return resultValue;
+	  }
+
+	  var keys = (0, _polyfill.getKeys)(target).concat((0, _polyfill.getSymbols)(target));
+
+	  var i = void 0,
+	      len = void 0;
+
+	  var key = void 0,
+	      value = void 0,
+	      index = void 0,
+	      resultCopy = void 0,
+	      result = void 0,
+	      ref = void 0;
+
+	  for (i = 0, len = keys.length; i < len; ++i) {
+	    key = keys[i];
+	    value = target[key];
+	    index = (0, _polyfill.indexOf)(visited, value);
+
+	    resultCopy = void 0;
+	    result = void 0;
+	    ref = void 0;
+
+	    if (index === -1) {
+	      resultCopy = (0, _copy.copy)(value, customizer);
+	      result = resultCopy !== null ? resultCopy : value;
+
+	      if (value !== null && /^(?:function|object)$/.test(typeof value)) {
+	        visited.push(value);
+	        reference.push(result);
+	      }
+	    } else {
+	      // circular reference
+	      ref = reference[index];
+	    }
+
+	    clone[key] = ref || recursiveCopy(value, customizer, result, visited, reference);
+	  }
+
+	  return clone;
+	}
+
+	exports['default'] = deepcopy;
+	module.exports = exports['default'];
+
+/***/ },
+/* 42 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
+
+	exports.__esModule = true;
+	exports.copyValue = exports.copyCollection = exports.copy = void 0;
+
+	var _polyfill = __webpack_require__(43);
+
+	var toString = Object.prototype.toString;
+
+	function copy(target, customizer) {
+	  var resultValue = copyValue(target);
+
+	  if (resultValue !== null) {
+	    return resultValue;
+	  }
+
+	  return copyCollection(target, customizer);
+	}
+
+	function copyCollection(target, customizer) {
+	  if (typeof customizer !== 'function') {
+	    throw new TypeError('customizer is must be a Function');
+	  }
+
+	  if (typeof target === 'function') {
+	    var source = String(target);
+
+	    // NOTE:
+	    //
+	    //   https://gist.github.com/jdalton/5e34d890105aca44399f
+	    //
+	    //   - https://gist.github.com/jdalton/5e34d890105aca44399f#gistcomment-1283831
+	    //   - http://es5.github.io/#x15
+	    //
+	    //   native functions does not have prototype:
+	    //
+	    //       Object.toString.prototype  // => undefined
+	    //       (function() {}).prototype  // => {}
+	    //
+	    //   but cannot detect native constructor:
+	    //
+	    //       typeof Object     // => 'function'
+	    //       Object.prototype  // => {}
+	    //
+	    //   and cannot detect null binded function:
+	    //
+	    //       String(Math.abs)
+	    //         // => 'function abs() { [native code] }'
+	    //
+	    //     Firefox, Safari:
+	    //       String((function abs() {}).bind(null))
+	    //         // => 'function abs() { [native code] }'
+	    //
+	    //     Chrome:
+	    //       String((function abs() {}).bind(null))
+	    //         // => 'function () { [native code] }'
+	    if (/^\s*function\s*\S*\([^\)]*\)\s*{\s*\[native code\]\s*}/.test(source)) {
+	      // native function
+	      return target;
+	    } else {
+	      // user defined function
+	      return new Function('return ' + String(source))();
+	    }
+	  }
+
+	  var targetClass = toString.call(target);
+
+	  if (targetClass === '[object Array]') {
+	    return [];
+	  }
+
+	  if (targetClass === '[object Object]' && target.constructor === Object) {
+	    return {};
+	  }
+
+	  if (targetClass === '[object Date]') {
+	    // NOTE:
+	    //
+	    //   Firefox need to convert
+	    //
+	    //   Firefox:
+	    //     var date = new Date;
+	    //     +date;            // 1420909365967
+	    //     +new Date(date);  // 1420909365000
+	    //     +new Date(+date); // 1420909365967
+	    //
+	    //   Chrome:
+	    //     var date = new Date;
+	    //     +date;            // 1420909757913
+	    //     +new Date(date);  // 1420909757913
+	    //     +new Date(+date); // 1420909757913
+	    return new Date(target.getTime());
+	  }
+
+	  if (targetClass === '[object RegExp]') {
+	    // NOTE:
+	    //
+	    //   Chrome, Safari:
+	    //     (new RegExp).source => "(?:)"
+	    //
+	    //   Firefox:
+	    //     (new RegExp).source => ""
+	    //
+	    //   Chrome, Safari, Firefox:
+	    //     String(new RegExp) => "/(?:)/"
+	    var regexpText = String(target),
+	        slashIndex = regexpText.lastIndexOf('/');
+
+	    return new RegExp(regexpText.slice(1, slashIndex), regexpText.slice(slashIndex + 1));
+	  }
+
+	  if ((0, _polyfill.isBuffer)(target)) {
+	    var buffer = new Buffer(target.length);
+
+	    target.copy(buffer);
+
+	    return buffer;
+	  }
+
+	  var customizerResult = customizer(target);
+
+	  if (customizerResult !== void 0) {
+	    return customizerResult;
+	  }
+
+	  return null;
+	}
+
+	function copyValue(target) {
+	  var targetType = typeof target;
+
+	  // copy String, Number, Boolean, undefined and Symbol
+	  // without null and Function
+	  if (target !== null && targetType !== 'object' && targetType !== 'function') {
+	    return target;
+	  }
+
+	  return null;
+	}
+
+	exports.copy = copy;
+	exports.copyCollection = copyCollection;
+	exports.copyValue = copyValue;
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(35).Buffer))
+
+/***/ },
+/* 43 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
+
+	exports.__esModule = true;
+	var toString = Object.prototype.toString;
+
+	var isBuffer = typeof Buffer !== 'undefined' ? function isBuffer(obj) {
+	  return Buffer.isBuffer(obj);
+	} : function isBuffer() {
+	  // always return false in browsers
+	  return false;
+	};
+
+	var getKeys = typeof Object.keys === 'function' ? function getKeys(obj) {
+	  return Object.keys(obj);
+	} : function getKeys(obj) {
+	  var objType = typeof obj;
+
+	  if (obj === null || objType !== 'function' && objType !== 'object') {
+	    throw new TypeError('obj must be an Object');
+	  }
+
+	  var resultKeys = [],
+	      key = void 0;
+
+	  for (key in obj) {
+	    Object.prototype.hasOwnProperty.call(obj, key) && resultKeys.push(key);
+	  }
+
+	  return resultKeys;
+	};
+
+	var getSymbols = typeof Symbol === 'function' ? function getSymbols(obj) {
+	  return Object.getOwnPropertySymbols(obj);
+	} : function getSymbols() {
+	  // always return empty Array when Symbol is not supported
+	  return [];
+	};
+
+	// NOTE:
+	//
+	//   Array.prototype.indexOf is cannot find NaN (in Chrome)
+	//   Array.prototype.includes is can find NaN (in Chrome)
+	//
+	//   this function can find NaN, because use SameValue algorithm
+	function indexOf(array, s) {
+	  if (toString.call(array) !== '[object Array]') {
+	    throw new TypeError('array must be an Array');
+	  }
+
+	  var i = void 0,
+	      len = void 0,
+	      value = void 0;
+
+	  for (i = 0, len = array.length; i < len; ++i) {
+	    value = array[i];
+
+	    // NOTE:
+	    //
+	    //   it is SameValue algorithm
+	    //   http://stackoverflow.com/questions/27144277/comparing-a-variable-with-itself
+	    //
+	    // eslint-disable-next-line no-self-compare
+	    if (value === s || value !== value && s !== s) {
+	      return i;
+	    }
+	  }
+
+	  return -1;
+	}
+
+	exports.getKeys = getKeys;
+	exports.getSymbols = getSymbols;
+	exports.indexOf = indexOf;
+	exports.isBuffer = isBuffer;
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(35).Buffer))
 
 /***/ }
 /******/ ])
