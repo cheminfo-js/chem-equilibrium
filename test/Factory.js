@@ -51,6 +51,9 @@ describe('Factory', function () {
             beta: 0.1,
             solid: true
         });
+
+        factory.enableEquation('A');
+        factory.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);
     });
     it('should create a Factory when from multi-solvent database', function () {
         var factory = new Factory({database: eq.multiSolvent});
