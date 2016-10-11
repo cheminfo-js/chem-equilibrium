@@ -7,13 +7,13 @@ const defaultOptions = {
     maxIterations: 99
 };
 
-function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC, options) {
+function newtonRaphton(model, beta, cTotal, c, solidModel, solidKsp, solidC, options) {
     // c is component concentrations. The initialization is up to the caller
     // model contains stoechiometric coefficient of the reactions
     // beta is the equilibrium constant for each reaction
     // cTotal is the total concentration of each component
     // solid model contains stoechiometric coefficients of the precipitation reactions
-    // solidBeta contains the solubility constants
+    // solidKsp contains the solubility constants
     // solidC contains the initial solid species "concentrations"
 
     options = Object.assign({}, defaultOptions, options);
@@ -21,10 +21,10 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC, op
     var nspec = beta.length;
 
     if (!solidModel) solidModel = new Array(ncomp).fill(0).map(() => []);
-    if (!solidBeta) solidBeta = [];
+    if (!solidKsp) solidKsp = [];
     if (!solidC) solidC = [];
 
-    var nsolid = solidBeta.length;
+    var nsolid = solidKsp.length;
 
     // Sanity check
     if (c.length !== ncomp || model.length !== ncomp || model[0].length !== nspec || solidC.length !== nsolid || solidModel.length !== ncomp || solidModel[0] && solidModel[0].length !== nsolid) {
@@ -34,7 +34,7 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC, op
     model = new Matrix(model);
     if (nsolid) {
         solidModel = new Matrix(solidModel);
-        var lnSolidBeta = new Matrix([solidBeta.map(Math.log2)]);
+        var lnSolidBeta = new Matrix([solidKsp.map(Math.log2)]);
         solidC = new Matrix([solidC]);
     }
     // Prevent numerical difficulties
@@ -55,13 +55,13 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC, op
         if (nsolid) {
             var Ksp = stat.product(c.transpose().repeat(1, nsolid).pow(solidModel), 0);
             Ksp.forEach((k, idx) => {
-                if (k > solidBeta[idx]) {
+                if (k > solidKsp[idx]) {
                     // The computed solubility product is greater than maximum value
                     solidIndices.push(idx);
                 } else if (solidC[0][idx] > 0) {
                     // solid concentration is not 0
                     solidIndices.push(idx);
-                } else if (Math.abs(k - solidBeta[idx]) < options.tolerance) {
+                } else if (Math.abs(k - solidKsp[idx]) < options.tolerance) {
                     // diff is negative but small, we keep it in the model
                     solidIndices.push(idx);
                 }
@@ -101,7 +101,7 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC, op
         var d = Matrix.subtract([cTotal], cTotCalc);
         if (nSolidPicked) {
             var dK = Matrix.subtract(lnSolidBeta, [lnKsp]).selection([0], solidIndices);
-            var dkOrig = Matrix.subtract([solidBeta], [Ksp]);
+            var dkOrig = Matrix.subtract([solidKsp], [Ksp]);
             var dAll = new Matrix(1, njstar);
             dAll.setSubMatrix(d, 0, 0);
             dAll.setSubMatrix(dK, 0, ncomp);
