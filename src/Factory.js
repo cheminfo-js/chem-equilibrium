@@ -26,7 +26,9 @@ class Factory {
     getSpecies(options) {
         options = options || {};
         var species = options.filtered ? Object.keys(this.species) : null;
-        return this.eqSet.getSpecies(species, options.type);
+        var getOptions = Object.assign({}, options);
+        getOptions.species = species;
+        return this.eqSet.getSpecies(getOptions);
     }
 
 
@@ -35,7 +37,7 @@ class Factory {
         var species = options.filtered ? Object.keys(this.species) : null;
         if(species) var eqSet = this.eqSet.getSubset(species);
         else eqSet = this.eqSet;
-        return eqSet.getNormalized(this.options.solvent).getComponents(null, options.type);
+        return eqSet.getNormalized(this.options.solvent).getComponents(options);
     }
 
     getEquations(options) {
@@ -47,7 +49,7 @@ class Factory {
         if(options.normalized) {
             eqSet = eqSet.getNormalized(this.options.solvent);
         }
-        return eqSet.getEquations();
+        return eqSet.getEquations(options);
     }
 
     getModel() {

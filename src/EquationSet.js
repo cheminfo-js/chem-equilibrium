@@ -36,10 +36,14 @@ class EquationSet {
         return this.getSpecies();
     }
 
-    getSpecies(species, type) {
+    getSpecies(options) {
+        options = options || {};
+        var species = options.species;
+        var type = options.type;
+        var includeDisabled = options.includeDisabled;
         var speciesSet = new Set();
         for(var [key, eq] of this.entries()) {
-            if(this._disabledKeys.has(key)) continue;
+            if(this._disabledKeys.has(key) && !includeDisabled) continue;
             if(type && type !== eq.type) continue;
             if(species) {
                 if(species.indexOf(eq.formed) > -1) {
@@ -63,13 +67,17 @@ class EquationSet {
         return this.getComponents();
     }
 
-    getComponents(species, type) {
+    getComponents(options) {
+        options = options || {};
+        var species = options.species;
+        var type = options.type;
+        var includeDisabled = options.includeDisabled;
         if(!this.isNormalized()) {
             throw new Error('Cannot get components from non-normalized equation set')
         }
         var speciesSet = new Set();
         for(var [key, eq] of this.entries()) {
-            if(this._disabledKeys.has(key)) continue;
+            if(this._disabledKeys.has(key) && !includeDisabled) continue;
             if (type && type !== eq.type) continue;
             if (species) {
                 if (species.indexOf(eq.formed) > -1) {
@@ -161,10 +169,15 @@ class EquationSet {
         return this._normalized;
     }
 
-    getEquations() {
+    getEquations(options) {
+        options = options || {};
         return Array.from(this.equations)
-            .filter(e => !this._disabledKeys.has(e[0]))
-            .map(e => e[1].toJSON());
+            .filter(e => options.includeDisabled || !this._disabledKeys.has(e[0]))
+            .map(e => {
+                var r = e[1].toJSON();
+                if(this._disabledKeys.has(e[0])) r.disabled = true;
+                return r;
+            });
     }
 
     getModel(totals, all) {

@@ -44,12 +44,18 @@ describe('Factory', function () {
         var factory = new Factory({database: eq.equations1});
         factory.disableEquation('A');
         factory.getSpecies().sort().should.deepEqual(['C', 'D', 'E']);
+        factory.getSpecies({includeDisabled: true}).sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);
         factory.getSpecies({filtered: false, type: 'acidoBasic'}).sort().should.deepEqual([]);
         factory.getComponents().sort().should.deepEqual(['D', 'E']);
         factory.getComponents({filtered: false, type: 'acidoBasic'}).sort().should.deepEqual([]);
+        factory.getComponents({includeDisabled:true}).sort().should.deepEqual(['B', 'D', 'E']);
         factory.getEquations().sort(equationSort).should.deepEqual([
             { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 } ]
         );
+        factory.getEquations({includeDisabled: true}).sort(equationSort).should.deepEqual([
+            { formed: 'A', components: {B: -1}, type: 'acidoBasic', pK: 1, disabled: true},
+            { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 }
+        ]);
         factory.addSpecie('A', 1);
         factory.addSpecie('C', 1);
         var model = factory.getModel();
