@@ -52,6 +52,7 @@ class Factory {
         return eqSet.getEquations(options);
     }
 
+
     getModel() {
         var subSet = this.eqSet.getSubset(Object.keys(this.species));
         var normSet = subSet.getNormalized(this.options.solvent);
@@ -85,6 +86,7 @@ class Factory {
 
     resetSpecies() {
         this.species = {};
+        this.addSpecie(this.options.solvent);
     }
 
     setTotal(label, total) {
