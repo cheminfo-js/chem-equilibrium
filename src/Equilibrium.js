@@ -146,6 +146,18 @@ class Equilibrium {
         var columns = rows.concat(getRange(nComp, nComp + nSpecSolution - 1));
         matrix = matrix.selection(rows, columns);
         beta = beta.selection([0], columns);
+        // remove empty columns
+        // var notZeroColumns = [];
+        // loop1: for(var i=0; i<matrix.columns; i++) {
+        //     for(var j=0; j<matrix.rows; j++) {
+        //         if(matrix[j][i] !== 0) {
+        //             notZeroColumns.push(i);
+        //             continue loop1;
+        //         }
+        //     }
+        // }
+        // matrix = matrix.selection(getRange(0, matrix.rows - 1), notZeroColumns);
+        // beta = beta.selection([0], notZeroColumns);
 
         // ============= Init stoechiometric matrix (formed solids) ================================================
         if(nSpecSolid) {
@@ -167,7 +179,7 @@ class Equilibrium {
                     // Update the beta value of all species
                     // newBeta = oldBeta * fixedComponentConcentration^(stoechiometricCoefficient)
                     m = new Matrix(1, nSpecSolid).fill(atEq);
-                    m.pow([solidMatrix.getRow(i)]);
+                    m.pow([Matrix.mul(solidMatrix, -1).getRow(i)]);
                     solidBeta.multiply(m);
                 }
             }
