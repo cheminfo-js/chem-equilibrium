@@ -21,18 +21,50 @@ class Factory {
         this.addSpecie(options.solvent);
     }
 
+    // =========== Getters ==============
+
     getSpecies(filtered, type) {
         var species = filtered ? Object.keys(this.species) : null;
         return this.eqSet.getSpecies(species, type);
     }
 
-    disableEquation(formedSpecie) {
-        this.eqSet.disableEquation(formedSpecie, true);
+
+    getComponents(filtered, type) {
+        var species = filtered ? Object.keys(this.species) : null;
+        if(species) var eqSet = this.eqSet.getSubset(species);
+        else eqSet = this.eqSet;
+        return eqSet.getNormalized(this.options.solvent).getComponents(null, type);
     }
 
-    enableEquation(formedSpecie) {
-        this.eqSet.enableEquation(formedSpecie, true);
+    getEquations(filtered, normalized) {
+        var eqSet = this.eqSet;
+        if(filtered) {
+            eqSet = this.eqSet.getSubset(Object.keys(this.species));
+        }
+        if(normalized) {
+            eqSet = eqSet.getNormalized(this.options.solvent);
+        }
+        return eqSet.getEquations();
     }
+
+    getModel() {
+        var subSet = this.eqSet.getSubset(Object.keys(this.species));
+        var normSet = subSet.getNormalized(this.options.solvent);
+        var model = normSet.getModel(this.species, true);
+        model.components.forEach(c => {
+            if(this.atEquilibrium.has(c.label)) {
+                c.atEquilibrium = this.species[c.label];
+                delete c.total;
+            }
+        });
+        return model;
+    }
+
+    getEquilibrium() {
+        return new Equilibrium(this.getModel(), this.options);
+    }
+
+    // =========== Setters ==============
 
     addSpecie(label, total) {
         total = total || 0;
@@ -50,17 +82,6 @@ class Factory {
         this.species = {};
     }
 
-    enableAllEquations() {
-        this.eqSet.enableAllEquations();
-    }
-
-    getComponents(filtered, type) {
-        var species = filtered ? Object.keys(this.species) : null;
-        if(species) var eqSet = this.eqSet.getSubset(species);
-        else eqSet = this.eqSet;
-        return eqSet.getNormalized(this.options.solvent).getComponents(null, type);
-    }
-
     setTotal(label, total) {
         this.species[label] = total;
         this.atEquilibrium.delete(label);
@@ -75,32 +96,17 @@ class Factory {
         this.options = options;
     }
 
-    getEquilibrium() {
-        return new Equilibrium(this.getModel(), this.options);
+
+    disableEquation(formedSpecie) {
+        this.eqSet.disableEquation(formedSpecie, true);
     }
 
-    getModel() {
-        var subSet = this.eqSet.getSubset(Object.keys(this.species));
-        var normSet = subSet.getNormalized(this.options.solvent);
-        var model = normSet.getModel(this.species, true);
-        model.components.forEach(c => {
-            if(this.atEquilibrium.has(c.label)) {
-                c.atEquilibrium = this.species[c.label];
-                delete c.total;
-            }
-        });
-        return model;
+    enableEquation(formedSpecie) {
+        this.eqSet.enableEquation(formedSpecie, true);
     }
 
-    getEquations(filtered, normalized) {
-        var eqSet = this.eqSet;
-        if(filtered) {
-            eqSet = this.eqSet.getSubset(Object.keys(this.species));
-        }
-        if(normalized) {
-            eqSet = eqSet.getNormalized(this.options.solvent);
-        }
-        return eqSet.getEquations();
+    enableAllEquations() {
+        this.eqSet.enableAllEquations();
     }
 
 }
