@@ -46,6 +46,14 @@ class Factory {
         }
     }
 
+    resetSpecies() {
+        this.species = {};
+    }
+
+    enableAllEquations() {
+        this.eqSet.enableAllEquations();
+    }
+
     getComponents(filtered, type) {
         var species = filtered ? Object.keys(this.species) : null;
         if(species) var eqSet = this.eqSet.getSubset(species);

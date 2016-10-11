@@ -97,6 +97,10 @@ class EquationSet {
         this._disabledKeys.delete(key);
     }
 
+    enableAllEquations() {
+        this._disabledKeys.clear();
+    }
+
     get size() {
         return this.equations.size;
     }
