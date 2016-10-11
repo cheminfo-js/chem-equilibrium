@@ -78,10 +78,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	var newtonRaphton = __webpack_require__(31);
 
 	var defaultOptions = {
-	    robustMaxTries: 1000,
+	    robustMaxTries: 10,
 	    volume: 1,
 	    random: Math.random,
-	    autoInitial: true
+	    autoInitial: true,
+	    tolerance: 1e-15
 	};
 
 	/**
@@ -330,7 +331,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        value: function solve() {
 	            var model = this._model;
 	            var initial = this._getInitial();
-	            var cSpec = newtonRaphton(model.model, model.beta, model.cTotal, initial.components, model.solidModel, model.solidBeta, initial.solids);
+	            var cSpec = newtonRaphton(model.model, model.beta, model.cTotal, initial.components, model.solidModel, model.solidBeta, initial.solids, this.options);
 	            var result = this._processResult(cSpec);
 	            if (this.options.autoInitial) this.setInitial(result);
 	            return result;
@@ -353,7 +354,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    components: random.logarithmic(this.options.random, model.compLabels.length),
 	                    solids: random.logarithmic(this.options.random, model.specSolidLabels.length)
 	                };
-	                var cSpec = newtonRaphton(model.model, model.beta, model.cTotal, initial.components, model.solidModel, model.solidBeta, initial.solids);
+	                var cSpec = newtonRaphton(model.model, model.beta, model.cTotal, initial.components, model.solidModel, model.solidBeta, initial.solids, this.options);
 	                if (cSpec) {
 	                    return this._processResult(cSpec);
 	                }
@@ -5966,8 +5967,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var Matrix = __webpack_require__(2);
 	var stat = __webpack_require__(8).matrix;
+	var defaultOptions = {
+	    tolerance: 1e-15,
+	    solidTolerance: 1e-5,
+	    maxIterations: 99
+	};
 
-	function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC) {
+	function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC, options) {
 	    // c is component concentrations. The initialization is up to the caller
 	    // model contains stoechiometric coefficient of the reactions
 	    // beta is the equilibrium constant for each reaction
@@ -5975,6 +5981,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // solid model contains stoechiometric coefficients of the precipitation reactions
 	    // solidBeta contains the solubility constants
 	    // solidC contains the initial solid species "concentrations"
+
+	    options = Object.assign({}, defaultOptions, options);
 	    var ncomp = cTotal.length;
 	    var nspec = beta.length;
 
@@ -5999,13 +6007,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	    // Prevent numerical difficulties
 	    for (var i = 0; i < cTotal.length; i++) {
-	        if (cTotal[i] === 0) cTotal[i] = 1e-15;
+	        if (cTotal[i] === 0) cTotal[i] = options.tolerance;
 	    }
 
 	    c = new Matrix([c]);
 
-	    var maxIt = 99;
-	    for (i = 0; i < maxIt; i++) {
+	    for (i = 0; i < options.maxIterations; i++) {
 	        // console.log('iteration' , i);
 	        // console.log(c, solidC)
 
@@ -6021,7 +6028,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                } else if (solidC[0][idx] > 0) {
 	                    // solid concentration is not 0
 	                    solidIndices.push(idx);
-	                } else if (Math.abs(k - solidBeta[idx]) < 1e-15) {
+	                } else if (Math.abs(k - solidBeta[idx]) < options.tolerance) {
 	                    // diff is negative but small, we keep it in the model
 	                    solidIndices.push(idx);
 	                }
@@ -6059,7 +6066,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var d = Matrix.subtract([cTotal], cTotCalc);
 	        if (nSolidPicked) {
 	            var dK = Matrix.subtract(lnSolidBeta, [lnKsp]).selection([0], solidIndices);
-	            var dkOrig = Matrix.subtract([solidBeta], [Ksp]).selection([0], solidIndices);
+	            var dkOrig = Matrix.subtract([solidBeta], [Ksp]);
 	            var dAll = new Matrix(1, njstar);
 	            dAll.setSubMatrix(d, 0, 0);
 	            dAll.setSubMatrix(dK, 0, ncomp);
@@ -6073,8 +6080,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // console.log('picked ids', solidIndices);
 
 
-	        // console.log('dkorig', dkOrig);
-	        if (checkEpsilon(d[0]) && checkSolid(solidC, dkOrig)) {
+	        // console.log('dkorig', dkOrig[0]);
+	        if (checkEpsilon(options.tolerance, d[0]) && checkSolid(options.solidTolerance, solidC, dkOrig)) {
 	            // console.log('final solution concentrations',c);
 	            // console.log('final solid concentrations', solidC);
 	            console.log('solution converged in ' + i + ' iterations');
@@ -6122,7 +6129,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        while (checkNeg(allC[0])) {
 	            deltaC = deltaC.multiply(0.5);
 	            allC.subtract(deltaC);
-	            if (checkEpsilon(deltaC[0])) break;
+	            if (checkEpsilon(options.tolerance, deltaC[0])) break;
 	        }
 
 	        // console.log('allC', allC.to1DArray());
@@ -6136,7 +6143,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    }
 
-	    if (i >= maxIt) {
+	    if (i >= options.maxIterations) {
 	        console.log('did not converge');
 	        return null;
 	    }
@@ -6146,18 +6153,22 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = newtonRaphton;
 
-	// Returns true if all elements in the array are smaller than 1e-15
-	function checkEpsilon(arr, n) {
+	// Returns true if all elements in the array are smaller than tolerance
+	function checkEpsilon(tolerance, arr, n) {
 	    return !arr.some(function (el, idx) {
 	        if (n && idx >= n) return false;
-	        return Math.abs(el) >= 1e-15;
+	        return Math.abs(el) >= tolerance;
 	    });
 	}
 
-	function checkSolid(c, dk) {
+	function checkSolid(tolerance, c, dk) {
 	    if (!c.length) return true;
 	    return !c[0].some(function (value, idx) {
-	        return value !== 0 && Math.abs(dk[idx]) >= 1e-15;
+	        if (dk[0][idx] === undefined) {
+	            debugger;
+	            throw 2;
+	        }
+	        return value !== 0 && Math.abs(dk[0][idx]) >= tolerance;
 	    });
 	}
 
@@ -6220,7 +6231,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    _createClass(Factory, [{
 	        key: 'getSpecies',
 	        value: function getSpecies(filtered, type) {
-	            var species = filtered ? Object.keys(this.species).concat(this.options.solvent) : null;
+	            var species = filtered ? Object.keys(this.species) : null;
 	            return this.eqSet.getSpecies(species, type);
 	        }
 	    }, {
@@ -6249,8 +6260,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }, {
 	        key: 'getComponents',
 	        value: function getComponents(filtered, type) {
-	            var species = filtered ? Object.keys(this.species).concat(this.options.solvent) : null;
-	            return this.eqSet.getNormalized(this.options.solvent).getComponents(species, type);
+	            var species = filtered ? Object.keys(this.species) : null;
+	            if (species) var eqSet = this.eqSet.getSubset(species);else eqSet = this.eqSet;
+	            return eqSet.getNormalized(this.options.solvent).getComponents(null, type);
 	        }
 	    }, {
 	        key: 'setTotal',

@@ -25,6 +25,10 @@ describe('Factory', function () {
         factory.getEquations(true).sort(equationSort).should.deepEqual([
             { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 } ]
         );
+        factory.resetSpecies();
+        factory.getSpecies(true).should.deepEqual([]);
+        factory.getComponents(true).should.deepEqual([]);
+        factory.getEquations(true).should.deepEqual([]);
 
         // Test getters when there is inter-dependency
         factory = new Factory({database: eq.acidBase});
