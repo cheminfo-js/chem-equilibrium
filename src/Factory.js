@@ -23,25 +23,28 @@ class Factory {
 
     // =========== Getters ==============
 
-    getSpecies(filtered, type) {
-        var species = filtered ? Object.keys(this.species) : null;
-        return this.eqSet.getSpecies(species, type);
+    getSpecies(options) {
+        options = options || {};
+        var species = options.filtered ? Object.keys(this.species) : null;
+        return this.eqSet.getSpecies(species, options.type);
     }
 
 
-    getComponents(filtered, type) {
-        var species = filtered ? Object.keys(this.species) : null;
+    getComponents(options) {
+        options = options || {};
+        var species = options.filtered ? Object.keys(this.species) : null;
         if(species) var eqSet = this.eqSet.getSubset(species);
         else eqSet = this.eqSet;
-        return eqSet.getNormalized(this.options.solvent).getComponents(null, type);
+        return eqSet.getNormalized(this.options.solvent).getComponents(null, options.type);
     }
 
-    getEquations(filtered, normalized) {
+    getEquations(options) {
+        options = options || {};
         var eqSet = this.eqSet;
-        if(filtered) {
+        if(options.filtered) {
             eqSet = this.eqSet.getSubset(Object.keys(this.species));
         }
-        if(normalized) {
+        if(options.normalized) {
             eqSet = eqSet.getNormalized(this.options.solvent);
         }
         return eqSet.getEquations();

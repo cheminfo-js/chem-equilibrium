@@ -6,34 +6,34 @@ describe('Factory', function () {
     it('should test various getters', function () {
         var factory = new Factory({database: eq.equations1});
         factory.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);
-        factory.getSpecies(false, 'acidoBasic').sort().should.deepEqual(['A', 'B']);
+        factory.getSpecies({filtered: false, type: 'acidoBasic'}).sort().should.deepEqual(['A', 'B']);
         factory.getComponents().sort().should.deepEqual(['B', 'D', 'E']);
-        factory.getComponents(false, 'acidoBasic').sort().should.deepEqual(['B']);
+        factory.getComponents({filtered: false, type: 'acidoBasic'}).sort().should.deepEqual(['B']);
         factory.getEquations().sort(equationSort).should.deepEqual([
             { formed: 'A', components: { B: -1 }, type: 'acidoBasic', pK: 1 },
             { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 } ]
         );
 
         factory.addSpecie('D', 1);
-        factory.getSpecies(true).should.deepEqual(['D']);
+        factory.getSpecies({filtered: true}).should.deepEqual(['D']);
         // getComponents only returns components when they form an equation
-        factory.getComponents(true).should.deepEqual([]);
-        factory.getEquations(true).sort(equationSort).should.deepEqual([]);
+        factory.getComponents({filtered: true}).should.deepEqual([]);
+        factory.getEquations({filtered: true}).sort(equationSort).should.deepEqual([]);
         factory.addSpecie('C', 1);
-        factory.getSpecies(true).sort().should.deepEqual(['C', 'D', 'E']);
-        factory.getComponents(true).sort().should.deepEqual(['D', 'E']);
-        factory.getEquations(true).sort(equationSort).should.deepEqual([
+        factory.getSpecies({filtered: true}).sort().should.deepEqual(['C', 'D', 'E']);
+        factory.getComponents({filtered: true}).sort().should.deepEqual(['D', 'E']);
+        factory.getEquations({filtered: true}).sort(equationSort).should.deepEqual([
             { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 } ]
         );
         factory.resetSpecies();
-        factory.getSpecies(true).should.deepEqual([]);
-        factory.getComponents(true).should.deepEqual([]);
-        factory.getEquations(true).should.deepEqual([]);
+        factory.getSpecies({filtered: true}).should.deepEqual([]);
+        factory.getComponents({filtered: true}).should.deepEqual([]);
+        factory.getEquations({filtered: true}).should.deepEqual([]);
 
         // Test getters when there is inter-dependency
         factory = new Factory({database: eq.acidBase});
         factory.addSpecie('HPO4--', 1);
-        factory.getComponents(true).sort().should.deepEqual(['H+', 'PO4---']);
+        factory.getComponents({filtered: true}).sort().should.deepEqual(['H+', 'PO4---']);
 
         factory = new Factory();
         factory.addSpecie('CH3COO-', 1);
@@ -44,9 +44,9 @@ describe('Factory', function () {
         var factory = new Factory({database: eq.equations1});
         factory.disableEquation('A');
         factory.getSpecies().sort().should.deepEqual(['C', 'D', 'E']);
-        factory.getSpecies(false, 'acidoBasic').sort().should.deepEqual([]);
+        factory.getSpecies({filtered: false, type: 'acidoBasic'}).sort().should.deepEqual([]);
         factory.getComponents().sort().should.deepEqual(['D', 'E']);
-        factory.getComponents(false, 'acidoBasic').sort().should.deepEqual([]);
+        factory.getComponents({filtered: false, type: 'acidoBasic'}).sort().should.deepEqual([]);
         factory.getEquations().sort(equationSort).should.deepEqual([
             { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 } ]
         );
