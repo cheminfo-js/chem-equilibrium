@@ -4,6 +4,12 @@ const EquationSet = require('../../src/core/EquationSet');
 const eq = require('./../data/equations');
 
 describe('EquationSet', function () {
+    it('should clone an equation set', function () {
+        var eqSet = new EquationSet(eq.equations1);
+        var newSet = eqSet.clone();
+        [...newSet.keys()].should.deepEqual([...eqSet.keys()]);
+    });
+
     it('should create and normalize an equation set (no inter-dependencies)', function () {
         var eqSet = new EquationSet(eq.equations1);
         var norm = eqSet.getNormalized('E');

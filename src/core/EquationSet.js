@@ -6,20 +6,30 @@ class EquationSet {
         equations = equations || [];
         this._normalized = false;
         this._disabledKeys = new Set();
-        this.equations = new Map();
+        this._equations = new Map();
         for (var i = 0; i < equations.length; i++) {
             this.add(equations[i]);
         }
     }
 
     [Symbol.iterator]() {
-        return this.equations.values();
+        return this._equations.values();
+    }
+    
+    clone() {
+        var eqSet = new EquationSet();
+        eqSet._normalized = this._normalized;
+        eqSet._disabledKeys = this._disabledKeys;
+        for(const [key, eq] of this.entries()) {
+            eqSet._equations.set(key, eq.clone());
+        }
+        return eqSet;
     }
 
     add(eq, key) {
         var equation = Equation.create(eq);
         key = key || getHash(eq.formed);
-        this.equations.set(key, equation);
+        this._equations.set(key, equation);
         this._normalized = false;
     }
 
@@ -29,7 +39,7 @@ class EquationSet {
         } else {
             key = eq;
         }
-        return this.equations.has(key);
+        return this._equations.has(key);
     }
 
     get species() {
@@ -110,7 +120,7 @@ class EquationSet {
     }
 
     get size() {
-        return this.equations.size;
+        return this._equations.size;
     }
 
     get(id, hashIt) {
@@ -120,31 +130,31 @@ class EquationSet {
         } else {
             key = id;
         }
-        return this.equations.get(key);
+        return this._equations.get(key);
     }
 
     keys() {
-        return this.equations.keys();
+        return this._equations.keys();
     }
 
     values() {
-        return this.equations.values();
+        return this._equations.values();
     }
 
     entries() {
-        return this.equations.entries();
+        return this._equations.entries();
     }
 
     forEach() {
-        return this.equations.forEach.apply(this.equations, arguments);
+        return this._equations.forEach.apply(this._equations, arguments);
     }
 
 
     getNormalized(solvent) {
         // In a normalized set, formed species can be found in any of the components
         // of the equation set
-        var norm = new Array(this.equations.size);
-        var keys = new Array(this.equations.size);
+        var norm = new Array(this._equations.size);
+        var keys = new Array(this._equations.size);
         var idx = 0;
         for (const [key, entry] of this.entries()) {
             norm[idx] = entry.withSolvent(solvent);
@@ -171,7 +181,7 @@ class EquationSet {
 
     getEquations(options) {
         options = options || {};
-        return Array.from(this.equations)
+        return Array.from(this._equations)
             .filter(e => options.includeDisabled || !this._disabledKeys.has(e[0]))
             .map(e => {
                 var r = e[1].toJSON();
