@@ -9,7 +9,7 @@ describe('Helper', function () {
         var clone = helper.clone();
         helper.getSpecies().should.deepEqual(clone.getSpecies());
     });
-    it('should test various getters', function () {
+    it.only('should test various getters', function () {
         var helper = new Helper({database: eq.equations1});
         helper.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);
         helper.getSpecies({filtered: false, type: 'acidoBasic'}).sort().should.deepEqual(['A', 'B']);
@@ -38,8 +38,9 @@ describe('Helper', function () {
 
         // Test getters when there is inter-dependency
         helper = new Helper({database: eq.acidBase});
-        helper.addSpecie('HPO4--', 1);
+        helper.addSpecie('PO4---', 1);
         helper.getComponents({filtered: true}).sort().should.deepEqual(['H+', 'PO4---']);
+        helper.getSpecies({filtered: true}).sort().should.deepEqual(['H+', 'H2PO4-','HPO4--', 'PO4---']);
 
         helper = new Helper();
         helper.addSpecie('CH3COO-', 1);

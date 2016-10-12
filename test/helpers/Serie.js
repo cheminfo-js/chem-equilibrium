@@ -5,15 +5,17 @@ const Serie = require('../../src/helpers/Serie');
 const eq = require('../data/equations');
 describe('Serie', function () {
     it('should create a chart', function () {
-        var helper = new Helper({database: eq.equations2});
-        helper.addSpecie('A', 0.1);
+        var helper = new Helper({database: eq.acidBase});
+        helper.addSpecie('PO4---', 1);
+
+        // console.log(JSON.stringify(helper.getModel(), null, '\t'));
         var serie = new Serie(helper);
 
         var chart = serie.getChart({
             chunks: 3,
-            varying: 'D'
+            varying: 'H+'
         });
 
-        console.log(JSON.stringify(chart, null, '\t'));
+        //console.log(JSON.stringify(chart, null, '\t'));
     });
 });
