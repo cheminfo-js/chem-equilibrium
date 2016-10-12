@@ -1,6 +1,6 @@
 'use strict';
 
-const Helper = require('../../../src/Helper');
+const Helper = require('../../../src/helpers/Helper');
 
 var chunks = 10;
 

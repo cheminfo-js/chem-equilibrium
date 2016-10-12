@@ -1,7 +1,7 @@
 'use strict';
 
-const EquationSet = require('../src/EquationSet');
-const eq = require('./data/equations');
+const EquationSet = require('../../src/core/EquationSet');
+const eq = require('./../data/equations');
 
 describe('EquationSet', function () {
     it('should create and normalize an equation set (no inter-dependencies)', function () {

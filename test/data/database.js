@@ -1,7 +1,7 @@
 'use strict';
 
-const EquationSet = require('../src/EquationSet');
-const equations = require('../data/data.json');
+const EquationSet = require('../../src/core/EquationSet');
+const equations = require('../../data/data.json');
 describe('database', function () {
     it('verify database can be initialized  in an EquationSet', function () {
         new EquationSet(equations);

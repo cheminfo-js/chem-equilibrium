@@ -1,8 +1,8 @@
 'use strict';
-const database = require('../data/data.json');
-const EquationSet = require('./EquationSet');
+const database = require('../../data/data.json');
+const EquationSet = require('./../core/EquationSet');
 const deepcopy = require('deepcopy');
-const Equilibrium = require('./Equilibrium');
+const Equilibrium = require('./../core/Equilibrium');
 
 const defaultOptions = {
     solvent: 'H2O'

@@ -1,6 +1,6 @@
 'use strict';
 
-const Equation = require('../src/Equation');
+const Equation = require('../../src/core/Equation');
 const eqA = new Equation({
     formed: 'A',
     components: {

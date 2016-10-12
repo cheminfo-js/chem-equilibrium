@@ -1,6 +1,6 @@
 'use strict';
 const Matrix = require('ml-matrix');
-const random = require('./util/random');
+const random = require('./../util/random');
 const newtonRaphton = require('./NewtonRaphton');
 
 const defaultOptions = {
