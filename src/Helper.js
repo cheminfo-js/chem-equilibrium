@@ -8,7 +8,7 @@ const defaultOptions = {
     solvent: 'H2O'
 };
 
-class Factory {
+class Helper {
     constructor(options) {
         this.atEquilibrium = new Set();
         options = Object.assign({}, defaultOptions, options);
@@ -118,7 +118,7 @@ class Factory {
 
 }
 
-module.exports = Factory;
+module.exports = Helper;
 
 function processDB(db, options) {
     db = deepcopy(db);

@@ -1,8 +1,8 @@
 'use strict';
 
 var Equilibrium = require('./Equilibrium');
-var Factory = require('./Factory');
+var Helper = require('./Helper');
 
-Equilibrium.Factory = Factory;
+Equilibrium.Helper = Helper;
 
 module.exports = Equilibrium;

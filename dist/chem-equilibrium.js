@@ -59,7 +59,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Equilibrium = __webpack_require__(1);
 	var Factory = __webpack_require__(32);
 
-	Equilibrium.Factory = Factory;
+	Equilibrium.Helper = Factory;
 
 	module.exports = Equilibrium;
 

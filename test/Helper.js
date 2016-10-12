@@ -1,64 +1,64 @@
 'use strict';
-const Factory = require('../src/Factory');
+const Helper = require('../src/Helper');
 const eq = require('./data/equations');
 
-describe('Factory', function () {
+describe('Helper', function () {
     it('should test various getters', function () {
-        var factory = new Factory({database: eq.equations1});
-        factory.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);
-        factory.getSpecies({filtered: false, type: 'acidoBasic'}).sort().should.deepEqual(['A', 'B']);
-        factory.getComponents().sort().should.deepEqual(['B', 'D', 'E']);
-        factory.getComponents({filtered: false, type: 'acidoBasic'}).sort().should.deepEqual(['B']);
-        factory.getEquations().sort(equationSort).should.deepEqual([
+        var helper = new Helper({database: eq.equations1});
+        helper.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);
+        helper.getSpecies({filtered: false, type: 'acidoBasic'}).sort().should.deepEqual(['A', 'B']);
+        helper.getComponents().sort().should.deepEqual(['B', 'D', 'E']);
+        helper.getComponents({filtered: false, type: 'acidoBasic'}).sort().should.deepEqual(['B']);
+        helper.getEquations().sort(equationSort).should.deepEqual([
             { formed: 'A', components: { B: -1 }, type: 'acidoBasic', pK: 1 },
             { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 } ]
         );
 
-        factory.addSpecie('D', 1);
-        factory.getSpecies({filtered: true}).should.deepEqual(['D']);
+        helper.addSpecie('D', 1);
+        helper.getSpecies({filtered: true}).should.deepEqual(['D']);
         // getComponents only returns components when they form an equation
-        factory.getComponents({filtered: true}).should.deepEqual([]);
-        factory.getEquations({filtered: true}).sort(equationSort).should.deepEqual([]);
-        factory.addSpecie('C', 1);
-        factory.getSpecies({filtered: true}).sort().should.deepEqual(['C', 'D', 'E']);
-        factory.getComponents({filtered: true}).sort().should.deepEqual(['D', 'E']);
-        factory.getEquations({filtered: true}).sort(equationSort).should.deepEqual([
+        helper.getComponents({filtered: true}).should.deepEqual([]);
+        helper.getEquations({filtered: true}).sort(equationSort).should.deepEqual([]);
+        helper.addSpecie('C', 1);
+        helper.getSpecies({filtered: true}).sort().should.deepEqual(['C', 'D', 'E']);
+        helper.getComponents({filtered: true}).sort().should.deepEqual(['D', 'E']);
+        helper.getEquations({filtered: true}).sort(equationSort).should.deepEqual([
             { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 } ]
         );
-        factory.resetSpecies();
-        factory.getSpecies({filtered: true}).should.deepEqual([]);
-        factory.getComponents({filtered: true}).should.deepEqual([]);
-        factory.getEquations({filtered: true}).should.deepEqual([]);
+        helper.resetSpecies();
+        helper.getSpecies({filtered: true}).should.deepEqual([]);
+        helper.getComponents({filtered: true}).should.deepEqual([]);
+        helper.getEquations({filtered: true}).should.deepEqual([]);
 
         // Test getters when there is inter-dependency
-        factory = new Factory({database: eq.acidBase});
-        factory.addSpecie('HPO4--', 1);
-        factory.getComponents({filtered: true}).sort().should.deepEqual(['H+', 'PO4---']);
+        helper = new Helper({database: eq.acidBase});
+        helper.addSpecie('HPO4--', 1);
+        helper.getComponents({filtered: true}).sort().should.deepEqual(['H+', 'PO4---']);
 
-        factory = new Factory();
-        factory.addSpecie('CH3COO-', 1);
+        helper = new Helper();
+        helper.addSpecie('CH3COO-', 1);
 
     });
 
     it('should enable/disable equations', function () {
-        var factory = new Factory({database: eq.equations1});
-        factory.disableEquation('A');
-        factory.getSpecies().sort().should.deepEqual(['C', 'D', 'E']);
-        factory.getSpecies({includeDisabled: true}).sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);
-        factory.getSpecies({filtered: false, type: 'acidoBasic'}).sort().should.deepEqual([]);
-        factory.getComponents().sort().should.deepEqual(['D', 'E']);
-        factory.getComponents({filtered: false, type: 'acidoBasic'}).sort().should.deepEqual([]);
-        factory.getComponents({includeDisabled:true}).sort().should.deepEqual(['B', 'D', 'E']);
-        factory.getEquations().sort(equationSort).should.deepEqual([
+        var helper = new Helper({database: eq.equations1});
+        helper.disableEquation('A');
+        helper.getSpecies().sort().should.deepEqual(['C', 'D', 'E']);
+        helper.getSpecies({includeDisabled: true}).sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);
+        helper.getSpecies({filtered: false, type: 'acidoBasic'}).sort().should.deepEqual([]);
+        helper.getComponents().sort().should.deepEqual(['D', 'E']);
+        helper.getComponents({filtered: false, type: 'acidoBasic'}).sort().should.deepEqual([]);
+        helper.getComponents({includeDisabled:true}).sort().should.deepEqual(['B', 'D', 'E']);
+        helper.getEquations().sort(equationSort).should.deepEqual([
             { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 } ]
         );
-        factory.getEquations({includeDisabled: true}).sort(equationSort).should.deepEqual([
+        helper.getEquations({includeDisabled: true}).sort(equationSort).should.deepEqual([
             { formed: 'A', components: {B: -1}, type: 'acidoBasic', pK: 1, disabled: true},
             { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 }
         ]);
-        factory.addSpecie('A', 1);
-        factory.addSpecie('C', 1);
-        var model = factory.getModel();
+        helper.addSpecie('A', 1);
+        helper.addSpecie('C', 1);
+        var model = helper.getModel();
         getComponent('D', model).should.deepEqual({label: 'D', total: 2});
         getComponent('E', model).should.deepEqual({label: 'E', total: 1});
         getFormedSpecie('C', model).should.deepEqual({
@@ -68,42 +68,42 @@ describe('Factory', function () {
             solid: true
         });
 
-        factory.enableEquation('A');
-        factory.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);
+        helper.enableEquation('A');
+        helper.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);
 
-        factory.disableEquation('A');
-        factory.disableEquation('C');
-        factory.getSpecies().should.deepEqual([]);
-        factory.enableAllEquations();
-        factory.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);
+        helper.disableEquation('A');
+        helper.disableEquation('C');
+        helper.getSpecies().should.deepEqual([]);
+        helper.enableAllEquations();
+        helper.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);
     });
-    it('should create a Factory when from multi-solvent database', function () {
-        var factory = new Factory({database: eq.multiSolvent});
-        factory.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E', 'F']);
-        factory = new Factory({database: eq.multiSolvent, solvent: 'DMSO'});
-        factory.getSpecies().sort().should.deepEqual(['D', 'E', 'F', 'G', 'H', 'I']);
+    it('should create a Helper when from multi-solvent database', function () {
+        var helper = new Helper({database: eq.multiSolvent});
+        helper.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E', 'F']);
+        helper = new Helper({database: eq.multiSolvent, solvent: 'DMSO'});
+        helper.getSpecies().sort().should.deepEqual(['D', 'E', 'F', 'G', 'H', 'I']);
     });
 
     it('in water, it should create acid/base model just by adding one component', function () {
-        var factory = new Factory({database: eq.acidBase});
-        factory.addSpecie('CH3COO-', 1);
-        var model = factory.getModel();
-        factory.getEquilibrium();
+        var helper = new Helper({database: eq.acidBase});
+        helper.addSpecie('CH3COO-', 1);
+        var model = helper.getModel();
+        helper.getEquilibrium();
         model.components.should.have.length(2);
         model.formedSpecies.should.have.length(2);
     });
 
 
     it('should create a model where one component has a fixed concentration at equilibrium', function () {
-        var factory = new Factory({database: eq.equations1});
-        factory.addSpecie('A', 1);
-        factory.addSpecie('C', 1);
-        factory.addSpecie('B', 1);
+        var helper = new Helper({database: eq.equations1});
+        helper.addSpecie('A', 1);
+        helper.addSpecie('C', 1);
+        helper.addSpecie('B', 1);
 
-        factory.addSpecie('X', 1); // should have no effect (specie not in database)
-        factory.setAtEquilibrium('E', 2);
-        factory.setAtEquilibrium('Y', 1); // should have no effect (specie not in database)
-        var model = factory.getModel();
+        helper.addSpecie('X', 1); // should have no effect (specie not in database)
+        helper.setAtEquilibrium('E', 2);
+        helper.setAtEquilibrium('Y', 1); // should have no effect (specie not in database)
+        var model = helper.getModel();
         getComponent('B', model).should.deepEqual({label: 'B', total: 0});
         getComponent('D', model).should.deepEqual({label: 'D', total: 2});
         getComponent('E', model).should.deepEqual({label: 'E', atEquilibrium: 2});
@@ -122,11 +122,11 @@ describe('Factory', function () {
     });
 
     it('should create acid/base model', function () {
-        var factory = new Factory({database: eq.acidBase});
-        factory.addSpecie('CO3--', 1);
-        factory.addSpecie('HCO3-', 1);
-        factory.addSpecie('OH-', 1);
-        var model = factory.getModel();
+        var helper = new Helper({database: eq.acidBase});
+        helper.addSpecie('CO3--', 1);
+        helper.addSpecie('HCO3-', 1);
+        helper.addSpecie('OH-', 1);
+        var model = helper.getModel();
         model.components.length.should.equal(2);
         model.formedSpecies.length.should.equal(3);
 
@@ -157,9 +157,9 @@ describe('Factory', function () {
     });
 
     it('should create a very simple precipitation model (in DMSO)', function () {
-        var factory = new Factory({solvent: 'DMSO', database: eq.AgClInDMSO});
-        factory.addSpecie('AgCl', 1);
-        var model = factory.getModel();
+        var helper = new Helper({solvent: 'DMSO', database: eq.AgClInDMSO});
+        helper.addSpecie('AgCl', 1);
+        var model = helper.getModel();
         model.components.length.should.equal(2);
         // A complex and a precipitate are formed
         model.formedSpecies.length.should.equal(2);
@@ -180,9 +180,9 @@ describe('Factory', function () {
     });
 
     it('should create precipitation model with OH- precipitation', function () {
-        var factory = new Factory({database: eq.AgInWater});
-        factory.addSpecie('Ag+', 1);
-        var model = factory.getModel();
+        var helper = new Helper({database: eq.AgInWater});
+        helper.addSpecie('Ag+', 1);
+        var model = helper.getModel();
         model.components.should.have.length(2);
         model.formedSpecies.should.have.length(2);
         getComponent('Ag+', model).should.deepEqual({label: 'Ag+', total: 1});
