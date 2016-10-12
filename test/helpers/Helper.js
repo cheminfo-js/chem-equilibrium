@@ -3,6 +3,12 @@ const Helper = require('../../src/helpers/Helper');
 const eq = require('./../data/equations');
 
 describe('Helper', function () {
+    it('should clone a helper', function () {
+        var helper = new Helper({database: eq.equations1});
+        helper.addSpecie('D', 1);
+        var clone = helper.clone();
+        helper.getSpecies().should.deepEqual(clone.getSpecies());
+    });
     it('should test various getters', function () {
         var helper = new Helper({database: eq.equations1});
         helper.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);

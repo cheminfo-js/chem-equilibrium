@@ -21,6 +21,15 @@ class Helper {
         this.addSpecie(options.solvent);
     }
 
+    // Clone
+    clone() {
+        var helper = new Helper();
+        helper.species = deepcopy(this.species);
+        helper.eqSet = this.eqSet.clone();
+        this.atEquilibrium = new Set(this.atEquilibrium);
+        return helper;
+    }
+
     // =========== Getters ==============
 
     getSpecies(options) {
