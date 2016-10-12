@@ -31,7 +31,7 @@ var model = {
         {
             "solid": true,
             "label": "Cu(OH)2",
-            "beta": 1584893192.4611108,
+            "beta": 1/1584893192.4611108,
             "components": [
                 -2,
                 1,
@@ -41,7 +41,7 @@ var model = {
         {
             "solid": true,
             "label": "Fe(OH)3",
-            "beta": 2818.382931264472,
+            "beta": 1/2818.382931264472,
             "components": [
                 -3,
                 0,
@@ -51,7 +51,7 @@ var model = {
     ]
 };
 
-model.components[0].atEquilibrium = Math.pow(10, -1.5);
+model.components[0].atEquilibrium = Math.pow(10, -6);
 
 var eq = new Equilibrium(model);
 var sol = eq.solveRobust();

@@ -64,7 +64,7 @@ describe('Factory', function () {
         getFormedSpecie('C', model).should.deepEqual({
             label: 'C',
             components: getExpectedComponents(['D', 2, 'E', 1], model),
-            beta: 0.1,
+            beta: 10,
             solid: true
         });
 
@@ -115,7 +115,7 @@ describe('Factory', function () {
         });
         getFormedSpecie('C', model).should.deepEqual({
             label: 'C',
-            beta: 0.1,
+            beta: 10,
             components: getExpectedComponents(['D', 2, 'E', 1], model),
             solid: true
         });
@@ -167,7 +167,7 @@ describe('Factory', function () {
         getComponent('Cl-', model).should.deepEqual({label: 'Cl-', total: 1});
         getFormedSpecie('AgCl', model).should.deepEqual({
             label: 'AgCl',
-            beta: Math.pow(10, -9.74),
+            beta: Math.pow(10, 9.74),
             components: getExpectedComponents(['Ag+', 1, 'Cl-', 1], model),
             solid: true
         });
@@ -189,7 +189,7 @@ describe('Factory', function () {
         getComponent('H+', model).should.deepEqual({label: 'H+', total: 0});
         getFormedSpecie('AgOH', model).should.deepEqual({
             label: 'AgOH',
-            beta: Math.pow(10, -7.72 + 14),
+            beta: Math.pow(10, 7.72 - 14),
             components: getExpectedComponents(['Ag+', 1, 'H+', -1], model),
             solid: true
         })

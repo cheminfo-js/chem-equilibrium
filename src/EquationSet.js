@@ -229,7 +229,7 @@ class EquationSet {
             return {
                 solid: eq.type === 'precipitation',
                 label: eq.formed,
-                beta: eq.type === 'precipitation' ? Math.pow(10, -eq.pK) : Math.pow(10, eq.pK),
+                beta: Math.pow(10, eq.pK),
                 components: components.map(key => {
                     return eq.components[key] || 0
                 })

@@ -239,6 +239,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var columns = rows.concat(getRange(nComp, nComp + nSpecSolution - 1));
 	            matrix = matrix.selection(rows, columns);
 	            beta = beta.selection([0], columns);
+	            // remove empty columns
+	            // var notZeroColumns = [];
+	            // loop1: for(var i=0; i<matrix.columns; i++) {
+	            //     for(var j=0; j<matrix.rows; j++) {
+	            //         if(matrix[j][i] !== 0) {
+	            //             notZeroColumns.push(i);
+	            //             continue loop1;
+	            //         }
+	            //     }
+	            // }
+	            // matrix = matrix.selection(getRange(0, matrix.rows - 1), notZeroColumns);
+	            // beta = beta.selection([0], notZeroColumns);
 
 	            // ============= Init stoechiometric matrix (formed solids) ================================================
 	            if (nSpecSolid) {
@@ -260,7 +272,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        // Update the beta value of all species
 	                        // newBeta = oldBeta * fixedComponentConcentration^(stoechiometricCoefficient)
 	                        m = new Matrix(1, nSpecSolid).fill(atEq);
-	                        m.pow([solidMatrix.getRow(i)]);
+	                        m.pow([Matrix.mul(solidMatrix, -1).getRow(i)]);
 	                        solidBeta.multiply(m);
 	                    }
 	                }
@@ -5973,13 +5985,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    maxIterations: 99
 	};
 
-	function newtonRaphton(model, beta, cTotal, c, solidModel, solidBeta, solidC, options) {
+	function newtonRaphton(model, beta, cTotal, c, solidModel, solidKsp, solidC, options) {
 	    // c is component concentrations. The initialization is up to the caller
 	    // model contains stoechiometric coefficient of the reactions
 	    // beta is the equilibrium constant for each reaction
 	    // cTotal is the total concentration of each component
 	    // solid model contains stoechiometric coefficients of the precipitation reactions
-	    // solidBeta contains the solubility constants
+	    // solidKsp contains the solubility constants
 	    // solidC contains the initial solid species "concentrations"
 
 	    options = Object.assign({}, defaultOptions, options);
@@ -5989,10 +6001,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (!solidModel) solidModel = new Array(ncomp).fill(0).map(function () {
 	        return [];
 	    });
-	    if (!solidBeta) solidBeta = [];
+	    if (!solidKsp) solidKsp = [];
 	    if (!solidC) solidC = [];
 
-	    var nsolid = solidBeta.length;
+	    var nsolid = solidKsp.length;
 
 	    // Sanity check
 	    if (c.length !== ncomp || model.length !== ncomp || model[0].length !== nspec || solidC.length !== nsolid || solidModel.length !== ncomp || solidModel[0] && solidModel[0].length !== nsolid) {
@@ -6002,7 +6014,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    model = new Matrix(model);
 	    if (nsolid) {
 	        solidModel = new Matrix(solidModel);
-	        var lnSolidBeta = new Matrix([solidBeta.map(Math.log2)]);
+	        var lnSolidBeta = new Matrix([solidKsp.map(Math.log2)]);
 	        solidC = new Matrix([solidC]);
 	    }
 	    // Prevent numerical difficulties
@@ -6022,13 +6034,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (nsolid) {
 	            var Ksp = stat.product(c.transpose().repeat(1, nsolid).pow(solidModel), 0);
 	            Ksp.forEach(function (k, idx) {
-	                if (k > solidBeta[idx]) {
+	                if (k > solidKsp[idx]) {
 	                    // The computed solubility product is greater than maximum value
 	                    solidIndices.push(idx);
 	                } else if (solidC[0][idx] > 0) {
 	                    // solid concentration is not 0
 	                    solidIndices.push(idx);
-	                } else if (Math.abs(k - solidBeta[idx]) < options.tolerance) {
+	                } else if (Math.abs(k - solidKsp[idx]) < options.tolerance) {
 	                    // diff is negative but small, we keep it in the model
 	                    solidIndices.push(idx);
 	                }
@@ -6066,7 +6078,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var d = Matrix.subtract([cTotal], cTotCalc);
 	        if (nSolidPicked) {
 	            var dK = Matrix.subtract(lnSolidBeta, [lnKsp]).selection([0], solidIndices);
-	            var dkOrig = Matrix.subtract([solidBeta], [Ksp]);
+	            var dkOrig = Matrix.subtract([solidKsp], [Ksp]);
 	            var dAll = new Matrix(1, njstar);
 	            dAll.setSubMatrix(d, 0, 0);
 	            dAll.setSubMatrix(dK, 0, ncomp);
@@ -6228,22 +6240,62 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this.addSpecie(options.solvent);
 	    }
 
+	    // =========== Getters ==============
+
 	    _createClass(Factory, [{
 	        key: 'getSpecies',
-	        value: function getSpecies(filtered, type) {
-	            var species = filtered ? Object.keys(this.species) : null;
-	            return this.eqSet.getSpecies(species, type);
+	        value: function getSpecies(options) {
+	            options = options || {};
+	            var species = options.filtered ? Object.keys(this.species) : null;
+	            var getOptions = Object.assign({}, options);
+	            getOptions.species = species;
+	            return this.eqSet.getSpecies(getOptions);
 	        }
 	    }, {
-	        key: 'disableEquation',
-	        value: function disableEquation(formedSpecie) {
-	            this.eqSet.disableEquation(formedSpecie, true);
+	        key: 'getComponents',
+	        value: function getComponents(options) {
+	            options = options || {};
+	            var species = options.filtered ? Object.keys(this.species) : null;
+	            if (species) var eqSet = this.eqSet.getSubset(species);else eqSet = this.eqSet;
+	            return eqSet.getNormalized(this.options.solvent).getComponents(options);
 	        }
 	    }, {
-	        key: 'enableEquation',
-	        value: function enableEquation(formedSpecie) {
-	            this.eqSet.enableEquation(formedSpecie, true);
+	        key: 'getEquations',
+	        value: function getEquations(options) {
+	            options = options || {};
+	            var eqSet = this.eqSet;
+	            if (options.filtered) {
+	                eqSet = this.eqSet.getSubset(Object.keys(this.species));
+	            }
+	            if (options.normalized) {
+	                eqSet = eqSet.getNormalized(this.options.solvent);
+	            }
+	            return eqSet.getEquations(options);
 	        }
+	    }, {
+	        key: 'getModel',
+	        value: function getModel() {
+	            var _this = this;
+
+	            var subSet = this.eqSet.getSubset(Object.keys(this.species));
+	            var normSet = subSet.getNormalized(this.options.solvent);
+	            var model = normSet.getModel(this.species, true);
+	            model.components.forEach(function (c) {
+	                if (_this.atEquilibrium.has(c.label)) {
+	                    c.atEquilibrium = _this.species[c.label];
+	                    delete c.total;
+	                }
+	            });
+	            return model;
+	        }
+	    }, {
+	        key: 'getEquilibrium',
+	        value: function getEquilibrium() {
+	            return new Equilibrium(this.getModel(), this.options);
+	        }
+
+	        // =========== Setters ==============
+
 	    }, {
 	        key: 'addSpecie',
 	        value: function addSpecie(label, total) {
@@ -6258,11 +6310,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        }
 	    }, {
-	        key: 'getComponents',
-	        value: function getComponents(filtered, type) {
-	            var species = filtered ? Object.keys(this.species) : null;
-	            if (species) var eqSet = this.eqSet.getSubset(species);else eqSet = this.eqSet;
-	            return eqSet.getNormalized(this.options.solvent).getComponents(null, type);
+	        key: 'resetSpecies',
+	        value: function resetSpecies() {
+	            this.species = {};
+	            this.addSpecie(this.options.solvent);
 	        }
 	    }, {
 	        key: 'setTotal',
@@ -6282,37 +6333,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	            this.options = options;
 	        }
 	    }, {
-	        key: 'getEquilibrium',
-	        value: function getEquilibrium() {
-	            return new Equilibrium(this.getModel(), this.options);
+	        key: 'disableEquation',
+	        value: function disableEquation(formedSpecie) {
+	            this.eqSet.disableEquation(formedSpecie, true);
 	        }
 	    }, {
-	        key: 'getModel',
-	        value: function getModel() {
-	            var _this = this;
-
-	            var subSet = this.eqSet.getSubset(Object.keys(this.species));
-	            var normSet = subSet.getNormalized(this.options.solvent);
-	            var model = normSet.getModel(this.species, true);
-	            model.components.forEach(function (c) {
-	                if (_this.atEquilibrium.has(c.label)) {
-	                    c.atEquilibrium = _this.species[c.label];
-	                    delete c.total;
-	                }
-	            });
-	            return model;
+	        key: 'enableEquation',
+	        value: function enableEquation(formedSpecie) {
+	            this.eqSet.enableEquation(formedSpecie, true);
 	        }
 	    }, {
-	        key: 'getEquations',
-	        value: function getEquations(filtered, normalized) {
-	            var eqSet = this.eqSet;
-	            if (filtered) {
-	                eqSet = this.eqSet.getSubset(Object.keys(this.species));
-	            }
-	            if (normalized) {
-	                eqSet = eqSet.getNormalized(this.options.solvent);
-	            }
-	            return eqSet.getEquations();
+	        key: 'enableAllEquations',
+	        value: function enableAllEquations() {
+	            this.eqSet.enableAllEquations();
 	        }
 	    }]);
 
@@ -7529,7 +7562,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    }, {
 	        key: 'getSpecies',
-	        value: function getSpecies(species, type) {
+	        value: function getSpecies(options) {
+	            options = options || {};
+	            var species = options.species;
+	            var type = options.type;
+	            var includeDisabled = options.includeDisabled;
 	            var speciesSet = new Set();
 	            var _iteratorNormalCompletion = true;
 	            var _didIteratorError = false;
@@ -7542,7 +7579,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    var key = _step$value[0];
 	                    var eq = _step$value[1];
 
-	                    if (this._disabledKeys.has(key)) continue;
+	                    if (this._disabledKeys.has(key) && !includeDisabled) continue;
 	                    if (type && type !== eq.type) continue;
 	                    if (species) {
 	                        if (species.indexOf(eq.formed) > -1) {
@@ -7581,7 +7618,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    }, {
 	        key: 'getComponents',
-	        value: function getComponents(species, type) {
+	        value: function getComponents(options) {
+	            options = options || {};
+	            var species = options.species;
+	            var type = options.type;
+	            var includeDisabled = options.includeDisabled;
 	            if (!this.isNormalized()) {
 	                throw new Error('Cannot get components from non-normalized equation set');
 	            }
@@ -7597,7 +7638,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    var key = _step2$value[0];
 	                    var eq = _step2$value[1];
 
-	                    if (this._disabledKeys.has(key)) continue;
+	                    if (this._disabledKeys.has(key) && !includeDisabled) continue;
 	                    if (type && type !== eq.type) continue;
 	                    if (species) {
 	                        if (species.indexOf(eq.formed) > -1) {
@@ -7643,6 +7684,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        value: function enableEquation(key, hashIt) {
 	            key = hashIt ? getHash(key) : key;
 	            this._disabledKeys.delete(key);
+	        }
+	    }, {
+	        key: 'enableAllEquations',
+	        value: function enableAllEquations() {
+	            this._disabledKeys.clear();
 	        }
 	    }, {
 	        key: 'get',
@@ -7733,13 +7779,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    }, {
 	        key: 'getEquations',
-	        value: function getEquations() {
+	        value: function getEquations(options) {
 	            var _this = this;
 
+	            options = options || {};
 	            return Array.from(this.equations).filter(function (e) {
-	                return !_this._disabledKeys.has(e[0]);
+	                return options.includeDisabled || !_this._disabledKeys.has(e[0]);
 	            }).map(function (e) {
-	                return e[1].toJSON();
+	                var r = e[1].toJSON();
+	                if (_this._disabledKeys.has(e[0])) r.disabled = true;
+	                return r;
 	            });
 	        }
 	    }, {

@@ -179,7 +179,7 @@ class Equilibrium {
                     // Update the beta value of all species
                     // newBeta = oldBeta * fixedComponentConcentration^(stoechiometricCoefficient)
                     m = new Matrix(1, nSpecSolid).fill(atEq);
-                    m.pow([Matrix.mul(solidMatrix, -1).getRow(i)]);
+                    m.pow([solidMatrix.getRow(i)]);
                     solidBeta.multiply(m);
                 }
             }
@@ -188,6 +188,8 @@ class Equilibrium {
             columns = getRange(0, nSpecSolid - 1);
             solidMatrix = solidMatrix.selection(rows, columns);
             solidBeta = solidBeta.selection([0], columns);
+            // newtonRaphton uses the dissociaton Ksp, not the formation Ksp
+            solidBeta.pow(-1);
         }
 
 
