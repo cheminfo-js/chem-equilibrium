@@ -42,6 +42,12 @@ describe('EquationSet', function () {
         subSet.size.should.equal(2);
     });
 
+    it('should get subset of an equation set', function () {
+        var eqSet = new EquationSet(eq.equations2);
+        var subSet = eqSet.getSubset(['A']);
+        subSet.size.should.equal(2);
+    });
+
     it('should get the model given the totals', function () {
         var eqSet = new EquationSet(eq.equations2);
         var normSet = eqSet.getNormalized('E');

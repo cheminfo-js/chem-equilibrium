@@ -47,24 +47,20 @@ class EquationSet {
     }
 
     getSpecies(options) {
-        options = options || {};
+        options = Object.assign({}, options);
         var species = options.species;
         var type = options.type;
         var includeDisabled = options.includeDisabled;
         var speciesSet = new Set();
-        for(var [key, eq] of this.entries()) {
-            if(this._disabledKeys.has(key) && !includeDisabled) continue;
-            if(type && type !== eq.type) continue;
-            if(species) {
-                if(species.indexOf(eq.formed) > -1) {
-                    speciesSet.add(eq.formed);
-                    Object.keys(eq.components).forEach(c => speciesSet.add(c));
-                } else {
-                    Object.keys(eq.components).forEach(c => {
-                        if(species.indexOf(c) > -1) speciesSet.add(c);
-                    });
-                }
-            } else {
+
+        if(species) {
+            var subset = this.getSubset(species);
+            delete options.species;
+            return subset.getSpecies(options);
+        } else {
+            for(var [key, eq] of this.entries()) {
+                if(this._disabledKeys.has(key) && !includeDisabled) continue;
+                if(type && type !== eq.type) continue;
                 speciesSet.add(eq.formed);
                 Object.keys(eq.components).forEach(c => speciesSet.add(c));
             }
@@ -249,26 +245,42 @@ class EquationSet {
         return model;
     }
 
-    getSubset(species) {
-        var speciesSet = new Set();
-        species.forEach(s => speciesSet.add(s));
+    getSubset(species, options) {
+        var speciesSet = new Set(species);
         // get a subset of the equations given a set of species
         var newSet = new EquationSet();
-        this.forEach(function(eq) {
-            if(species.indexOf(eq.formed) !== -1) {
-                newSet.add(eq);
-                speciesSet.add(eq.formed);
-                Object.keys(eq.components).forEach(s => speciesSet.add(s));
-            }
-        });
-
         var moreAdded = true;
         var passes = 0;
+
+        var f = (species) => {
+            passes++;
+            if(passes === 10) return;
+            this.forEach(function(eq) {
+                if(species.includes(eq.formed) && !newSet.has(eq)) {
+                    newSet.add(eq);
+                    speciesSet.add(eq.formed);
+                    var newComponents = Object.keys(eq.components);
+                    newComponents.forEach(s => speciesSet.add(s));
+                    f(newComponents);
+                }
+            });
+        };
+
+        f(species);
+
+
+
+        if(passes === 10) {
+            throw new Error('You might have a circular dependency in your equations');
+        }
+
+        moreAdded = true;
+        passes = 0;
         while(passes <= 10 && moreAdded) {
             passes++;
             moreAdded = false;
             this.forEach(function(eq) {
-                var hasAll = !Object.keys(eq.components).some(c => !speciesSet.has(c));
+                var hasAll = Object.keys(eq.components).every(c => speciesSet.has(c));
                 if(hasAll && !newSet.has(eq)) {
                     newSet.add(eq);
                     speciesSet.add(eq.formed);

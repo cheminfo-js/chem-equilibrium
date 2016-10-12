@@ -9,7 +9,7 @@ describe('Helper', function () {
         var clone = helper.clone();
         helper.getSpecies().should.deepEqual(clone.getSpecies());
     });
-    it.only('should test various getters', function () {
+    it('should test various getters', function () {
         var helper = new Helper({database: eq.equations1});
         helper.getSpecies().sort().should.deepEqual(['A', 'B', 'C', 'D', 'E']);
         helper.getSpecies({filtered: false, type: 'acidoBasic'}).sort().should.deepEqual(['A', 'B']);
@@ -21,16 +21,17 @@ describe('Helper', function () {
         );
 
         helper.addSpecie('D', 1);
-        helper.getSpecies({filtered: true}).should.deepEqual(['D']);
+        helper.getSpecies({filtered: true}).should.deepEqual([]);
         // getComponents only returns components when they form an equation
         helper.getComponents({filtered: true}).should.deepEqual([]);
         helper.getEquations({filtered: true}).sort(equationSort).should.deepEqual([]);
-        helper.addSpecie('C', 1);
-        helper.getSpecies({filtered: true}).sort().should.deepEqual(['C', 'D', 'E']);
-        helper.getComponents({filtered: true}).sort().should.deepEqual(['D', 'E']);
+        helper.addSpecie('E', 1);
         helper.getEquations({filtered: true}).sort(equationSort).should.deepEqual([
             { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 } ]
         );
+        helper.getSpecies({filtered: true}).sort().should.deepEqual(['C', 'D', 'E']);
+        helper.getComponents({filtered: true}).sort().should.deepEqual(['D', 'E']);
+
         helper.resetSpecies();
         helper.getSpecies({filtered: true}).should.deepEqual([]);
         helper.getComponents({filtered: true}).should.deepEqual([]);
@@ -40,7 +41,7 @@ describe('Helper', function () {
         helper = new Helper({database: eq.acidBase});
         helper.addSpecie('PO4---', 1);
         helper.getComponents({filtered: true}).sort().should.deepEqual(['H+', 'PO4---']);
-        helper.getSpecies({filtered: true}).sort().should.deepEqual(['H+', 'H2PO4-','HPO4--', 'PO4---']);
+        helper.getSpecies({filtered: true}).sort().should.deepEqual(['H+', 'H2O', 'H2PO4-', 'H3PO4', 'HPO4--', 'OH-', 'PO4---']);
 
         helper = new Helper();
         helper.addSpecie('CH3COO-', 1);
