@@ -16,6 +16,9 @@ describe('Serie', function () {
             varying: 'H+'
         });
 
+
+        chart.chart.data.length.should.equal(6);
+
         //console.log(JSON.stringify(chart, null, '\t'));
     });
 });

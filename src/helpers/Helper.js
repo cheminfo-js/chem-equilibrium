@@ -26,7 +26,8 @@ class Helper {
         var helper = new Helper();
         helper.species = deepcopy(this.species);
         helper.eqSet = this.eqSet.clone();
-        this.atEquilibrium = new Set(this.atEquilibrium);
+        helper.options = deepcopy(this.options);
+        helper.atEquilibrium = new Set(this.atEquilibrium);
         return helper;
     }
 
@@ -109,7 +110,7 @@ class Helper {
     }
 
     setOptions(options) {
-        this.options = options;
+        this.options = Object.assign({}, this.options, options);
     }
 
 

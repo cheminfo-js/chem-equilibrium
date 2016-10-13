@@ -14,7 +14,7 @@ class Serie {
         this.helper = helper;
     }
 
-    getChart(options) {
+    getSolutions(options) {
         options = Object.assign({}, defaultOptions, options);
         // We don't want to change the original helper
         var helper = this.helper.clone();
@@ -76,16 +76,23 @@ class Serie {
                 errorCount++;
             }
         }
+        return {
+            x, solutions, errorCount,
+            species: solutions[0] ? Object.keys(solutions[0]) : []
+        }
+    }
 
-        var species = helper.getSpecies({filtered: true});
-        var chart =
-        getChart(x, solutions, {
-            xLabel: options.isFixed ? ('Quantity ' + (log ? '-log10 of ' : 'of ') + varying + 'at equilibrium ' + log ? '' : '[mol]') : ('Total quantity of ' + varying),
+    getChart(options) {
+        var sol = this.getSolutions(options);
+        var chart = getChart(sol.x, sol.solutions, {
+            xLabel: options.isFixed ? ('Quantity ' + (log ? '-log10 of ' : 'of ') + options.varying + 'at equilibrium ' + log ? '' : '[mol]') : ('Total quantity of ' + options.varying),
             yLabel: 'Amount of other species at equilibrium [mol]'
         });
 
         return {
-            chart, errorCount, species
+            chart,
+            errorCount: sol.errorCount,
+            species: sol.species
         }
     }
 }
