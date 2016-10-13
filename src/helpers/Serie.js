@@ -1,6 +1,5 @@
 'use strict';
 
-const getChart = require('../util/chart');
 const defaultOptions = {
     chunks: 200,
     log: false,
@@ -79,20 +78,6 @@ class Serie {
         return {
             x, solutions, errorCount,
             species: solutions[0] ? Object.keys(solutions[0]) : []
-        }
-    }
-
-    getChart(options) {
-        var sol = this.getSolutions(options);
-        var chart = getChart(sol.x, sol.solutions, {
-            xLabel: options.isFixed ? ('Quantity ' + (log ? '-log10 of ' : 'of ') + options.varying + 'at equilibrium ' + log ? '' : '[mol]') : ('Total quantity of ' + options.varying),
-            yLabel: 'Amount of other species at equilibrium [mol]'
-        });
-
-        return {
-            chart,
-            errorCount: sol.errorCount,
-            species: sol.species
         }
     }
 }
