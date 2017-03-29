@@ -51,12 +51,12 @@ describe('EquationSet', function () {
     it('should get the model given the totals', function () {
         var eqSet = new EquationSet(eq.equations2);
         var normSet = eqSet.getNormalized('E');
-        var model = normSet.getModel({A: 1});
+        normSet.getModel({A: 1});
     });
 
     it('should throw when normalizing an equations set with a circular dependency', function () {
         var eqSet = new EquationSet(eq.circularEquations);
-        (function() {
+        (function () {
             eqSet.getNormalized();
         }).should.throw(/circular/);
     });

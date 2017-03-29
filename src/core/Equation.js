@@ -6,16 +6,16 @@ class Equation {
     constructor(eq) {
         // Sanity checks
         if (typeof eq.formed !== 'string') throw new Error('equation expects a property "formed" that is a string');
-        if(typeof eq.pK !== 'number') throw new Error('equation expects a property "pK" that is a number');
+        if (typeof eq.pK !== 'number') throw new Error('equation expects a property "pK" that is a number');
         if (types.indexOf(eq.type) === -1) throw new Error('Unexpected type');
-        if(Object.prototype.toString.call(eq.components) !== '[object Object]') throw new Error('Unexpected components');
-        if(Object.keys(eq.components).length < 1) throw new Error('Components is expected to have at least one key');
+        if (Object.prototype.toString.call(eq.components) !== '[object Object]') throw new Error('Unexpected components');
+        if (Object.keys(eq.components).length < 1) throw new Error('Components is expected to have at least one key');
 
         this._eq = deepcopy(eq);
     }
 
     static create(eq) {
-        if(eq instanceof Equation) {
+        if (eq instanceof Equation) {
             return eq.clone();
         } else {
             return new Equation(eq);
@@ -73,7 +73,7 @@ class Equation {
                 }
             }
         }
-        if(!eq.components) {
+        if (!eq.components) {
             return this.clone();
         }
 

@@ -1,7 +1,7 @@
 'use strict';
 
 exports.logarithmic = function (random, len) {
-    if(len === undefined) {
+    if (len === undefined) {
         return Math.pow(random(), 10);
     }
     var arr = new Array(len);

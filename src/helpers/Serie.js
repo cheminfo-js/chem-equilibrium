@@ -42,7 +42,7 @@ class Serie {
         helper.addSpecie(options.solution.type);
         helper.addSpecie(options.titrationSolution.type);
 
-        for (var i = 0; i <= chunks; i++) {
+        for (let i = 0; i <= chunks; i++) {
             var vol = titrVolStart + (titrVolStop - titrVolStart) * (i / chunks);
             var totalVol = vol + solVolume;
             var titrQty = vol * titrConc;
@@ -69,7 +69,7 @@ class Serie {
         }
 
         var xy = [];
-        for (var i = 0; i < ph.length; i++) {
+        for (let i = 0; i < ph.length; i++) {
             xy.push(vols[i], ph[i]);
         }
 
@@ -79,7 +79,7 @@ class Serie {
             xy, errorCount, solutions, species,
             volumes: vols,
             equations: helper.getEquations({filtered: true})
-        }
+        };
     }
 
     getSolutions(options) {
@@ -147,7 +147,7 @@ class Serie {
         return {
             x, solutions, errorCount,
             species: solutions[0] ? Object.keys(solutions[0]) : []
-        }
+        };
     }
 }
 

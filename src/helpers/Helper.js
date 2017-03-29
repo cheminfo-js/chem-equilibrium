@@ -13,7 +13,7 @@ class Helper {
         this.atEquilibrium = new Set();
         options = Object.assign({}, defaultOptions, options);
         var db = options.database || database;
-        if(options.extend && options.database) db = db.concat(database);
+        if (options.extend && options.database) db = db.concat(database);
         db = processDB(db, options);
         this.species = {};
         this.options = options;
@@ -45,7 +45,7 @@ class Helper {
     getComponents(options) {
         options = options || {};
         var species = options.filtered ? Object.keys(this.species) : null;
-        if(species) var eqSet = this.eqSet.getSubset(species);
+        if (species) var eqSet = this.eqSet.getSubset(species);
         else eqSet = this.eqSet;
         return eqSet.getNormalized(this.options.solvent).getComponents(options);
     }
@@ -53,10 +53,10 @@ class Helper {
     getEquations(options) {
         options = options || {};
         var eqSet = this.eqSet;
-        if(options.filtered) {
+        if (options.filtered) {
             eqSet = this.eqSet.getSubset(Object.keys(this.species));
         }
-        if(options.normalized) {
+        if (options.normalized) {
             eqSet = eqSet.getNormalized(this.options.solvent);
         }
         return eqSet.getEquations(options);
@@ -68,7 +68,7 @@ class Helper {
         var normSet = subSet.getNormalized(this.options.solvent);
         var model = normSet.getModel(this.species, true);
         model.components.forEach(c => {
-            if(this.atEquilibrium.has(c.label)) {
+            if (this.atEquilibrium.has(c.label)) {
                 c.atEquilibrium = this.species[c.label];
                 delete c.total;
             }
@@ -87,7 +87,7 @@ class Helper {
         if (label === this.solvent) {
             total = 0;
         }
-        if(!this.species[label]) {
+        if (!this.species[label]) {
             this.species[label] = total;
         } else {
             this.species[label] += total;
@@ -133,9 +133,9 @@ module.exports = Helper;
 function processDB(db, options) {
     db = deepcopy(db);
     var toRemove = [];
-    for(var i=0; i<db.length; i++) {
-        if(typeof db[i].pK !== 'number' || options.solvent !== 'H2O') {
-            if(!db[i].pK[options.solvent]) {
+    for (var i = 0; i < db.length; i++) {
+        if (typeof db[i].pK !== 'number' || options.solvent !== 'H2O') {
+            if (!db[i].pK[options.solvent]) {
                 toRemove.push(i);
             } else {
                 db[i].pK = db[i].pK[options.solvent];
@@ -143,8 +143,8 @@ function processDB(db, options) {
         }
     }
 
-    for(i = db.length -1; i >= 0; i--) {
-        if(toRemove.indexOf(i) > -1) {
+    for (i = db.length - 1; i >= 0; i--) {
+        if (toRemove.indexOf(i) > -1) {
             db.splice(i, 1);
         }
     }

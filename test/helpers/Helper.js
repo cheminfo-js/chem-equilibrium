@@ -16,8 +16,8 @@ describe('Helper', function () {
         helper.getComponents().sort().should.deepEqual(['B', 'D', 'E']);
         helper.getComponents({filtered: false, type: 'acidoBasic'}).sort().should.deepEqual(['B']);
         helper.getEquations().sort(equationSort).should.deepEqual([
-            { formed: 'A', components: { B: -1 }, type: 'acidoBasic', pK: 1 },
-            { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 } ]
+            {formed: 'A', components: {B: -1}, type: 'acidoBasic', pK: 1},
+            {formed: 'C', components: {D: 2, E: 1}, type: 'precipitation', pK: 1}]
         );
 
         helper.addSpecie('D', 1);
@@ -27,7 +27,7 @@ describe('Helper', function () {
         helper.getEquations({filtered: true}).sort(equationSort).should.deepEqual([]);
         helper.addSpecie('E', 1);
         helper.getEquations({filtered: true}).sort(equationSort).should.deepEqual([
-            { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 } ]
+            {formed: 'C', components: {D: 2, E: 1}, type: 'precipitation', pK: 1}]
         );
         helper.getSpecies({filtered: true}).sort().should.deepEqual(['C', 'D', 'E']);
         helper.getComponents({filtered: true}).sort().should.deepEqual(['D', 'E']);
@@ -56,13 +56,13 @@ describe('Helper', function () {
         helper.getSpecies({filtered: false, type: 'acidoBasic'}).sort().should.deepEqual([]);
         helper.getComponents().sort().should.deepEqual(['D', 'E']);
         helper.getComponents({filtered: false, type: 'acidoBasic'}).sort().should.deepEqual([]);
-        helper.getComponents({includeDisabled:true}).sort().should.deepEqual(['B', 'D', 'E']);
+        helper.getComponents({includeDisabled: true}).sort().should.deepEqual(['B', 'D', 'E']);
         helper.getEquations().sort(equationSort).should.deepEqual([
-            { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 } ]
+            {formed: 'C', components: {D: 2, E: 1}, type: 'precipitation', pK: 1}]
         );
         helper.getEquations({includeDisabled: true}).sort(equationSort).should.deepEqual([
-            { formed: 'A', components: {B: -1}, type: 'acidoBasic', pK: 1, disabled: true},
-            { formed: 'C', components: { D: 2, E: 1 }, type: 'precipitation', pK: 1 }
+            {formed: 'A', components: {B: -1}, type: 'acidoBasic', pK: 1, disabled: true},
+            {formed: 'C', components: {D: 2, E: 1}, type: 'precipitation', pK: 1}
         ]);
         helper.addSpecie('A', 1);
         helper.addSpecie('C', 1);
@@ -200,8 +200,8 @@ describe('Helper', function () {
             beta: Math.pow(10, 7.72 - 14),
             components: getExpectedComponents(['Ag+', 1, 'H+', -1], model),
             solid: true
-        })
-    })
+        });
+    });
 });
 
 function getIndexes(labels, model) {
@@ -229,7 +229,7 @@ function getExpectedComponents(labels, model) {
 }
 
 function getFormedSpecie(label, model) {
-    return model.formedSpecies.find(s => s.label === label)
+    return model.formedSpecies.find(s => s.label === label);
 }
 
 function getComponent(label, model) {
@@ -237,7 +237,7 @@ function getComponent(label, model) {
 }
 
 function equationSort(a, b) {
-    if(a.formed < b.formed) return -1;
-    else if(a.formed > b.formed) return 1;
+    if (a.formed < b.formed) return -1;
+    else if (a.formed > b.formed) return 1;
     return 0;
 }

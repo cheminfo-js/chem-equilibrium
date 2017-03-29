@@ -1,6 +1,8 @@
 'use strict';
-var Matrix = require('ml-matrix');
-var stat = require('ml-stat').matrix;
+const Matrix = require('ml-matrix');
+const stat = require('ml-stat').matrix;
+const debug = require('debug')('core:newton-rahpton');
+
 const defaultOptions = {
     tolerance: 1e-15,
     solidTolerance: 1e-5,
@@ -17,14 +19,14 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidKsp, solidC, opt
     // solidC contains the initial solid species "concentrations"
 
     options = Object.assign({}, defaultOptions, options);
-    var ncomp = cTotal.length;
-    var nspec = beta.length;
+    const ncomp = cTotal.length;
+    const nspec = beta.length;
 
     if (!solidModel) solidModel = new Array(ncomp).fill(0).map(() => []);
     if (!solidKsp) solidKsp = [];
     if (!solidC) solidC = [];
 
-    var nsolid = solidKsp.length;
+    const nsolid = solidKsp.length;
 
     // Sanity check
     if (c.length !== ncomp || model.length !== ncomp || model[0].length !== nspec || solidC.length !== nsolid || solidModel.length !== ncomp || solidModel[0] && solidModel[0].length !== nsolid) {
@@ -92,8 +94,9 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidKsp, solidC, opt
 
         // console.log('number of solids', nSolidPicked);
         // Add to it "concentrations" based on solid species
-        if (nsolid)
+        if (nsolid) {
             cTotCalc.add([stat.sum(Matrix.multiply(solidC.repeat(ncomp, 1), solidModel), 1)]);
+        }
 
         // console.log(cTotal, cTotCalc);
         // d is the difference between expected total concentration and actual total concentration given
@@ -119,7 +122,7 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidKsp, solidC, opt
         if (checkEpsilon(options.tolerance, d[0]) && checkSolid(options.solidTolerance, solidC, dkOrig)) {
             // console.log('final solution concentrations',c);
             // console.log('final solid concentrations', solidC);
-            console.log(`solution converged in ${i} iterations`);
+            debug(`solution converged in ${i} iterations`);
             return cSpec.to1DArray().concat(solidC.to1DArray ? solidC.to1DArray() : solidC);
         }
 
@@ -182,7 +185,7 @@ function newtonRaphton(model, beta, cTotal, c, solidModel, solidKsp, solidC, opt
     }
 
     if (i >= options.maxIterations) {
-        console.log('did not converge')
+        debug('did not converge');
         return null;
     }
     // console.log('insoluble indices', solidIndices);
@@ -196,15 +199,14 @@ module.exports = newtonRaphton;
 function checkEpsilon(tolerance, arr, n) {
     return !arr.some(function (el, idx) {
         if (n && idx >= n) return false;
-        return Math.abs(el) >= tolerance
+        return Math.abs(el) >= tolerance;
     });
 }
 
 function checkSolid(tolerance, c, dk) {
     if (!c.length) return true;
     return !c[0].some(function (value, idx) {
-        if(dk[0][idx] === undefined) {
-            debugger;
+        if (dk[0][idx] === undefined) {
             throw 2;
         }
         return value !== 0 && Math.abs(dk[0][idx]) >= tolerance;
@@ -217,12 +219,6 @@ function checkNeg(arr, n) {
         if (n && idx >= n) return true;
         return el <= 0;
     });
-}
-
-function checkAllNeg(arr) {
-    return !arr.some(function (el) {
-        return el > 0;
-    })
 }
 
 function getRange(start, end) {
