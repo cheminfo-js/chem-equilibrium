@@ -17,7 +17,9 @@
   "scripts": {
     "test": "mocha --require should --reporter mocha-better-spec-reporter --recursive",
     "build": "cheminfo build -b -u",
-    "database": "node data/update.js"
+    "database": "node data/update.js",
+    "eslint": "eslint .",
+    "eslint-fix": "eslint --fix ."
   },
   "devDependencies": {
     "cheminfo-tools": "^1.5.0",
