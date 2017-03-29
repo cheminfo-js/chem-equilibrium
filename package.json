@@ -16,7 +16,7 @@
   "main": "./src/index.js",
   "scripts": {
     "test": "mocha --require should --reporter mocha-better-spec-reporter --recursive",
-    "build": "cheminfo build -b -u",
+    "build": "cheminfo build -b",
     "database": "node data/update.js",
     "eslint": "eslint .",
     "eslint-fix": "eslint --fix ."
