@@ -215,9 +215,9 @@ class Equilibrium {
             }
         }
 
-        specLabels = specLabels.concat(model.formedSpecies.map(f => f.label));
         var specSolutionLabels = formedSpeciesSolution.map(s => s.label);
         var specSolidLabels = formedSpeciesSolid.map(s => s.label);
+        specLabels = specLabels.concat(specSolutionLabels, specSolidLabels);
 
         return {
             model: matrix.to2DArray(),
