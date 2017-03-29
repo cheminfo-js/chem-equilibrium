@@ -1,4 +1,4 @@
-var newtonRaphton = require('../../src/NewtonRaphton');
+var newtonRaphton = require('../../../src/core/NewtonRaphton');
 
 //species: 0: Cl-, 1: Ag+,     2: AgCl
 //rxns: 0: Cl- -> Cl-, beta=1

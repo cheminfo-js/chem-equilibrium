@@ -1,5 +1,5 @@
 'use strict';
-const Equilibrium = require('../../src/Equilibrium');
+const Equilibrium = require('../../../src/core/Equilibrium');
 
 var model = {
     "volume": 1,
