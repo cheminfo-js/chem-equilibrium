@@ -1,7 +1,7 @@
 'use strict';
 const Matrix = require('ml-matrix');
 const stat = require('ml-stat').matrix;
-const debug = require('debug')('core:newton-rahpton');
+const debug = require('debug')('core:newton-raphton');
 
 const defaultOptions = {
     tolerance: 1e-15,
