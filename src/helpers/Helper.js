@@ -1,7 +1,9 @@
-'use strict';
-const database = require('../../data/data.json');
-const EquationSet = require('./../core/EquationSet');
+
 const deepcopy = require('deepcopy');
+
+const database = require('../../data/data.json');
+
+const EquationSet = require('./../core/EquationSet');
 const Equilibrium = require('./../core/Equilibrium');
 
 const defaultOptions = {
@@ -11,8 +13,8 @@ const defaultOptions = {
 class Helper {
   constructor(options) {
     this.atEquilibrium = new Set();
-    options = Object.assign({}, defaultOptions, options);
-    var db = options.database || database;
+    options = { ...defaultOptions, ...options};
+    let db = options.database || database;
     if (options.extend && options.database) db = db.concat(database);
     db = processDB(db, options);
     this.species = {};
@@ -23,7 +25,7 @@ class Helper {
 
   // Clone
   clone() {
-    var helper = new Helper();
+    let helper = new Helper();
     helper.species = deepcopy(this.species);
     helper.eqSet = this.eqSet.clone();
     helper.options = deepcopy(this.options);
@@ -35,15 +37,15 @@ class Helper {
 
   getSpecies(options) {
     options = options || {};
-    var species = options.filtered ? Object.keys(this.species) : null;
-    var getOptions = Object.assign({}, options);
+    let species = options.filtered ? Object.keys(this.species) : null;
+    let getOptions = { ...options};
     getOptions.species = species;
     return this.eqSet.getSpecies(getOptions);
   }
 
   getComponents(options) {
     options = options || {};
-    var species = options.filtered ? Object.keys(this.species) : null;
+    let species = options.filtered ? Object.keys(this.species) : null;
     if (species) var eqSet = this.eqSet.getSubset(species);
     else eqSet = this.eqSet;
     return eqSet.getNormalized(this.options.solvent).getComponents(options);
@@ -51,7 +53,7 @@ class Helper {
 
   getEquations(options) {
     options = options || {};
-    var eqSet = this.eqSet;
+    let eqSet = this.eqSet;
     if (options.filtered) {
       eqSet = this.eqSet.getSubset(Object.keys(this.species));
     }
@@ -62,9 +64,9 @@ class Helper {
   }
 
   getModel() {
-    var subSet = this.eqSet.getSubset(Object.keys(this.species));
-    var normSet = subSet.getNormalized(this.options.solvent);
-    var model = normSet.getModel(this.species, true);
+    let subSet = this.eqSet.getSubset(Object.keys(this.species));
+    let normSet = subSet.getNormalized(this.options.solvent);
+    let model = normSet.getModel(this.species, true);
     model.components.forEach((c) => {
       if (this.atEquilibrium.has(c.label)) {
         c.atEquilibrium = this.species[c.label];
@@ -108,7 +110,7 @@ class Helper {
   }
 
   setOptions(options) {
-    this.options = Object.assign({}, this.options, options);
+    this.options = { ...this.options, ...options};
   }
 
   disableEquation(formedSpecie) {
@@ -128,7 +130,7 @@ module.exports = Helper;
 
 function processDB(db, options) {
   db = deepcopy(db);
-  var toRemove = [];
+  let toRemove = [];
   for (var i = 0; i < db.length; i++) {
     if (typeof db[i].pK !== 'number' || options.solvent !== 'H2O') {
       if (!db[i].pK[options.solvent]) {

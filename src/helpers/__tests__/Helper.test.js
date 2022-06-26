@@ -1,16 +1,16 @@
-'use strict';
-const Helper = require('../Helper');
+
 const eq = require('../../../test/data/equations');
+const Helper = require('../Helper');
 
 describe('Helper', () => {
   it('should clone a helper', () => {
-    var helper = new Helper({ database: eq.equations1 });
+    let helper = new Helper({ database: eq.equations1 });
     helper.addSpecie('D', 1);
-    var clone = helper.clone();
+    let clone = helper.clone();
     expect(helper.getSpecies()).deepEqual(clone.getSpecies());
   });
   it('should test various getters', () => {
-    var helper = new Helper({ database: eq.equations1 });
+    let helper = new Helper({ database: eq.equations1 });
     expect(helper.getSpecies().sort()).deepEqual(['A', 'B', 'C', 'D', 'E']);
     expect(
       helper.getSpecies({ filtered: false, type: 'acidoBasic' }).sort(),
@@ -74,7 +74,7 @@ describe('Helper', () => {
   });
 
   it('should enable/disable equations', () => {
-    var helper = new Helper({ database: eq.equations1 });
+    let helper = new Helper({ database: eq.equations1 });
     helper.disableEquation('A');
     expect(helper.getSpecies().sort()).deepEqual(['C', 'D', 'E']);
     expect(helper.getSpecies({ includeDisabled: true }).sort()).deepEqual([
@@ -113,7 +113,7 @@ describe('Helper', () => {
     ]);
     helper.addSpecie('A', 1);
     helper.addSpecie('C', 1);
-    var model = helper.getModel();
+    let model = helper.getModel();
     expect(getComponent('D', model)).deepEqual({ label: 'D', total: 2 });
     expect(getComponent('E', model)).deepEqual({ label: 'E', total: 1 });
     expect(getFormedSpecie('C', model)).deepEqual({
@@ -133,7 +133,7 @@ describe('Helper', () => {
     expect(helper.getSpecies().sort()).deepEqual(['A', 'B', 'C', 'D', 'E']);
   });
   it('should create a Helper when from multi-solvent database', () => {
-    var helper = new Helper({ database: eq.multiSolvent });
+    let helper = new Helper({ database: eq.multiSolvent });
     expect(helper.getSpecies().sort()).deepEqual([
       'A',
       'B',
@@ -154,16 +154,16 @@ describe('Helper', () => {
   });
 
   it('in water, it should create acid/base model just by adding one component', () => {
-    var helper = new Helper({ database: eq.acidBase });
+    let helper = new Helper({ database: eq.acidBase });
     helper.addSpecie('CH3COO-', 1);
-    var model = helper.getModel();
+    let model = helper.getModel();
     helper.getEquilibrium();
     expect(model.components).toHaveLength(2);
     expect(model.formedSpecies).toHaveLength(2);
   });
 
   it('should create a model where one component has a fixed concentration at equilibrium', () => {
-    var helper = new Helper({ database: eq.equations1 });
+    let helper = new Helper({ database: eq.equations1 });
     helper.addSpecie('A', 1);
     helper.addSpecie('C', 1);
     helper.addSpecie('B', 1);
@@ -171,7 +171,7 @@ describe('Helper', () => {
     helper.addSpecie('X', 1); // should have no effect (specie not in database)
     helper.setAtEquilibrium('E', 2);
     helper.setAtEquilibrium('Y', 1); // should have no effect (specie not in database)
-    var model = helper.getModel();
+    let model = helper.getModel();
     expect(getComponent('B', model)).deepEqual({ label: 'B', total: 0 });
     expect(getComponent('D', model)).deepEqual({ label: 'D', total: 2 });
     expect(getComponent('E', model)).deepEqual({
@@ -193,13 +193,13 @@ describe('Helper', () => {
   });
 
   it('should create acid/base model', () => {
-    var helper = new Helper({ database: eq.acidBase });
+    let helper = new Helper({ database: eq.acidBase });
     helper.addSpecie('CO3--', 1);
     helper.addSpecie('HCO3-', 1);
     helper.addSpecie('OH-', 1);
-    var model = helper.getModel();
-    expect(model.components.length).toEqual(2);
-    expect(model.formedSpecies.length).toEqual(3);
+    let model = helper.getModel();
+    expect(model.components).toHaveLength(2);
+    expect(model.formedSpecies).toHaveLength(3);
 
     expect(getComponent('CO3--', model)).deepEqual({
       label: 'CO3--',
@@ -230,12 +230,12 @@ describe('Helper', () => {
   });
 
   it('should create a very simple precipitation model (in DMSO)', () => {
-    var helper = new Helper({ solvent: 'DMSO', database: eq.AgClInDMSO });
+    let helper = new Helper({ solvent: 'DMSO', database: eq.AgClInDMSO });
     helper.addSpecie('AgCl', 1);
-    var model = helper.getModel();
-    expect(model.components.length).toEqual(2);
+    let model = helper.getModel();
+    expect(model.components).toHaveLength(2);
     // A complex and a precipitate are formed
-    expect(model.formedSpecies.length).toEqual(2);
+    expect(model.formedSpecies).toHaveLength(2);
     expect(getComponent('Ag+', model)).deepEqual({ label: 'Ag+', total: 1 });
     expect(getComponent('Cl-', model)).deepEqual({ label: 'Cl-', total: 1 });
     expect(getFormedSpecie('AgCl', model)).deepEqual({
@@ -253,9 +253,9 @@ describe('Helper', () => {
   });
 
   it('should create precipitation model with OH- precipitation', () => {
-    var helper = new Helper({ database: eq.AgInWater });
+    let helper = new Helper({ database: eq.AgInWater });
     helper.addSpecie('Ag+', 1);
-    var model = helper.getModel();
+    let model = helper.getModel();
     expect(model.components).toHaveLength(2);
     expect(model.formedSpecies).toHaveLength(2);
     expect(getComponent('Ag+', model)).deepEqual({ label: 'Ag+', total: 1 });
@@ -270,7 +270,7 @@ describe('Helper', () => {
 });
 
 function getIndexes(labels, model) {
-  var indexes = new Array(labels.length);
+  let indexes = new Array(labels.length);
   for (var i = 0; i < labels.length; i++) {
     indexes[i] = model.components.findIndex((c) => c.label === labels[i]);
   }
@@ -278,15 +278,15 @@ function getIndexes(labels, model) {
 }
 
 function getExpectedComponents(labels, model) {
-  var l = [];
-  var v = [];
+  let l = [];
+  let v = [];
   for (var i = 0; i < labels.length; i++) {
     if (i % 2 === 0) l.push(labels[i]);
     else v.push(labels[i]);
   }
-  var indexes = getIndexes(l, model);
+  let indexes = getIndexes(l, model);
 
-  var expected = new Array(model.components.length).fill(0);
+  let expected = new Array(model.components.length).fill(0);
   for (i = 0; i < indexes.length; i++) {
     expected[indexes[i]] = v[i];
   }

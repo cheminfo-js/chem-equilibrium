@@ -1,4 +1,4 @@
-'use strict';
+
 
 const defaultOptions = {
   chunks: 200,
@@ -14,41 +14,41 @@ class Serie {
   }
 
   getTitration(options) {
-    options = Object.assign({}, defaultOptions, options);
+    options = { ...defaultOptions, ...options};
     // We don't want to change the original helper
-    var helper = this.helper.clone();
+    let helper = this.helper.clone();
     helper.resetSpecies();
     // Some options are meant for the helper
     // e.g. tolerance, solidTolerance, maxIterations
     helper.setOptions(options);
 
-    var solVolume = options.solution.volume;
-    var solConc = options.solution.concentration;
-    var solQty = solConc * solVolume;
+    let solVolume = options.solution.volume;
+    let solConc = options.solution.concentration;
+    let solQty = solConc * solVolume;
 
-    var titrConc = options.titrationSolution.concentration;
-    var titrVolStart = 0;
-    var titrVolStop = options.titrationSolution.volume;
+    let titrConc = options.titrationSolution.concentration;
+    let titrVolStart = 0;
+    let titrVolStop = options.titrationSolution.volume;
 
-    var errorCount = 0;
+    let errorCount = 0;
 
-    var vols = [];
-    var ph = [];
-    var solutions = [];
-    var chunks = options.chunks;
-    var sol;
+    let vols = [];
+    let ph = [];
+    let solutions = [];
+    let chunks = options.chunks;
+    let sol;
 
     helper.addSpecie(options.solution.type);
     helper.addSpecie(options.titrationSolution.type);
 
     for (let i = 0; i <= chunks; i++) {
-      var vol = titrVolStart + (titrVolStop - titrVolStart) * (i / chunks);
-      var totalVol = vol + solVolume;
-      var titrQty = vol * titrConc;
+      let vol = titrVolStart + (titrVolStop - titrVolStart) * (i / chunks);
+      let totalVol = vol + solVolume;
+      let titrQty = vol * titrConc;
       helper.setTotal(options.titrationSolution.type, titrQty);
       helper.setTotal(options.solution.type, solQty);
       helper.setOptions({ volume: totalVol });
-      var eq = helper.getEquilibrium();
+      let eq = helper.getEquilibrium();
 
       if (!sol) {
         sol = eq.solveRobust();
@@ -66,12 +66,12 @@ class Serie {
       }
     }
 
-    var xy = [];
+    let xy = [];
     for (let i = 0; i < ph.length; i++) {
       xy.push(vols[i], ph[i]);
     }
 
-    var species = solutions[0] ? Object.keys(solutions[0]) : [];
+    let species = solutions[0] ? Object.keys(solutions[0]) : [];
 
     return {
       xy,
@@ -84,15 +84,15 @@ class Serie {
   }
 
   getSolutions(options) {
-    options = Object.assign({}, defaultOptions, options);
+    options = { ...defaultOptions, ...options};
     // We don't want to change the original helper
-    var helper = this.helper.clone();
+    let helper = this.helper.clone();
     // Some options are meant for the helper
     // e.g. tolerance, solidTolerance, maxIterations
     helper.setOptions(options);
 
     checkOptions(options);
-    var varying = options.varying;
+    let varying = options.varying;
 
     // if(options.log) {
     //     var [from, to] = [Math.pow(10, -options.to), Math.pow(10, -options.from)];
@@ -100,14 +100,14 @@ class Serie {
     //     [from, to] = [options.from, options.to];
     // }
 
-    var errorCount = 0;
-    var chunks = options.chunks;
-    var sol;
-    var solutions = [];
-    var x = [];
-    var log = options.log;
-    var from = options.from;
-    var to = options.to;
+    let errorCount = 0;
+    let chunks = options.chunks;
+    let sol;
+    let solutions = [];
+    let x = [];
+    let log = options.log;
+    let from = options.from;
+    let to = options.to;
 
     // if(log) {
     //     from = -Math.log10(Number(options.to));
@@ -117,8 +117,8 @@ class Serie {
     //     to = Number(options.to);
     // }
 
-    for (var i = 0; i <= chunks; i++) {
-      var val = options.from + ((to - from) * i) / chunks;
+    for (let i = 0; i <= chunks; i++) {
+      let val = options.from + ((to - from) * i) / chunks;
 
       if (log) {
         var realVal = Math.pow(10, -val);
@@ -130,7 +130,7 @@ class Serie {
       } else {
         helper.setTotal(varying, realVal);
       }
-      var eq = helper.getEquilibrium();
+      let eq = helper.getEquilibrium();
       if (sol) {
         eq.setInitial(sol);
         sol = eq.solve();

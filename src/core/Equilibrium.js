@@ -1,5 +1,6 @@
-'use strict';
+
 const Matrix = require('ml-matrix');
+
 const random = require('./../util/random');
 const newtonRaphton = require('./NewtonRaphton');
 
@@ -34,7 +35,7 @@ class Equilibrium {
    * @param {function} [options.random=Math.random] - Random number generator to use when initializing concentrations
    */
   constructor(model, options) {
-    this.options = Object.assign({}, defaultOptions, options);
+    this.options = { ...defaultOptions, ...options};
     checkModel(model);
     this.model = model;
     this._model = this._processModel(model);
@@ -48,13 +49,13 @@ class Equilibrium {
    */
   _getInitial() {
     // Return random inital value for all labels that don't have a fixed initial value
-    var keys = this._initial ? Object.keys(this._initial) : [];
-    var initial = new Array(this._model.nComp);
-    var initialSolid = new Array(this._model.specSolidLabels.length);
+    let keys = this._initial ? Object.keys(this._initial) : [];
+    let initial = new Array(this._model.nComp);
+    let initialSolid = new Array(this._model.specSolidLabels.length);
 
     for (var i = 0; i < keys.length; i++) {
-      var key = keys[i];
-      var idx = this._model.compLabels.indexOf(key);
+      let key = keys[i];
+      let idx = this._model.compLabels.indexOf(key);
       if (idx === -1) {
         idx = this._model.specSolidLabels.indexOf(key);
         if (idx !== -1) initialSolid[idx] = this._initial[key];
@@ -91,20 +92,20 @@ class Equilibrium {
     // change betas and model to reflect what should be
     // optimized in newton raphton
     // Initialize model
-    var nFormed = model.formedSpecies.length;
-    var nComp = model.components.length;
-    var nSpec = nComp + nFormed;
-    var nSpecSolution = count(model.formedSpecies, (spec) => !spec.solid);
-    var nSpecSolid = nSpec - nSpecSolution - nComp;
+    let nFormed = model.formedSpecies.length;
+    let nComp = model.components.length;
+    let nSpec = nComp + nFormed;
+    let nSpecSolution = count(model.formedSpecies, (spec) => !spec.solid);
+    let nSpecSolid = nSpec - nSpecSolution - nComp;
 
-    var formedSpeciesSolution = model.formedSpecies.filter(
+    let formedSpeciesSolution = model.formedSpecies.filter(
       (spec) => !spec.solid,
     );
-    var formedSpeciesSolid = model.formedSpecies.filter((spec) => spec.solid);
+    let formedSpeciesSolid = model.formedSpecies.filter((spec) => spec.solid);
 
     // ========= init betas =====================================================================================
     // The formation constants for components is always 1
-    var beta = new Matrix(1, nSpecSolution + nComp).fill(1);
+    let beta = new Matrix(1, nSpecSolution + nComp).fill(1);
     // The other formation constants we pick from user
     beta.setSubMatrix([formedSpeciesSolution.map((c) => c.beta)], 0, nComp);
     if (nSpecSolid) {
@@ -115,13 +116,13 @@ class Equilibrium {
     // One line per component, one column per specie
     // Species are components + formedSpecies
 
-    var matrix = new Matrix(nComp, nSpecSolution + nComp);
-    var identity = Matrix.identity(model.components.length);
+    let matrix = new Matrix(nComp, nSpecSolution + nComp);
+    let identity = Matrix.identity(model.components.length);
     matrix.setSubMatrix(identity, 0, 0);
 
     // Now we modify the stoechiometric matrix if there are any components with fixed concentrations
     // Fixed components are removed from the model and beta values of species are updated accordingly
-    var rows = [];
+    let rows = [];
     for (i = 0; i < nComp; i++) {
       for (var j = 0; j < nSpecSolution; j++) {
         matrix.set(i, j + nComp, formedSpeciesSolution[j].components[i]);
@@ -144,7 +145,7 @@ class Equilibrium {
     }
 
     // remove fixed components from beta and stoechiometric matrix
-    var columns = rows.concat(getRange(nComp, nComp + nSpecSolution - 1));
+    let columns = rows.concat(getRange(nComp, nComp + nSpecSolution - 1));
     matrix = matrix.selection(rows, columns);
     beta = beta.selection([0], columns);
     // remove empty columns
@@ -194,15 +195,15 @@ class Equilibrium {
     }
 
     // ============= Labels and concentrations ==================================================================
-    var specLabels = [];
-    var fixedLabels = [];
-    var cFixed = [];
-    var compLabels = [];
+    let specLabels = [];
+    let fixedLabels = [];
+    let cFixed = [];
+    let compLabels = [];
 
     // Init labels and total concentration
-    var cTotal = [];
+    let cTotal = [];
     for (var i = 0; i < nComp; i++) {
-      var component = model.components[i];
+      let component = model.components[i];
       if (component.atEquilibrium) {
         // Keep concentration and label of fixed components
         fixedLabels.push(component.label);
@@ -215,15 +216,15 @@ class Equilibrium {
       }
     }
 
-    var specSolutionLabels = formedSpeciesSolution.map((s) => s.label);
-    var specSolidLabels = formedSpeciesSolid.map((s) => s.label);
+    let specSolutionLabels = formedSpeciesSolution.map((s) => s.label);
+    let specSolidLabels = formedSpeciesSolid.map((s) => s.label);
     specLabels = specLabels.concat(specSolutionLabels, specSolidLabels);
 
     return {
       model: matrix.to2DArray(),
       beta: beta.to1DArray(),
-      cTotal: cTotal,
-      cFixed: cFixed,
+      cTotal,
+      cFixed,
       specLabels,
       compLabels,
       fixedLabels,
@@ -242,9 +243,9 @@ class Equilibrium {
    * and the value is the concentration at equilibrium of this specie.
    */
   solve() {
-    var model = this._model;
-    var initial = this._getInitial();
-    var cSpec = newtonRaphton(
+    let model = this._model;
+    let initial = this._getInitial();
+    let cSpec = newtonRaphton(
       model.model,
       model.beta,
       model.cTotal,
@@ -254,7 +255,7 @@ class Equilibrium {
       initial.solids,
       this.options,
     );
-    var result = this._processResult(cSpec);
+    let result = this._processResult(cSpec);
     if (this.options.autoInitial) this.setInitial(result);
     return result;
   }
@@ -267,9 +268,9 @@ class Equilibrium {
    * and the value is the concentration at equilibrium of this specie.
    */
   solveRobust() {
-    var model = this._model;
-    for (var i = 0; i < this.options.robustMaxTries; i++) {
-      var initial = {
+    let model = this._model;
+    for (let i = 0; i < this.options.robustMaxTries; i++) {
+      let initial = {
         components: random.logarithmic(
           this.options.random,
           model.compLabels.length,
@@ -279,7 +280,7 @@ class Equilibrium {
           model.specSolidLabels.length,
         ),
       };
-      var cSpec = newtonRaphton(
+      let cSpec = newtonRaphton(
         model.model,
         model.beta,
         model.cTotal,
@@ -303,10 +304,10 @@ class Equilibrium {
    * amount (in moles) of this components.
    */
   setInitial(init) {
-    var initial = Object.assign({}, init);
-    var keys = Object.keys(initial);
-    for (var i = 0; i < keys.length; i++) {
-      var key = keys[i];
+    let initial = { ...init};
+    let keys = Object.keys(initial);
+    for (let i = 0; i < keys.length; i++) {
+      let key = keys[i];
       if (initial[key] === 0) initial[key] = 1e-15;
     }
     this._initial = initial;
@@ -321,7 +322,7 @@ class Equilibrium {
    */
   _processResult(cSpec) {
     if (!cSpec) return null;
-    var result = {};
+    let result = {};
     for (var i = 0; i < this._model.specLabels.length; i++) {
       result[this._model.specLabels[i]] = cSpec[i];
     }
@@ -337,8 +338,8 @@ class Equilibrium {
 module.exports = Equilibrium;
 
 function getRange(start, end) {
-  var arr = [];
-  for (var i = start; i <= end; i++) {
+  let arr = [];
+  for (let i = start; i <= end; i++) {
     arr.push(i);
   }
   return arr;
@@ -346,7 +347,7 @@ function getRange(start, end) {
 
 function checkModel(model) {
   // check that labels are unique
-  var labels = {};
+  let labels = {};
   checkLabels(model.formedSpecies, labels);
   checkLabels(model.components, labels);
   checkComponents(model.components);
@@ -354,17 +355,17 @@ function checkModel(model) {
 }
 
 function checkLabels(arr, labels) {
-  for (var i = 0; i < arr.length; i++) {
-    var label = arr[i].label;
+  for (let i = 0; i < arr.length; i++) {
+    let label = arr[i].label;
     if (label === undefined || label === null)
-      throw new Error('Labels must be defined');
+      {throw new Error('Labels must be defined');}
     if (labels[label]) throw new Error('Labels should be unique');
     labels[label] = true;
   }
 }
 
 function checkComponents(comp) {
-  for (var i = 0; i < comp.length; i++) {
+  for (let i = 0; i < comp.length; i++) {
     if (
       typeof comp[i].total !== 'number' &&
       typeof comp[i].atEquilibrium !== 'number'
@@ -377,10 +378,10 @@ function checkComponents(comp) {
 }
 
 function checkFormedSpecies(model) {
-  var spec = model.formedSpecies;
+  let spec = model.formedSpecies;
   if (!spec) throw new Error('Formed species is not defined');
-  for (var i = 0; i < spec.length; i++) {
-    var s = spec[i];
+  for (let i = 0; i < spec.length; i++) {
+    let s = spec[i];
     if (!s.components || s.components.length !== model.components.length) {
       throw new Error(
         "Formed species' components array should have the same size as components",
@@ -393,8 +394,8 @@ function checkFormedSpecies(model) {
 }
 
 function count(arr, cb) {
-  var count = 0;
-  for (var i = 0; i < arr.length; i++) {
+  let count = 0;
+  for (let i = 0; i < arr.length; i++) {
     if (cb(arr[i])) ++count;
   }
   return count;

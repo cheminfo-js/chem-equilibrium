@@ -1,19 +1,20 @@
-'use strict';
+
 
 const deepcopy = require('deepcopy');
+
 const types = ['acidoBasic', 'precipitation', 'complexation'];
 class Equation {
   constructor(eq) {
     // Sanity checks
     if (typeof eq.formed !== 'string')
-      throw new Error('equation expects a property "formed" that is a string');
+      {throw new Error('equation expects a property "formed" that is a string');}
     if (typeof eq.pK !== 'number')
-      throw new Error('equation expects a property "pK" that is a number');
+      {throw new Error('equation expects a property "pK" that is a number');}
     if (types.indexOf(eq.type) === -1) throw new Error('Unexpected type');
     if (Object.prototype.toString.call(eq.components) !== '[object Object]')
-      throw new Error('Unexpected components');
+      {throw new Error('Unexpected components');}
     if (Object.keys(eq.components).length < 1)
-      throw new Error('Components is expected to have at least one key');
+      {throw new Error('Components is expected to have at least one key');}
 
     this._eq = deepcopy(eq);
   }
@@ -53,10 +54,10 @@ class Equation {
   // Get a new representation of the equation given a solvent
   // Returns a new equation that does not include the solvent
   withSolvent(solvent) {
-    var eq = {};
-    var comp = this._eq.components;
-    var formed = this._eq.formed;
-    var compKeys = Object.keys(comp);
+    let eq = {};
+    let comp = this._eq.components;
+    let formed = this._eq.formed;
+    let compKeys = Object.keys(comp);
     if (formed === solvent) {
       eq.formed = compKeys[0];
       eq.components = {};

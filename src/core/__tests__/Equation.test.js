@@ -1,6 +1,7 @@
-'use strict';
+
 
 const Equation = require('../Equation');
+
 const eqA = new Equation({
   formed: 'A',
   components: {
@@ -13,26 +14,26 @@ const eqA = new Equation({
 
 describe('Equation', () => {
   it('solvent is the formed specie', () => {
-    var eq = eqA.withSolvent('A');
-    expect(eq.formed).toEqual('B');
+    let eq = eqA.withSolvent('A');
+    expect(eq.formed).toBe('B');
     expect(eq.components).deepEqual({ C: -1 });
     expect(eq.pK).toEqual(-1);
-    expect(eq.type).toEqual('acidoBasic');
+    expect(eq.type).toBe('acidoBasic');
   });
 
   it('solvent is a component', () => {
-    var eq = eqA.withSolvent('B');
-    expect(eq.formed).toEqual('A');
+    let eq = eqA.withSolvent('B');
+    expect(eq.formed).toBe('A');
     expect(eq.components).deepEqual({ C: 1 });
-    expect(eq.pK).toEqual(1);
-    expect(eq.type).toEqual('acidoBasic');
+    expect(eq.pK).toBe(1);
+    expect(eq.type).toBe('acidoBasic');
   });
 
   it('solvent is not in the equation', () => {
-    var eq = eqA.withSolvent('D');
-    expect(eq.formed).toEqual('A');
+    let eq = eqA.withSolvent('D');
+    expect(eq.formed).toBe('A');
     expect(eq.components).deepEqual({ B: 1, C: 1 });
-    expect(eq.pK).toEqual(1);
-    expect(eq.type).toEqual('acidoBasic');
+    expect(eq.pK).toBe(1);
+    expect(eq.type).toBe('acidoBasic');
   });
 });

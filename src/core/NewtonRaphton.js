@@ -1,4 +1,4 @@
-'use strict';
+
 const Matrix = require('ml-matrix');
 const stat = require('ml-stat').matrix;
 const debug = require('debug')('core:newton-raphton');
@@ -27,7 +27,7 @@ function newtonRaphton(
   // solidKsp contains the solubility constants
   // solidC contains the initial solid species "concentrations"
 
-  options = Object.assign({}, defaultOptions, options);
+  options = { ...defaultOptions, ...options};
   const ncomp = cTotal.length;
   const nspec = beta.length;
 
@@ -94,7 +94,7 @@ function newtonRaphton(
     }
 
     // console.log(solidIndices);
-    var nSolidPicked = solidIndices.length;
+    let nSolidPicked = solidIndices.length;
     if (nSolidPicked) {
       var solidCPicked = solidC.selection([0], solidIndices);
       var solidModelPicked = solidModel.selection(
@@ -103,7 +103,7 @@ function newtonRaphton(
       );
     }
 
-    var njstar = ncomp + nSolidPicked;
+    let njstar = ncomp + nSolidPicked;
 
     // Calculate all species concentrations from component concentrations
     // console.log('c', c.to1DArray());
@@ -113,7 +113,7 @@ function newtonRaphton(
     );
     // console.log('cSpec', cSpec);
     // Compute total concentration of each component based on dissolved species
-    var cTotCalc = new Matrix([
+    let cTotCalc = new Matrix([
       stat.sum(Matrix.multiply(cSpec.repeat(ncomp, 1), model), 1),
     ]);
 
@@ -128,9 +128,9 @@ function newtonRaphton(
     // console.log(cTotal, cTotCalc);
     // d is the difference between expected total concentration and actual total concentration given
     // console.log('cTotCalc', cTotCalc.to1DArray());
-    var d = Matrix.subtract([cTotal], cTotCalc);
+    let d = Matrix.subtract([cTotal], cTotCalc);
     if (nSolidPicked) {
-      var dK = Matrix.subtract(lnSolidBeta, [lnKsp]).selection(
+      let dK = Matrix.subtract(lnSolidBeta, [lnKsp]).selection(
         [0],
         solidIndices,
       );
@@ -162,12 +162,12 @@ function newtonRaphton(
     }
 
     // We decompose the Jacobian (Jstar is symetric and easier to inverse)
-    var Jstar = new Matrix(njstar, njstar).fill(0);
+    let Jstar = new Matrix(njstar, njstar).fill(0);
 
     // Fill the part of Jstar specific to dissolved variables
     for (var j = 0; j < ncomp; j++) {
       for (var k = j; k < ncomp; k++) {
-        for (var l = 0; l < nspec; l++) {
+        for (let l = 0; l < nspec; l++) {
           Jstar[j][k] += model[k][l] * model[j][l] * cSpec[0][l];
           Jstar[k][j] = Jstar[j][k];
         }
@@ -177,7 +177,7 @@ function newtonRaphton(
     // Fill the part of jstar specific to solid part
     for (j = 0; j < ncomp; j++) {
       for (k = 0; k < nSolidPicked; k++) {
-        var jk = k + ncomp;
+        let jk = k + ncomp;
         Jstar[j][jk] = solidModelPicked[j][k];
         Jstar[jk][j] = solidModelPicked[j][k];
       }
@@ -186,10 +186,10 @@ function newtonRaphton(
     // console.log('jstar', Jstar);
     // console.log('inter', d, d.mmul(Jstar.inv()));
     // We compute the next delta of component concentrations and apply it to the current component concentrations
-    var diag = Matrix.identity(njstar).setSubMatrix(Matrix.diag(c[0]), 0, 0);
-    var deltaC = dAll.mmul(Jstar.inverse()).mmul(diag);
+    let diag = Matrix.identity(njstar).setSubMatrix(Matrix.diag(c[0]), 0, 0);
+    let deltaC = dAll.mmul(Jstar.inverse()).mmul(diag);
 
-    var allC = new Matrix(1, njstar);
+    let allC = new Matrix(1, njstar);
     allC.setSubMatrix(c, 0, 0);
     if (nSolidPicked) {
       allC.setSubMatrix(solidCPicked, 0, ncomp);
@@ -211,7 +211,7 @@ function newtonRaphton(
       c.set(0, j, allC.get(0, j));
     }
     for (j = 0; j < nSolidPicked; j++) {
-      var val = allC.get(0, ncomp + j);
+      let val = allC.get(0, ncomp + j);
       if (val < 0) solidC.set(0, solidIndices[j], 0);
       else solidC.set(0, solidIndices[j], val);
     }
@@ -256,8 +256,8 @@ function checkNeg(arr, n) {
 }
 
 function getRange(start, end) {
-  var arr = [];
-  for (var i = start; i <= end; i++) {
+  let arr = [];
+  for (let i = start; i <= end; i++) {
     arr.push(i);
   }
   return arr;

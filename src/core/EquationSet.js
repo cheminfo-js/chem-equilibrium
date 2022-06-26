@@ -1,13 +1,14 @@
-'use strict';
+
 
 const Equation = require('./Equation');
+
 class EquationSet {
   constructor(equations) {
     equations = equations || [];
     this._normalized = false;
     this._disabledKeys = new Set();
     this._equations = new Map();
-    for (var i = 0; i < equations.length; i++) {
+    for (let i = 0; i < equations.length; i++) {
       this.add(equations[i]);
     }
   }
@@ -17,7 +18,7 @@ class EquationSet {
   }
 
   clone() {
-    var eqSet = new EquationSet();
+    let eqSet = new EquationSet();
     eqSet._normalized = this._normalized;
     eqSet._disabledKeys = this._disabledKeys;
     for (const [key, eq] of this.entries()) {
@@ -27,7 +28,7 @@ class EquationSet {
   }
 
   add(eq, key) {
-    var equation = Equation.create(eq);
+    let equation = Equation.create(eq);
     key = key || getHash(eq.formed);
     this._equations.set(key, equation);
     this._normalized = false;
@@ -47,18 +48,18 @@ class EquationSet {
   }
 
   getSpecies(options) {
-    options = Object.assign({}, options);
-    var species = options.species;
-    var type = options.type;
-    var includeDisabled = options.includeDisabled;
-    var speciesSet = new Set();
+    options = { ...options};
+    let species = options.species;
+    let type = options.type;
+    let includeDisabled = options.includeDisabled;
+    let speciesSet = new Set();
 
     if (species) {
-      var subset = this.getSubset(species);
+      let subset = this.getSubset(species);
       delete options.species;
       return subset.getSpecies(options);
     } else {
-      for (var [key, eq] of this.entries()) {
+      for (let [key, eq] of this.entries()) {
         if (this._disabledKeys.has(key) && !includeDisabled) continue;
         if (type && type !== eq.type) continue;
         speciesSet.add(eq.formed);
@@ -74,14 +75,14 @@ class EquationSet {
 
   getComponents(options) {
     options = options || {};
-    var species = options.species;
-    var type = options.type;
-    var includeDisabled = options.includeDisabled;
+    let species = options.species;
+    let type = options.type;
+    let includeDisabled = options.includeDisabled;
     if (!this.isNormalized()) {
       throw new Error('Cannot get components from non-normalized equation set');
     }
-    var speciesSet = new Set();
-    for (var [key, eq] of this.entries()) {
+    let speciesSet = new Set();
+    for (let [key, eq] of this.entries()) {
       if (this._disabledKeys.has(key) && !includeDisabled) continue;
       if (type && type !== eq.type) continue;
       if (species) {
@@ -118,7 +119,7 @@ class EquationSet {
   }
 
   get(id, hashIt) {
-    var key;
+    let key;
     if (hashIt) {
       key = getHash(id);
     } else {
@@ -146,9 +147,9 @@ class EquationSet {
   getNormalized(solvent) {
     // In a normalized set, formed species can be found in any of the components
     // of the equation set
-    var norm = new Array(this._equations.size);
-    var keys = new Array(this._equations.size);
-    var idx = 0;
+    let norm = new Array(this._equations.size);
+    let keys = new Array(this._equations.size);
+    let idx = 0;
     for (const [key, entry] of this.entries()) {
       norm[idx] = entry.withSolvent(solvent);
       keys[idx] = key;
@@ -156,8 +157,8 @@ class EquationSet {
     }
     norm = normalize(norm);
 
-    var normSet = new EquationSet();
-    for (var i = 0; i < norm.length; i++) {
+    let normSet = new EquationSet();
+    for (let i = 0; i < norm.length; i++) {
       normSet.add(norm[i], keys[i]);
     }
 
@@ -177,7 +178,7 @@ class EquationSet {
     return Array.from(this._equations)
       .filter((e) => options.includeDisabled || !this._disabledKeys.has(e[0]))
       .map((e) => {
-        var r = e[1].toJSON();
+        let r = e[1].toJSON();
         if (this._disabledKeys.has(e[0])) r.disabled = true;
         return r;
       });
@@ -187,36 +188,36 @@ class EquationSet {
     if (!this.isNormalized()) {
       throw new Error('Cannot get model from un-normalized equation set');
     }
-    var totalComp = {};
+    let totalComp = {};
     if (all) {
       var subset = this;
     } else {
       subset = this.getSubset(Object.keys(totals));
     }
-    var components = subset.components;
+    let components = subset.components;
     const subsetKeys = [...subset.keys()];
     const subsetArr = [...subset.values()].filter(
       (s, idx) => !this._disabledKeys.has(subsetKeys[idx]),
     );
     components.forEach((c) => (totalComp[c] = 0));
     for (var key in totals) {
-      var total = totals[key] || 0;
+      let total = totals[key] || 0;
       if (components.indexOf(key) !== -1) {
         totalComp[key] += total;
       } else {
-        var eq = subsetArr.find((eq) => {
+        let eq = subsetArr.find((eq) => {
           return eq.formed === key;
         });
         if (eq) {
-          var keys = Object.keys(eq.components);
-          for (var i = 0; i < keys.length; i++) {
+          let keys = Object.keys(eq.components);
+          for (let i = 0; i < keys.length; i++) {
             totalComp[keys[i]] += eq.components[keys[i]] * total;
           }
         }
       }
     }
 
-    var model = {
+    let model = {
       volume: 1,
     };
 
@@ -242,11 +243,11 @@ class EquationSet {
   }
 
   getSubset(species) {
-    var speciesSet = new Set(species);
+    let speciesSet = new Set(species);
     // get a subset of the equations given a set of species
-    var newSet = new EquationSet();
-    var moreAdded = true;
-    var passes = 0;
+    let newSet = new EquationSet();
+    let moreAdded = true;
+    let passes = 0;
 
     var f = (species) => {
       passes++;
@@ -255,7 +256,7 @@ class EquationSet {
         if (species.includes(eq.formed) && !newSet.has(eq)) {
           newSet.add(eq);
           speciesSet.add(eq.formed);
-          var newComponents = Object.keys(eq.components);
+          let newComponents = Object.keys(eq.components);
           newComponents.forEach((s) => speciesSet.add(s));
           f(newComponents);
         }
@@ -274,7 +275,7 @@ class EquationSet {
       passes++;
       moreAdded = false;
       this.forEach(function (eq) {
-        var hasAll = Object.keys(eq.components).every((c) => speciesSet.has(c));
+        let hasAll = Object.keys(eq.components).every((c) => speciesSet.has(c));
         if (hasAll && !newSet.has(eq)) {
           newSet.add(eq);
           speciesSet.add(eq.formed);
@@ -297,16 +298,16 @@ class EquationSet {
 module.exports = EquationSet;
 
 function normalize(equations) {
-  var N = equations.length;
-  var newEquations = new Array(N).fill(0);
-  var needs = new Array(N);
+  let N = equations.length;
+  let newEquations = new Array(N).fill(0);
+  let needs = new Array(N);
 
   // First, find the independent equations
   for (let i = 0; i < N; i++) {
     if (isIndependent(equations, i)) {
       newEquations[i] = equations[i];
     } else {
-      var keys = Object.keys(equations[i].components);
+      let keys = Object.keys(equations[i].components);
       needs[i] = keys.map(function (key) {
         return equations.findIndex(function (eq) {
           return eq.formed === key;
@@ -315,7 +316,7 @@ function normalize(equations) {
     }
   }
 
-  var iter = 0;
+  let iter = 0;
   while (!allDefined(newEquations) && iter < 10) {
     for (let i = 0; i < N; i++) {
       if (!newEquations[i]) {
@@ -333,10 +334,10 @@ function normalize(equations) {
 }
 
 function isIndependent(equations, idx) {
-  var keys = Object.keys(equations[idx].components);
-  for (var i = 0; i < keys.length; i++) {
+  let keys = Object.keys(equations[idx].components);
+  for (let i = 0; i < keys.length; i++) {
     var key = keys[i];
-    var eq = equations.find(function (eq) {
+    let eq = equations.find(function (eq) {
       return eq.formed === key;
     });
     if (eq) return false;
@@ -357,8 +358,8 @@ function allDefined(arr, idx) {
 }
 
 function fillLine(equations, newEquations, i) {
-  var eq = equations[i];
-  var newEq = {
+  let eq = equations[i];
+  let newEq = {
     type: eq.type,
     formed: eq.formed,
     components: {},
@@ -368,13 +369,13 @@ function fillLine(equations, newEquations, i) {
 }
 
 function fillRec(equations, eq, eqToFill, n) {
-  var componentsToFill = eqToFill.components;
-  var components = eq.components;
-  var keys = Object.keys(components);
+  let componentsToFill = eqToFill.components;
+  let components = eq.components;
+  let keys = Object.keys(components);
   for (let j = 0; j < keys.length; j++) {
-    var key = keys[j];
+    let key = keys[j];
     let nn = n * components[key];
-    var rep = equations.find((eq) => eq.formed === keys[j]);
+    let rep = equations.find((eq) => eq.formed === keys[j]);
     if (!rep) {
       componentsToFill[keys[j]] = componentsToFill[keys[j]] || 0;
       componentsToFill[keys[j]] += nn;

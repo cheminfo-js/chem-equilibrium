@@ -1,4 +1,4 @@
-'use strict';
+
 
 const Equilibrium = require('./core/Equilibrium');
 const Helper = require('./helpers/Helper');
