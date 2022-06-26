@@ -1,5 +1,3 @@
-
-
 const defaultOptions = {
   chunks: 200,
   log: false,
@@ -8,13 +6,13 @@ const defaultOptions = {
   isFixed: false,
 };
 
-class Serie {
+export class Serie {
   constructor(helper) {
     this.helper = helper;
   }
 
   getTitration(options) {
-    options = { ...defaultOptions, ...options};
+    options = { ...defaultOptions, ...options };
     // We don't want to change the original helper
     let helper = this.helper.clone();
     helper.resetSpecies();
@@ -84,7 +82,7 @@ class Serie {
   }
 
   getSolutions(options) {
-    options = { ...defaultOptions, ...options};
+    options = { ...defaultOptions, ...options };
     // We don't want to change the original helper
     let helper = this.helper.clone();
     // Some options are meant for the helper
@@ -164,5 +162,3 @@ function checkOptions(options) {
     throw new Error('Invalid arguments: property "varying" is not defined');
   }
 }
-
-module.exports = Serie;

@@ -1,7 +1,8 @@
+import Debug from 'debug';
+import { Matrix } from 'ml-matrix';
+import { matrix as matrixStat } from 'ml-stat';
 
-const Matrix = require('ml-matrix');
-const stat = require('ml-stat').matrix;
-const debug = require('debug')('core:newton-raphton');
+const debug = Debug('core:newton-raphton');
 
 const defaultOptions = {
   tolerance: 1e-15,
@@ -27,7 +28,7 @@ function newtonRaphton(
   // solidKsp contains the solubility constants
   // solidC contains the initial solid species "concentrations"
 
-  options = { ...defaultOptions, ...options};
+  options = { ...defaultOptions, ...options };
   const ncomp = cTotal.length;
   const nspec = beta.length;
 
@@ -70,7 +71,7 @@ function newtonRaphton(
     // For this we compute the solubility products and compare it to the equilibrium constants
     var solidIndices = [];
     if (nsolid) {
-      var Ksp = stat.product(
+      var Ksp = matrixStat.product(
         c.transpose().repeat(1, nsolid).pow(solidModel),
         0,
       );
@@ -108,20 +109,20 @@ function newtonRaphton(
     // Calculate all species concentrations from component concentrations
     // console.log('c', c.to1DArray());
     var cSpec = Matrix.multiply(
-      [stat.product(c.transpose().repeat(1, nspec).pow(model), 0)],
+      [matrixStat.product(c.transpose().repeat(1, nspec).pow(model), 0)],
       [beta],
     );
     // console.log('cSpec', cSpec);
     // Compute total concentration of each component based on dissolved species
     let cTotCalc = new Matrix([
-      stat.sum(Matrix.multiply(cSpec.repeat(ncomp, 1), model), 1),
+      matrixStat.sum(Matrix.multiply(cSpec.repeat(ncomp, 1), model), 1),
     ]);
 
     // console.log('number of solids', nSolidPicked);
     // Add to it "concentrations" based on solid species
     if (nsolid) {
       cTotCalc.add([
-        stat.sum(Matrix.multiply(solidC.repeat(ncomp, 1), solidModel), 1),
+        matrixStat.sum(Matrix.multiply(solidC.repeat(ncomp, 1), solidModel), 1),
       ]);
     }
 
@@ -142,19 +143,15 @@ function newtonRaphton(
       dAll = d;
     }
 
-    // console.log('diff solution', d.to1DArray());
     if (nsolid) {
       // console.log('solidC', solidC.to1DArray());
       // console.log('picked ids', solidIndices);
     }
 
-    // console.log('dkorig', dkOrig[0]);
     if (
       checkEpsilon(options.tolerance, d[0]) &&
       checkSolid(options.solidTolerance, solidC, dkOrig)
     ) {
-      // console.log('final solution concentrations',c);
-      // console.log('final solid concentrations', solidC);
       debug(`solution converged in ${i} iterations`);
       return cSpec
         .to1DArray()

@@ -1,20 +1,22 @@
-
-
-const deepcopy = require('deepcopy');
+import deepcopy from 'deepcopy';
 
 const types = ['acidoBasic', 'precipitation', 'complexation'];
-class Equation {
+export class Equation {
   constructor(eq) {
     // Sanity checks
-    if (typeof eq.formed !== 'string')
-      {throw new Error('equation expects a property "formed" that is a string');}
-    if (typeof eq.pK !== 'number')
-      {throw new Error('equation expects a property "pK" that is a number');}
+    if (typeof eq.formed !== 'string') {
+      throw new Error('equation expects a property "formed" that is a string');
+    }
+    if (typeof eq.pK !== 'number') {
+      throw new Error('equation expects a property "pK" that is a number');
+    }
     if (types.indexOf(eq.type) === -1) throw new Error('Unexpected type');
-    if (Object.prototype.toString.call(eq.components) !== '[object Object]')
-      {throw new Error('Unexpected components');}
-    if (Object.keys(eq.components).length < 1)
-      {throw new Error('Components is expected to have at least one key');}
+    if (Object.prototype.toString.call(eq.components) !== '[object Object]') {
+      throw new Error('Unexpected components');
+    }
+    if (Object.keys(eq.components).length < 1) {
+      throw new Error('Components is expected to have at least one key');
+    }
 
     this._eq = deepcopy(eq);
   }
@@ -85,5 +87,3 @@ class Equation {
     return new Equation(eq);
   }
 }
-
-module.exports = Equation;

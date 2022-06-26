@@ -1,19 +1,17 @@
+import database from '../../data/data.json';
+import { EquationSet } from "../core/EquationSet";
+import { Equilibrium } from "../core/Equilibrium";
 
 const deepcopy = require('deepcopy');
-
-const database = require('../../data/data.json');
-
-const EquationSet = require('./../core/EquationSet');
-const Equilibrium = require('./../core/Equilibrium');
 
 const defaultOptions = {
   solvent: 'H2O',
 };
 
-class Helper {
+export class Helper {
   constructor(options) {
     this.atEquilibrium = new Set();
-    options = { ...defaultOptions, ...options};
+    options = { ...defaultOptions, ...options };
     let db = options.database || database;
     if (options.extend && options.database) db = db.concat(database);
     db = processDB(db, options);
@@ -38,7 +36,7 @@ class Helper {
   getSpecies(options) {
     options = options || {};
     let species = options.filtered ? Object.keys(this.species) : null;
-    let getOptions = { ...options};
+    let getOptions = { ...options };
     getOptions.species = species;
     return this.eqSet.getSpecies(getOptions);
   }
@@ -110,7 +108,7 @@ class Helper {
   }
 
   setOptions(options) {
-    this.options = { ...this.options, ...options};
+    this.options = { ...this.options, ...options };
   }
 
   disableEquation(formedSpecie) {
@@ -125,8 +123,6 @@ class Helper {
     this.eqSet.enableAllEquations();
   }
 }
-
-module.exports = Helper;
 
 function processDB(db, options) {
   db = deepcopy(db);

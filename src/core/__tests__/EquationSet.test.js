@@ -1,6 +1,4 @@
-
-
-const EquationSet = require('../../src/core/EquationSet');
+import { EquationSet } from '../EquationSet';
 
 const eq = require('./../data/equations');
 

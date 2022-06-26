@@ -1,7 +1,7 @@
-
 const Matrix = require('ml-matrix');
 
-const random = require('./../util/random');
+const { logRandom } = require('../util/logRandom');
+
 const newtonRaphton = require('./NewtonRaphton');
 
 const defaultOptions = {
@@ -15,7 +15,7 @@ const defaultOptions = {
 /**
  * Equilibrium
  */
-class Equilibrium {
+export class Equilibrium {
   /**
    * @constructor
    * @param {object} model
@@ -35,7 +35,7 @@ class Equilibrium {
    * @param {function} [options.random=Math.random] - Random number generator to use when initializing concentrations
    */
   constructor(model, options) {
-    this.options = { ...defaultOptions, ...options};
+    this.options = { ...defaultOptions, ...options };
     checkModel(model);
     this.model = model;
     this._model = this._processModel(model);
@@ -66,13 +66,13 @@ class Equilibrium {
 
     for (i = 0; i < initial.length; i++) {
       if (initial[i] === undefined) {
-        initial[i] = random.logarithmic(this.options.random);
+        initial[i] = logRandom(this.options.random);
       }
     }
 
     for (i = 0; i < initialSolid.length; i++) {
       if (initialSolid[i] === undefined) {
-        initialSolid[i] = random.logarithmic(this.options.random);
+        initialSolid[i] = logRandom(this.options.random);
       }
     }
 
@@ -271,11 +271,11 @@ class Equilibrium {
     let model = this._model;
     for (let i = 0; i < this.options.robustMaxTries; i++) {
       let initial = {
-        components: random.logarithmic(
+        components: logRandom.logarithmic(
           this.options.random,
           model.compLabels.length,
         ),
-        solids: random.logarithmic(
+        solids: logRandom.logarithmic(
           this.options.random,
           model.specSolidLabels.length,
         ),
@@ -304,7 +304,7 @@ class Equilibrium {
    * amount (in moles) of this components.
    */
   setInitial(init) {
-    let initial = { ...init};
+    let initial = { ...init };
     let keys = Object.keys(initial);
     for (let i = 0; i < keys.length; i++) {
       let key = keys[i];
@@ -335,8 +335,6 @@ class Equilibrium {
   }
 }
 
-module.exports = Equilibrium;
-
 function getRange(start, end) {
   let arr = [];
   for (let i = start; i <= end; i++) {
@@ -357,8 +355,9 @@ function checkModel(model) {
 function checkLabels(arr, labels) {
   for (let i = 0; i < arr.length; i++) {
     let label = arr[i].label;
-    if (label === undefined || label === null)
-      {throw new Error('Labels must be defined');}
+    if (label === undefined || label === null) {
+      throw new Error('Labels must be defined');
+    }
     if (labels[label]) throw new Error('Labels should be unique');
     labels[label] = true;
   }

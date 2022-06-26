@@ -1,8 +1,6 @@
+import { Equation } from './Equation';
 
-
-const Equation = require('./Equation');
-
-class EquationSet {
+export class EquationSet {
   constructor(equations) {
     equations = equations || [];
     this._normalized = false;
@@ -48,7 +46,7 @@ class EquationSet {
   }
 
   getSpecies(options) {
-    options = { ...options};
+    options = { ...options };
     let species = options.species;
     let type = options.type;
     let includeDisabled = options.includeDisabled;
@@ -294,8 +292,6 @@ class EquationSet {
     return newSet;
   }
 }
-
-module.exports = EquationSet;
 
 function normalize(equations) {
   let N = equations.length;
