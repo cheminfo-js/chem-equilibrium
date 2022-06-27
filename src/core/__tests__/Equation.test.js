@@ -1,6 +1,4 @@
-
-
-const Equation = require('../Equation');
+import { Equation } from '../Equation';
 
 const eqA = new Equation({
   formed: 'A',

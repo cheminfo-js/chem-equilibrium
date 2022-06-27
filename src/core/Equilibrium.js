@@ -1,8 +1,8 @@
-const Matrix = require('ml-matrix');
+import { Matrix } from 'ml-matrix';
 
-const { logRandom } = require('../util/logRandom');
+import { logRandom } from '../util/logRandom';
 
-const newtonRaphton = require('./NewtonRaphton');
+import { newtonRaphton } from './NewtonRaphton';
 
 const defaultOptions = {
   robustMaxTries: 10,
@@ -53,7 +53,7 @@ export class Equilibrium {
     let initial = new Array(this._model.nComp);
     let initialSolid = new Array(this._model.specSolidLabels.length);
 
-    for (var i = 0; i < keys.length; i++) {
+    for (let i = 0; i < keys.length; i++) {
       let key = keys[i];
       let idx = this._model.compLabels.indexOf(key);
       if (idx === -1) {
@@ -64,13 +64,13 @@ export class Equilibrium {
       }
     }
 
-    for (i = 0; i < initial.length; i++) {
+    for (let i = 0; i < initial.length; i++) {
       if (initial[i] === undefined) {
         initial[i] = logRandom(this.options.random);
       }
     }
 
-    for (i = 0; i < initialSolid.length; i++) {
+    for (let i = 0; i < initialSolid.length; i++) {
       if (initialSolid[i] === undefined) {
         initialSolid[i] = logRandom(this.options.random);
       }
@@ -123,13 +123,13 @@ export class Equilibrium {
     // Now we modify the stoechiometric matrix if there are any components with fixed concentrations
     // Fixed components are removed from the model and beta values of species are updated accordingly
     let rows = [];
-    for (i = 0; i < nComp; i++) {
-      for (var j = 0; j < nSpecSolution; j++) {
+    for (let i = 0; i < nComp; i++) {
+      for (let j = 0; j < nSpecSolution; j++) {
         matrix.set(i, j + nComp, formedSpeciesSolution[j].components[i]);
       }
     }
 
-    for (i = 0; i < nComp; i++) {
+    for (let i = 0; i < nComp; i++) {
       // Fixed components have the atEquilibrium property set
       var atEq = model.components[i].atEquilibrium;
       if (!atEq) {
@@ -138,7 +138,7 @@ export class Equilibrium {
       } else {
         // Update the beta value of all species
         // newBeta = oldBeta * fixedComponentConcentration^(stoechiometricCoefficient)
-        var m = new Matrix(1, nSpecSolution + nComp).fill(atEq);
+        const m = new Matrix(1, nSpecSolution + nComp).fill(atEq);
         m.pow([matrix.getRow(i)]);
         beta.multiply(m);
       }
@@ -165,13 +165,13 @@ export class Equilibrium {
     if (nSpecSolid) {
       rows = [];
       var solidMatrix = new Matrix(nComp, nSpecSolid);
-      for (i = 0; i < nComp; i++) {
-        for (j = 0; j < nSpecSolid; j++) {
+      for (let i = 0; i < nComp; i++) {
+        for (let j = 0; j < nSpecSolid; j++) {
           solidMatrix.set(i, j, formedSpeciesSolid[j].components[i]);
         }
       }
 
-      for (i = 0; i < nComp; i++) {
+      for (let i = 0; i < nComp; i++) {
         // Fixed components have the atEquilibrium property set
         atEq = model.components[i].atEquilibrium;
         if (!atEq) {
@@ -194,7 +194,7 @@ export class Equilibrium {
       solidBeta.pow(-1);
     }
 
-    // ============= Labels and concentrations ==================================================================
+    // ==========r=== Labels and concentrations ==================================================================
     let specLabels = [];
     let fixedLabels = [];
     let cFixed = [];
@@ -202,7 +202,7 @@ export class Equilibrium {
 
     // Init labels and total concentration
     let cTotal = [];
-    for (var i = 0; i < nComp; i++) {
+    for (let i = 0; i < nComp; i++) {
       let component = model.components[i];
       if (component.atEquilibrium) {
         // Keep concentration and label of fixed components
@@ -323,11 +323,11 @@ export class Equilibrium {
   _processResult(cSpec) {
     if (!cSpec) return null;
     let result = {};
-    for (var i = 0; i < this._model.specLabels.length; i++) {
+    for (let i = 0; i < this._model.specLabels.length; i++) {
       result[this._model.specLabels[i]] = cSpec[i];
     }
 
-    for (i = 0; i < this._model.cFixed.length; i++) {
+    for (let i = 0; i < this._model.cFixed.length; i++) {
       result[this._model.fixedLabels[i]] = this._model.cFixed[i];
     }
 

@@ -10,7 +10,7 @@ const defaultOptions = {
   maxIterations: 99,
 };
 
-function newtonRaphton(
+export function newtonRaphton(
   model,
   beta,
   cTotal,
@@ -57,13 +57,13 @@ function newtonRaphton(
     solidC = new Matrix([solidC]);
   }
   // Prevent numerical difficulties
-  for (var i = 0; i < cTotal.length; i++) {
+  for (let i = 0; i < cTotal.length; i++) {
     if (cTotal[i] === 0) cTotal[i] = options.tolerance;
   }
 
   c = new Matrix([c]);
 
-  for (i = 0; i < options.maxIterations; i++) {
+  for (let i = 0; i < options.maxIterations; i++) {
     // console.log('iteration' , i);
     // console.log(c, solidC)
 
@@ -89,12 +89,11 @@ function newtonRaphton(
       });
       //solidIndices = getRange(0, solidC[0].length -1);
       var lnKsp = Ksp.slice();
-      for (j = 0; j < lnKsp.length; j++) {
+      for (let j = 0; j < lnKsp.length; j++) {
         lnKsp[j] = Math.log2(lnKsp[j]);
       }
     }
 
-    // console.log(solidIndices);
     let nSolidPicked = solidIndices.length;
     if (nSolidPicked) {
       var solidCPicked = solidC.selection([0], solidIndices);
@@ -162,8 +161,8 @@ function newtonRaphton(
     let Jstar = new Matrix(njstar, njstar).fill(0);
 
     // Fill the part of Jstar specific to dissolved variables
-    for (var j = 0; j < ncomp; j++) {
-      for (var k = j; k < ncomp; k++) {
+    for (let j = 0; j < ncomp; j++) {
+      for (let k = j; k < ncomp; k++) {
         for (let l = 0; l < nspec; l++) {
           Jstar[j][k] += model[k][l] * model[j][l] * cSpec[0][l];
           Jstar[k][j] = Jstar[j][k];
@@ -172,8 +171,8 @@ function newtonRaphton(
     }
 
     // Fill the part of jstar specific to solid part
-    for (j = 0; j < ncomp; j++) {
-      for (k = 0; k < nSolidPicked; k++) {
+    for (let j = 0; j < ncomp; j++) {
+      for (let k = 0; k < nSolidPicked; k++) {
         let jk = k + ncomp;
         Jstar[j][jk] = solidModelPicked[j][k];
         Jstar[jk][j] = solidModelPicked[j][k];
@@ -193,7 +192,6 @@ function newtonRaphton(
     }
     // console.log('deltaC', deltaC);
     allC.add(deltaC);
-    // console.log('c', c);
     // c should be positive. If it's not we want to subtract some of the deltaC we've added
     // We do this iteratively until either nothing is negative anymore or deltaC has become very small
     while (checkNeg(allC[0])) {
@@ -204,10 +202,10 @@ function newtonRaphton(
 
     // console.log('allC', allC.to1DArray());
 
-    for (j = 0; j < c.columns; j++) {
+    for (let j = 0; j < c.columns; j++) {
       c.set(0, j, allC.get(0, j));
     }
-    for (j = 0; j < nSolidPicked; j++) {
+    for (let j = 0; j < nSolidPicked; j++) {
       let val = allC.get(0, ncomp + j);
       if (val < 0) solidC.set(0, solidIndices[j], 0);
       else solidC.set(0, solidIndices[j], val);
@@ -223,8 +221,6 @@ function newtonRaphton(
     .to1DArray()
     .concat(solidC.to1DArray ? solidC.to1DArray() : solidC);
 }
-
-module.exports = newtonRaphton;
 
 // Returns true if all elements in the array are smaller than tolerance
 function checkEpsilon(tolerance, arr, n) {

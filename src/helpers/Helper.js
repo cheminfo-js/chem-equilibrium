@@ -1,8 +1,8 @@
 import database from '../../data/data.json';
-import { EquationSet } from "../core/EquationSet";
-import { Equilibrium } from "../core/Equilibrium";
+import { EquationSet } from '../core/EquationSet';
+import { Equilibrium } from '../core/Equilibrium';
 
-const deepcopy = require('deepcopy');
+import deepcopy from 'deepcopy';
 
 const defaultOptions = {
   solvent: 'H2O',
@@ -41,11 +41,15 @@ export class Helper {
     return this.eqSet.getSpecies(getOptions);
   }
 
-  getComponents(options) {
-    options = options || {};
+  getComponents(options = {}) {
     let species = options.filtered ? Object.keys(this.species) : null;
-    if (species) var eqSet = this.eqSet.getSubset(species);
-    else eqSet = this.eqSet;
+
+    let eqSet;
+    if (species) {
+      eqSet = this.eqSet.getSubset(species);
+    } else {
+      eqSet = this.eqSet;
+    }
     return eqSet.getNormalized(this.options.solvent).getComponents(options);
   }
 
@@ -127,7 +131,7 @@ export class Helper {
 function processDB(db, options) {
   db = deepcopy(db);
   let toRemove = [];
-  for (var i = 0; i < db.length; i++) {
+  for (let i = 0; i < db.length; i++) {
     if (typeof db[i].pK !== 'number' || options.solvent !== 'H2O') {
       if (!db[i].pK[options.solvent]) {
         toRemove.push(i);
@@ -137,7 +141,7 @@ function processDB(db, options) {
     }
   }
 
-  for (i = db.length - 1; i >= 0; i--) {
+  for (let i = db.length - 1; i >= 0; i--) {
     if (toRemove.indexOf(i) > -1) {
       db.splice(i, 1);
     }

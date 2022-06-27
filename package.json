@@ -2,8 +2,11 @@
   "name": "chem-equilibrium",
   "version": "2.2.1",
   "description": "Compute chemical equilibrium",
+  "main": "lib/index.js",
+  "module": "src/index.js",
   "keywords": [],
   "files": [
+    "lib",
     "src"
   ],
   "author": "Daniel Kostro &lt;kostro.d@gmail.com&gt;",
@@ -12,8 +15,10 @@
     "url": "https://github.com/cheminfo-js/chem-equilibrium/issues"
   },
   "homepage": "https://github.com/cheminfo-js/chem-equilibrium",
+  "jest": {
+    "testEnvironment": "node"
+  },
   "license": "MIT",
-  "main": "./src/index.js",
   "scripts": {
     "build": "cheminfo-build --entry src/index.js --root ChemEquilibirum",
     "database": "node data/update.js",
@@ -22,7 +27,9 @@
     "prepack": "rollup -c",
     "prettier": "prettier --check src",
     "prettier-write": "prettier --write src",
-    "test": "mocha --require should --reporter mocha-better-spec-reporter --recursive"
+    "test": "npm run test-coverage && npm run eslint && npm run prettier",
+    "test-coverage": "jest --coverage",
+    "test-only": "jest"
   },
   "devDependencies": {
     "@types/jest": "^28.1.3",
