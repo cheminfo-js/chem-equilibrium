@@ -10,11 +10,11 @@
     "src"
   ],
   "author": "Daniel Kostro &lt;kostro.d@gmail.com&gt;",
-  "repository": "cheminfo-js/chem-equilibrium",
+  "repository": "cheminfo/chem-equilibrium",
   "bugs": {
-    "url": "https://github.com/cheminfo-js/chem-equilibrium/issues"
+    "url": "https://github.com/cheminfo/chem-equilibrium/issues"
   },
-  "homepage": "https://github.com/cheminfo-js/chem-equilibrium",
+  "homepage": "https://github.com/cheminfo/chem-equilibrium",
   "jest": {
     "testEnvironment": "node"
   },
