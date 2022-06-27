@@ -4,7 +4,7 @@ import {
   multiSolvent,
   AgClInDMSO,
   AgInWater,
-} from '../../../test/data/equations';
+} from '../../core/__tests__/data/equations';
 import { Helper } from '../Helper';
 
 describe('Helper', () => {

@@ -15,9 +15,6 @@
     "url": "https://github.com/cheminfo/chem-equilibrium/issues"
   },
   "homepage": "https://github.com/cheminfo/chem-equilibrium",
-  "jest": {
-    "testEnvironment": "node"
-  },
   "license": "MIT",
   "scripts": {
     "build": "cheminfo-build --entry src/index.js --root ChemEquilibirum",

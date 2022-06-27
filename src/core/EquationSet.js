@@ -27,14 +27,15 @@ export class EquationSet {
 
   add(eq, key) {
     let equation = Equation.create(eq);
-    key = key || getHash(eq.formed);
+    key = key || btoa(eq.formed);
     this._equations.set(key, equation);
     this._normalized = false;
   }
 
   has(eq) {
+    let key;
     if (eq instanceof Equation) {
-      var key = getHash(eq.formed);
+      key = btoa(eq.formed);
     } else {
       key = eq;
     }
@@ -99,12 +100,12 @@ export class EquationSet {
   }
 
   disableEquation(key, hashIt) {
-    key = hashIt ? getHash(key) : key;
+    key = hashIt ? btoa(key) : key;
     this._disabledKeys.add(key);
   }
 
   enableEquation(key, hashIt) {
-    key = hashIt ? getHash(key) : key;
+    key = hashIt ? btoa(key) : key;
     this._disabledKeys.delete(key);
   }
 
@@ -119,7 +120,7 @@ export class EquationSet {
   get(id, hashIt) {
     let key;
     if (hashIt) {
-      key = getHash(id);
+      key = btoa(id);
     } else {
       key = id;
     }
@@ -187,8 +188,9 @@ export class EquationSet {
       throw new Error('Cannot get model from un-normalized equation set');
     }
     let totalComp = {};
+    let subset;
     if (all) {
-      var subset = this;
+      subset = this;
     } else {
       subset = this.getSubset(Object.keys(totals));
     }
@@ -198,7 +200,7 @@ export class EquationSet {
       (s, idx) => !this._disabledKeys.has(subsetKeys[idx]),
     );
     components.forEach((c) => (totalComp[c] = 0));
-    for (var key in totals) {
+    for (let key in totals) {
       let total = totals[key] || 0;
       if (components.indexOf(key) !== -1) {
         totalComp[key] += total;
@@ -247,7 +249,7 @@ export class EquationSet {
     let moreAdded = true;
     let passes = 0;
 
-    var f = (species) => {
+    const f = (species) => {
       passes++;
       if (passes === 10) return;
       this.forEach(function (eq) {
@@ -272,7 +274,7 @@ export class EquationSet {
     while (passes <= 10 && moreAdded) {
       passes++;
       moreAdded = false;
-      this.forEach(function (eq) {
+      this.forEach((eq) => {
         let hasAll = Object.keys(eq.components).every((c) => speciesSet.has(c));
         if (hasAll && !newSet.has(eq)) {
           newSet.add(eq);
@@ -332,8 +334,8 @@ function normalize(equations) {
 function isIndependent(equations, idx) {
   let keys = Object.keys(equations[idx].components);
   for (let i = 0; i < keys.length; i++) {
-    var key = keys[i];
-    let eq = equations.find(function (eq) {
+    const key = keys[i];
+    const eq = equations.find((eq) => {
       return eq.formed === key;
     });
     if (eq) return false;
@@ -343,11 +345,11 @@ function isIndependent(equations, idx) {
 
 function allDefined(arr, idx) {
   if (idx !== undefined) {
-    return !idx.some(function (idx) {
+    return !idx.some((idx) => {
       return idx !== -1 && !arr[idx];
     });
   } else {
-    return !arr.some(function (el) {
+    return !arr.some((el) => {
       return el === 0;
     });
   }
@@ -381,8 +383,4 @@ function fillRec(equations, eq, eqToFill, n) {
   }
   eqToFill.pK = eqToFill.pK || 0;
   eqToFill.pK += n * eq.pK;
-}
-
-function getHash(id) {
-  return new Buffer(id).toString('base64');
 }

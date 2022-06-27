@@ -1,8 +1,9 @@
+import deepcopy from 'deepcopy';
+
 import database from '../../data/data.json';
 import { EquationSet } from '../core/EquationSet';
 import { Equilibrium } from '../core/Equilibrium';
 
-import deepcopy from 'deepcopy';
 
 const defaultOptions = {
   solvent: 'H2O',

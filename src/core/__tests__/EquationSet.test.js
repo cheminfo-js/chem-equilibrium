@@ -6,7 +6,7 @@ const {
   equations3,
   equations4,
   circularEquations,
-} = require('./../data/equations');
+} = require('./data/equations');
 
 describe('EquationSet', () => {
   it('should clone an equation set', () => {
