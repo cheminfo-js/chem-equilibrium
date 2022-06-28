@@ -131,7 +131,7 @@ export class Equilibrium {
 
     for (let i = 0; i < nComp; i++) {
       // Fixed components have the atEquilibrium property set
-      var atEq = model.components[i].atEquilibrium;
+      let atEq = model.components[i].atEquilibrium;
       if (!atEq) {
         // Keep this component in the final model
         rows.push(i);
@@ -173,7 +173,7 @@ export class Equilibrium {
 
       for (let i = 0; i < nComp; i++) {
         // Fixed components have the atEquilibrium property set
-        atEq = model.components[i].atEquilibrium;
+        let atEq = model.components[i].atEquilibrium;
         if (!atEq) {
           // Keep this component in the final model
           rows.push(i);
@@ -271,14 +271,8 @@ export class Equilibrium {
     let model = this._model;
     for (let i = 0; i < this.options.robustMaxTries; i++) {
       let initial = {
-        components: logRandom.logarithmic(
-          this.options.random,
-          model.compLabels.length,
-        ),
-        solids: logRandom.logarithmic(
-          this.options.random,
-          model.specSolidLabels.length,
-        ),
+        components: logRandom(this.options.random, model.compLabels.length),
+        solids: logRandom(this.options.random, model.specSolidLabels.length),
       };
       let cSpec = newtonRaphton(
         model.model,

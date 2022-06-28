@@ -252,7 +252,7 @@ export class EquationSet {
     const f = (species) => {
       passes++;
       if (passes === 10) return;
-      this.forEach(function (eq) {
+      this.forEach((eq) => {
         if (species.includes(eq.formed) && !newSet.has(eq)) {
           newSet.add(eq);
           speciesSet.add(eq.formed);
@@ -306,8 +306,8 @@ function normalize(equations) {
       newEquations[i] = equations[i];
     } else {
       let keys = Object.keys(equations[i].components);
-      needs[i] = keys.map(function (key) {
-        return equations.findIndex(function (eq) {
+      needs[i] = keys.map((key) => {
+        return equations.findIndex((eq) => {
           return eq.formed === key;
         });
       });
