@@ -4,7 +4,6 @@ import database from '../../data/data.json';
 import { EquationSet } from '../core/EquationSet';
 import { Equilibrium } from '../core/Equilibrium';
 
-
 const defaultOptions = {
   solvent: 'H2O',
 };

@@ -1,8 +1,8 @@
-import Debug from 'debug';
+import debugLibrary from 'debug';
 import { Matrix } from 'ml-matrix';
 import { matrix as matrixStat } from 'ml-stat';
 
-const debug = Debug('core:newton-raphton');
+const debug = debugLibrary('core:newton-raphton');
 
 const defaultOptions = {
   tolerance: 1e-15,
@@ -51,9 +51,10 @@ export function newtonRaphton(
   }
 
   model = new Matrix(model);
+  let lnSolidBeta;
   if (nsolid) {
     solidModel = new Matrix(solidModel);
-    var lnSolidBeta = new Matrix([solidKsp.map(Math.log2)]);
+    lnSolidBeta = new Matrix([solidKsp.map(Math.log2)]);
     solidC = new Matrix([solidC]);
   }
   // Prevent numerical difficulties
@@ -63,7 +64,8 @@ export function newtonRaphton(
 
   c = new Matrix([c]);
 
-  for (let i = 0; i < options.maxIterations; i++) {
+  let i
+  for (i = 0; i < options.maxIterations; i++) {
     // console.log('iteration' , i);
     // console.log(c, solidC)
 
@@ -129,13 +131,15 @@ export function newtonRaphton(
     // d is the difference between expected total concentration and actual total concentration given
     // console.log('cTotCalc', cTotCalc.to1DArray());
     let d = Matrix.subtract([cTotal], cTotCalc);
+    let dAll;
+    let dkOrig;
     if (nSolidPicked) {
       let dK = Matrix.subtract(lnSolidBeta, [lnKsp]).selection(
         [0],
         solidIndices,
       );
-      var dkOrig = Matrix.subtract([solidKsp], [Ksp]);
-      var dAll = new Matrix(1, njstar);
+      dkOrig = Matrix.subtract([solidKsp], [Ksp]);
+      dAll = new Matrix(1, njstar);
       dAll.setSubMatrix(d, 0, 0);
       dAll.setSubMatrix(dK, 0, ncomp);
     } else {
@@ -232,7 +236,7 @@ function checkEpsilon(tolerance, arr, n) {
 
 function checkSolid(tolerance, c, dk) {
   if (!c.length) return true;
-  return !c[0].some(function (value, idx) {
+  return !c[0].some((value, idx) => {
     if (dk[0][idx] === undefined) {
       throw 2;
     }
@@ -242,7 +246,7 @@ function checkSolid(tolerance, c, dk) {
 
 // return true if any element is negative
 function checkNeg(arr, n) {
-  return arr.some(function (el, idx) {
+  return arr.some((el, idx) => {
     if (n && idx >= n) return true;
     return el <= 0;
   });

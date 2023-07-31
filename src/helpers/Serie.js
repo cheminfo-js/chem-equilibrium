@@ -117,9 +117,10 @@ export class Serie {
 
     for (let i = 0; i <= chunks; i++) {
       let val = options.from + ((to - from) * i) / chunks;
+      let realVal;
 
       if (log) {
-        var realVal = Math.pow(10, -val);
+        realVal = Math.pow(10, -val);
       } else {
         realVal = val;
       }

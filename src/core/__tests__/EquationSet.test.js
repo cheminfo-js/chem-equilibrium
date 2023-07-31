@@ -61,7 +61,7 @@ describe('EquationSet', () => {
 
   it('should throw when normalizing an equations set with a circular dependency', () => {
     let eqSet = new EquationSet(circularEquations);
-    expect(function () {
+    expect(() => {
       eqSet.getNormalized();
     }).toThrow(/circular/);
   });

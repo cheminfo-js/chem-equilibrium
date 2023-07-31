@@ -2,7 +2,7 @@ import { Matrix } from 'ml-matrix';
 
 import { logRandom } from '../util/logRandom';
 
-import { newtonRaphton } from './NewtonRaphton';
+import { newtonRaphton } from './newtonRaphton';
 
 const defaultOptions = {
   robustMaxTries: 10,
@@ -108,8 +108,10 @@ export class Equilibrium {
     let beta = new Matrix(1, nSpecSolution + nComp).fill(1);
     // The other formation constants we pick from user
     beta.setSubMatrix([formedSpeciesSolution.map((c) => c.beta)], 0, nComp);
+    let solidBeta
+    let solidMatrix
     if (nSpecSolid) {
-      var solidBeta = new Matrix([formedSpeciesSolid.map((c) => c.beta)]);
+      solidBeta = new Matrix([formedSpeciesSolid.map((c) => c.beta)]);
     }
 
     // =========== Init stoechiometric matrix (formed species in solution) =================================
@@ -164,7 +166,7 @@ export class Equilibrium {
     // ============= Init stoechiometric matrix (formed solids) ================================================
     if (nSpecSolid) {
       rows = [];
-      var solidMatrix = new Matrix(nComp, nSpecSolid);
+      solidMatrix = new Matrix(nComp, nSpecSolid);
       for (let i = 0; i < nComp; i++) {
         for (let j = 0; j < nSpecSolid; j++) {
           solidMatrix.set(i, j, formedSpeciesSolid[j].components[i]);
@@ -180,7 +182,7 @@ export class Equilibrium {
         } else {
           // Update the beta value of all species
           // newBeta = oldBeta * fixedComponentConcentration^(stoechiometricCoefficient)
-          m = new Matrix(1, nSpecSolid).fill(atEq);
+          const m = new Matrix(1, nSpecSolid).fill(atEq);
           m.pow([solidMatrix.getRow(i)]);
           solidBeta.multiply(m);
         }
